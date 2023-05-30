@@ -62,3 +62,15 @@ Now you can start making changes to the code. Once you are done, please submit a
 For all Pull Requests, you should be extremely descriptive about both your problem and proposed solution. If there are any affected open or closed issues, please leave the issue number in your PR message.
 
 Did you have an issue, like a merge conflict, or don't know how to open a pull request? Check out [GitHub's pull request tutorial](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests) on how to resolve merge conflicts and other issues. Once your PR has been merged, you will be proudly listed as a contributor in the [contributor chart](https://github.com/withcontext-ai/builder/graphs/contributors).
+
+### Troubleshooting
+
+Make sure your have these dependencies installed:
+
+- [Git](https://git-scm.com/downloads)
+- [Node.js](https://nodejs.org/en/download/)
+
+If you use VS Code, we recommend installing the following extensions:
+
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
