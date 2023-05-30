@@ -9,7 +9,17 @@ TODO: one-line description
 
 ## 🚀 Quick Start / Live Demo
 
-TODO: run locally
+Run web app locally:
+
+```bash
+cd apps/web
+
+# install dependencies
+npm install
+
+# run dev server
+npm run dev
+```
 
 ## 🧑‍💻 Contributing
 
