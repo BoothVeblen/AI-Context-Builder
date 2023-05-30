@@ -26,3 +26,7 @@ npm run dev
 ### Opening issues
 
 Before you submit an issue, please check all existing [open and closed issues](https://github.com/withcontext-ai/builder/issues) to see if your issue has previously been resolved or is already known. If there is already an issue logged, feel free to upvote it by adding a 👍 [reaction](https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments). If you would like to [submit a new issue](https://github.com/withcontext-ai/builder/issues/new/choose), please fill out our Issue Template to the best of your ability so we can accurately understand your report.
+
+### Good first issues
+
+We have a list of [good first issues](https://github.com/withcontext-ai/builder/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
