@@ -1,0 +1,26 @@
+{
+  "name": "builder",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "turbo": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=16.17.0"
+  },
+  "packageManager": "pnpm@7.15.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/withcontext-ai/builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/withcontext-ai/builder/issues"
+  },
+  "homepage": "https://github.com/withcontext-ai/builder#readme"
+}
