@@ -13,16 +13,14 @@ Live demo: https://build.withcontext.ai
 
 or
 
-Run web app locally:
+Run the app locally:
 
 ```bash
-cd apps/web
-
 # install dependencies
-npm install
+pnpm install
 
 # run dev server
-npm run dev
+pnpm dev
 ```
 
 ## 🧑‍💻 Contributing
@@ -45,16 +43,14 @@ Then clone your GitHub forked repository to your local machine:
 git clone https://github.com/<your_github_username>/builder.git
 ```
 
-Go to the web app directory and run the following commands:
+Run the following commands at root directory:
 
 ```bash
-cd apps/web
-
 # install dependencies
-npm install
+pnpm install
 
 # run dev server
-npm run dev
+pnpm dev
 ```
 
 Now you can start making changes to the code. Once you are done, please submit a pull request to the `main` branch of this repository. We will review your pull request and merge it if everything looks good.
@@ -68,7 +64,13 @@ Did you have an issue, like a merge conflict, or don't know how to open a pull r
 Make sure your have these dependencies installed:
 
 - [Git](https://git-scm.com/downloads)
-- [Node.js](https://nodejs.org/en/download/)
+- [Node.js](https://nodejs.org/en/download/) (>=16.17.0)
+
+[Enable Corepack](https://pnpm.io/installation#using-corepack) to use `pnpm` as the package manager:
+
+```bash
+corepack enable
+```
 
 If you use VS Code, we recommend installing the following extensions:
 
