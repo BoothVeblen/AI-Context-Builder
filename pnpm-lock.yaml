@@ -7,16 +7,34 @@ importers:
       '@commitlint/cli': ^17.6.5
       '@commitlint/config-conventional': ^17.6.5
       '@ianvs/prettier-plugin-sort-imports': ^4.0.1
+      eslint: 8.41.0
+      eslint-config-next: 13.4.4
+      eslint-config-prettier: ^8.8.0
+      eslint-config-turbo: ^1.10.0
+      eslint-plugin-react: ^7.32.2
+      eslint-plugin-tailwindcss: ^3.12.1
       husky: ^8.0.0
       prettier: ^2.8.8
+      tailwindcss: 3.3.2
+      tailwindcss-animate: ^1.0.5
       turbo: ^1.10.0
+      typescript: 5.0.4
     dependencies:
       '@commitlint/cli': 17.6.5
       '@commitlint/config-conventional': 17.6.5
       '@ianvs/prettier-plugin-sort-imports': 4.0.1_prettier@2.8.8
+      eslint: 8.41.0
+      eslint-config-next: 13.4.4_opaykosi7ysrbskpnffskmbrki
+      eslint-config-prettier: 8.8.0_eslint@8.41.0
+      eslint-config-turbo: 1.10.0_eslint@8.41.0
+      eslint-plugin-react: 7.32.2_eslint@8.41.0
+      eslint-plugin-tailwindcss: 3.12.1_tailwindcss@3.3.2
       husky: 8.0.3
       prettier: 2.8.8
+      tailwindcss: 3.3.2
+      tailwindcss-animate: 1.0.5_tailwindcss@3.3.2
       turbo: 1.10.0
+      typescript: 5.0.4
 
   apps/web:
     specifiers:
@@ -2005,6 +2023,24 @@ packages:
       - supports-color
     dev: false
 
+  /eslint-config-prettier/8.8.0_eslint@8.41.0:
+    resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
+    hasBin: true
+    peerDependencies:
+      eslint: '>=7.0.0'
+    dependencies:
+      eslint: 8.41.0
+    dev: false
+
+  /eslint-config-turbo/1.10.0_eslint@8.41.0:
+    resolution: {integrity: sha512-iJsjoOb0vjnpV65rL+SAOIgbOluEibFqo/ke4UzXA9bi13cNJOT9k6FCQA7RXBHwChz+6BzYq5ZyoE3WcUg+0g==}
+    peerDependencies:
+      eslint: '>6.6.0'
+    dependencies:
+      eslint: 8.41.0
+      eslint-plugin-turbo: 1.10.0_eslint@8.41.0
+    dev: false
+
   /eslint-import-resolver-node/0.3.7:
     resolution: {integrity: sha512-gozW2blMLJCeFpBwugLTGyvVjNoeo1knonXAcatC6bjPBZitotxdWf7Gimr25N4c0AAOo4eOUfaG82IJPDpqCA==}
     dependencies:
@@ -2158,6 +2194,25 @@ packages:
       resolve: 2.0.0-next.4
       semver: 6.3.0
       string.prototype.matchall: 4.0.8
+    dev: false
+
+  /eslint-plugin-tailwindcss/3.12.1_tailwindcss@3.3.2:
+    resolution: {integrity: sha512-LyIRV0rx6prTpJZsSCXSNJ34Yry3Nj9OJwvzh1xTsiG6+UCnAPW1Bx41s7vZzUDKMlwFgpUN9Me+NK12T4DHYg==}
+    engines: {node: '>=12.13.0'}
+    peerDependencies:
+      tailwindcss: ^3.3.2
+    dependencies:
+      fast-glob: 3.2.12
+      postcss: 8.4.24
+      tailwindcss: 3.3.2
+    dev: false
+
+  /eslint-plugin-turbo/1.10.0_eslint@8.41.0:
+    resolution: {integrity: sha512-7eDeOjZDx/GcrZj4XYX1puaxsDtm6FE53qlbb4JyJhhkKC8OVYTJHTpu8kSmFTNsVoIgDFo/SEUIMwKHLYRM3w==}
+    peerDependencies:
+      eslint: '>6.6.0'
+    dependencies:
+      eslint: 8.41.0
     dev: false
 
   /eslint-scope/7.2.0:
