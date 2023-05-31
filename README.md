@@ -76,3 +76,17 @@ If you use VS Code, we recommend installing the following extensions:
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+
+## Recommend Reading
+
+Libaries and tools used in this project:
+
+- [React](https://react.dev/learn)
+- [Next.js](https://nextjs.org/docs)
+- [shadcn/ui](https://ui.shadcn.com/)
+  - [Tailwind CSS](https://tailwindcss.com/)
+  - [Radix](https://www.radix-ui.com/)
+  - [React Hook Form](https://react-hook-form.com/)
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- [Playwright](https://playwright.dev/docs/writing-tests)
+- [Monorepo Handbook](https://turbo.build/repo/docs/handbook)
