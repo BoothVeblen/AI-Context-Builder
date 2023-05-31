@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache",
+    "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache"
   },
   "dependencies": {
     "@types/node": "20.2.5",

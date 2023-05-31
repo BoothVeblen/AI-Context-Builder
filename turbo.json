@@ -11,6 +11,14 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "format:check": {
+      "cache": false,
+      "outputs": []
+    },
+    "format:write": {
+      "cache": false,
+      "outputs": []
     }
   }
 }
