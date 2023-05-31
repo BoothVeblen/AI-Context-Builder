@@ -77,7 +77,7 @@ If you use VS Code, we recommend installing the following extensions:
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
-## Recommend Reading
+## 📚 Recommend Reading
 
 Libaries and tools used in this project:
 
