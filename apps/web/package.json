@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache",
-    "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache"
+    "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@types/node": "20.2.5",
@@ -31,6 +32,7 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.34.3",
     "@testing-library/react": "^14.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "jsdom": "^22.1.0",

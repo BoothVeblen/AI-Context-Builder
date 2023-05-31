@@ -5,9 +5,10 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "test": "turbo run test",
     "format:check": "turbo run format:check",
     "format:write": "turbo run format:write",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
     "prepare": "husky install"
   },
   "dependencies": {
