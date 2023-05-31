@@ -7,7 +7,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format:check": "turbo run format:check",
-    "format:write": "turbo run format",
+    "format:write": "turbo run format:write",
     "prepare": "husky install"
   },
   "dependencies": {
