@@ -92,3 +92,5 @@ Libaries and tools used in this project:
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Playwright](https://playwright.dev/docs/writing-tests)
 - [Monorepo Handbook](https://turbo.build/repo/docs/handbook)
+
+EOF

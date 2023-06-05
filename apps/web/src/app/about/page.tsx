@@ -8,7 +8,7 @@ export default function AboutPage() {
         href="/dashboard"
         className="text-blue-600 hover:underline dark:text-blue-500"
       >
-        Dashboard~
+        Dashboard
       </Link>
     </div>
   )
