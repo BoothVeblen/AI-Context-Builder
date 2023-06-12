@@ -5,7 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import clsx from 'clsx'
 
 import { auth } from '@/lib/auth'
-import { getFlags } from '@/lib/flags'
+import { flags } from '@/lib/flags'
 import AppLayout from '@/components/app-layout'
 import AppSidebar from '@/components/app-sidebar'
 
@@ -21,10 +21,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { enabledAuth } = getFlags()
   const { userId } = auth()
 
-  if (enabledAuth) {
+  if (flags.enabledAuth) {
     return (
       <ClerkProvider>
         <html lang="en" className="h-full">

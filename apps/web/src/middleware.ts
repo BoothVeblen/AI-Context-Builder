@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
 import { authMiddleware } from '@clerk/nextjs'
 
-import { getFlags } from './lib/flags'
-
-const { isDev, enabledAuth } = getFlags()
+import { flags } from './lib/flags'
 
 export default authMiddleware({
-  debug: isDev,
-  publicRoutes: enabledAuth ? ['/', '/explore'] : [],
+  debug: flags.isDev,
+  publicRoutes: flags.enabledAuth ? ['/', '/explore'] : [],
   beforeAuth: () => {
-    if (enabledAuth) return NextResponse.next()
+    if (flags.enabledAuth) return NextResponse.next()
     return false
   },
 })

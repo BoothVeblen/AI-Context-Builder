@@ -7,16 +7,14 @@ import {
   SignedOutAuthObject,
 } from '@clerk/nextjs/dist/types/server'
 
-import { getFlags } from './flags'
+import { flags } from './flags'
 
 export function auth() {
-  const { enabledAuth } = getFlags()
-  if (enabledAuth) return clerkAuth()
+  if (flags.enabledAuth) return clerkAuth()
   return {} as SignedInAuthObject | SignedOutAuthObject
 }
 
 export function currentUser() {
-  const { enabledAuth } = getFlags()
-  if (enabledAuth) return clerkCurrentUser()
+  if (flags.enabledAuth) return clerkCurrentUser()
   return Promise.resolve(null)
 }

@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test'
 
-import { getFlags } from '../lib/flags'
+import { flags } from '../lib/flags'
 
 test('should navigate to the sign in page', async ({ page }) => {
-  const { enabledAuth } = getFlags()
-  if (!enabledAuth) return
+  if (!flags.enabledAuth) return
 
   await page.goto('/sign-in')
   await expect(page).toHaveURL(/.*sign-in/)
