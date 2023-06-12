@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useFlagStore } from '@/store/flags'
 import { LogIn } from 'lucide-react'
 
 export default function LoginLink() {
+  const enabledAuth = useFlagStore((state) => state.enabledAuth)
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
 
   const href = useMemo(() => {
@@ -15,6 +17,8 @@ export default function LoginLink() {
   useEffect(() => {
     setRedirectUrl(window.location.href)
   }, [])
+
+  if (!enabledAuth) return null
 
   return (
     <Link

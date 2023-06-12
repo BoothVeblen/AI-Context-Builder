@@ -1,9 +1,11 @@
 import './globals.css'
 
 import { Inter } from 'next/font/google'
-import { auth, ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
 import clsx from 'clsx'
 
+import { auth } from '@/lib/auth'
+import { getFlags } from '@/lib/flags'
 import AppLayout from '@/components/app-layout'
 import AppSidebar from '@/components/app-sidebar'
 
@@ -19,17 +21,28 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { enabledAuth } = getFlags()
   const { userId } = auth()
 
+  if (enabledAuth) {
+    return (
+      <ClerkProvider>
+        <html lang="en" className="h-full">
+          <body className={clsx('h-full', inter.className)}>
+            <AppLayout sidebar={userId ? <AppSidebar /> : null}>
+              {children}
+            </AppLayout>
+          </body>
+        </html>
+      </ClerkProvider>
+    )
+  }
+
   return (
-    <ClerkProvider>
-      <html lang="en" className="h-full">
-        <body className={clsx('h-full', inter.className)}>
-          <AppLayout sidebar={userId ? <AppSidebar /> : null}>
-            {children}
-          </AppLayout>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className="h-full">
+      <body className="h-full">
+        <AppLayout sidebar={<AppSidebar />}>{children}</AppLayout>
+      </body>
+    </html>
   )
 }

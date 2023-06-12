@@ -1,5 +1,6 @@
-import { currentUser, UserButton } from '@clerk/nextjs'
+import { UserButton } from '@clerk/nextjs'
 
+import { currentUser } from '@/lib/auth'
 import { SidebarNav } from '@/components/ui/sidebar-nav'
 import LoginLink from '@/components/login-link'
 
