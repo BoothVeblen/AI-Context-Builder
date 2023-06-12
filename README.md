@@ -15,13 +15,9 @@ or
 
 Run the app locally:
 
-```bash
-# install dependencies
-pnpm install
-
-# run dev server
-pnpm dev
-```
+1. [Install Docker](https://docs.docker.com/get-docker/) on your machine.
+1. Run `docker compose up`
+1. Visit `http://localhost:3000`
 
 ## 🧑‍💻 Contributing
 

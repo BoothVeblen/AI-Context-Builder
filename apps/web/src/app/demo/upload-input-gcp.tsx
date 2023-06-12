@@ -5,11 +5,11 @@ import axios from 'axios'
 
 import { isImage } from '@/lib/utils'
 
-export default function UploadInput() {
+export default function UploadInputGCP() {
   const [progress, setProgress] = useState(0)
   const [fileUrl, setFileUrl] = useState('')
 
-  const uploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
     try {
       const file = e.currentTarget.files?.[0]
       if (!file) return
@@ -56,7 +56,7 @@ export default function UploadInput() {
   return (
     <div className="flex flex-col space-y-2">
       <label htmlFor="upload-input-gcp">Upload to Google Cloud</label>
-      <input id="upload-input-gcp" onChange={uploadPhoto} type="file" />
+      <input id="upload-input-gcp" onChange={handleChange} type="file" />
       {progress > 0 && <progress value={progress} max="100" />}
       {isImage(fileUrl) ? (
         // eslint-disable-next-line @next/next/no-img-element

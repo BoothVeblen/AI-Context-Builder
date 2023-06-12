@@ -5,3 +5,4 @@ dist/**
 .next/**
 
 service-account-file.json
+apps/upload-api/uploads/**
