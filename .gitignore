@@ -3,3 +3,5 @@ node_modules
 build/**
 dist/**
 .next/**
+
+service-account-file.json
