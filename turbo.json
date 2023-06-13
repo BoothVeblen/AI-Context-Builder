@@ -8,7 +8,7 @@
     "CI",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
-    "NEXT_PUBLIC_BUCKET_NAME"
+    "GCP_STORAGE_BUCKET_NAME"
   ],
   "pipeline": {
     "build": {
@@ -25,6 +25,10 @@
       "outputs": []
     },
     "lint": {},
+    "lint:fix": {
+      "cache": false,
+      "outputs": []
+    },
     "test": {},
     "test:e2e": {}
   }

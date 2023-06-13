@@ -3,11 +3,15 @@ import { Storage } from '@google-cloud/storage'
 import { nanoid } from 'nanoid'
 
 const UPLOAD_FOLDER = 'public-tmp'
-const BUCKET_NAME = process.env.NEXT_PUBLIC_BUCKET_NAME
+const BUCKET_NAME = process.env.GCP_STORAGE_BUCKET_NAME
 
 export async function GET(request: Request) {
   try {
-    if (!BUCKET_NAME) return NextResponse.json({ success: false })
+    if (!BUCKET_NAME)
+      return NextResponse.json({
+        success: false,
+        error: 'env GCP_STORAGE_BUCKET_NAME is not found',
+      })
 
     const { searchParams } = new URL(request.url)
     const id = nanoid()
