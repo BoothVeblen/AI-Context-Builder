@@ -26,6 +26,7 @@ RUN pnpm install --frozen-lockfile
 # Build the project
 ENV IS_DOCKER true
 COPY --from=builder /app/out/full/ .
+COPY tailwind.config.cjs tailwind.config.cjs
 COPY turbo.json turbo.json
 RUN pnpm run build --filter=web
 
