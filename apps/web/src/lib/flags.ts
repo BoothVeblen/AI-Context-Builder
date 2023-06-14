@@ -5,4 +5,5 @@ export const flags = {
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     process.env.CLERK_SECRET_KEY,
   ].every((env) => env !== undefined),
+  isNeon: process.env.DATABASE_URL?.includes('neon.tech') || false,
 }

@@ -8,7 +8,8 @@
     "CI",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
-    "GCP_STORAGE_BUCKET_NAME"
+    "GCP_STORAGE_BUCKET_NAME",
+    "DATABASE_URL"
   ],
   "pipeline": {
     "build": {
