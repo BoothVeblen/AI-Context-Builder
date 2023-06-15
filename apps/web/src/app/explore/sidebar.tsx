@@ -1,36 +1,37 @@
-import { SidebarNav } from '@/components/ui/sidebar-nav'
 import AuthButton from '@/components/auth-button'
 
-const sidebarNavItems = [
+import FeaturedList from './featured-list'
+
+const FEATURED_LIST_DATA = [
   {
+    id: 'all',
     title: 'All Categories',
-    href: '/',
   },
   {
+    id: 'hr',
     title: 'Human Resources',
-    href: '/#',
   },
   {
+    id: 'tr',
     title: 'Translation',
-    href: '/#',
   },
   {
+    id: 'kb',
     title: 'Knowledge Base',
-    href: '/#',
   },
   {
+    id: 'st',
     title: 'Self Training',
-    href: '/#',
   },
 ]
 
 export default async function ExploreSidebar() {
   return (
     <>
-      <h1 className="px-6 py-4 text-2xl font-semibold">Explore</h1>
+      <h1 className="px-4 py-2 text-lg font-semibold">Explore</h1>
       <div className="m-full h-px bg-slate-100" />
       <div className="flex-1 overflow-y-auto px-1 py-3">
-        <SidebarNav items={sidebarNavItems} />
+        <FeaturedList defaultValue={FEATURED_LIST_DATA} />
       </div>
       <AuthButton />
     </>
