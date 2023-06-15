@@ -1,17 +1,17 @@
 import AuthButton from '@/components/auth-button'
-import ChatList from '@/components/chat-list'
+import SessionList from '@/components/session-list'
 
 interface IProps {
-  botId: string
+  appId: string
 }
 
-export default async function BotSidebar({ botId }: IProps) {
+export default async function AppSidebar({ appId }: IProps) {
   return (
     <>
-      <h1 className="p-4 text-2xl font-semibold">Bot: {botId}</h1>
+      <h1 className="p-4 text-2xl font-semibold">App: {appId}</h1>
       <div className="m-full h-px bg-slate-100" />
       <div className="flex-1 overflow-y-auto p-4">
-        <ChatList botId={botId} />
+        <SessionList appId={appId} />
       </div>
       <AuthButton />
     </>
