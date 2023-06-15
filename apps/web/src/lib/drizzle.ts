@@ -37,7 +37,7 @@ const pool = flags.isNeon
   : new Pool({
       connectionString:
         process.env.DATABASE_URL ||
-        'postgres://postgres:postgres@host.docker.internal:5432/postgres',
+        'postgres://postgres:postgres@db:5432/postgres',
     })
 
 export const db = flags.isNeon ? drizzleServerless(pool) : drizzle(pool)
