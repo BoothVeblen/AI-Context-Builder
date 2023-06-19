@@ -15,7 +15,7 @@ export default function AppSidebar() {
         </Link>
       </div>
       <div className="m-auto mt-6 h-px w-14 bg-slate-200" />
-      <nav className="overflow-y-auto py-6">
+      <nav className="no-scrollbar overflow-y-auto py-6">
         <ul role="list" className="flex flex-col items-center space-y-4">
           <li>
             <Link href="/app/lzl">
