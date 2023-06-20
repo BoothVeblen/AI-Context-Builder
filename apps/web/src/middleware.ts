@@ -5,7 +5,8 @@ import { flags } from './lib/flags'
 
 export default authMiddleware({
   debug: flags.isDev,
-  publicRoutes: flags.enabledAuth ? ['/', '/explore'] : [],
+  publicRoutes: flags.enabledAuth ? undefined : [], // protect all routes with auth if enabledAuth is true
+  // publicRoutes: flags.enabledAuth ? ['/', '/explore'] : [], // old logic, just for reference
   beforeAuth: () => {
     if (flags.enabledAuth) return NextResponse.next()
     return false
