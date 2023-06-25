@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import axios from 'axios'
-import { nanoid } from 'nanoid'
 
-import { isImage } from '@/lib/utils'
+import { isImage, nanoid } from '@/lib/utils'
 
 const UPLOAD_API_URL = 'http://localhost:3010/upload'
 const UPLOAD_FOLDER_URL = 'http://localhost:3010/uploads'

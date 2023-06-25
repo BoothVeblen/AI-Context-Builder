@@ -1,5 +1,6 @@
 import { ClassValue, clsx } from 'clsx'
 import ms from 'ms'
+import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
@@ -16,3 +17,8 @@ export const timeAgo = (timestamp: Date, timeOnly?: boolean): string => {
     timeOnly ? '' : ' ago'
   }`
 }
+
+export const nanoid = customAlphabet(
+  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+  7
+) // 7-character random string

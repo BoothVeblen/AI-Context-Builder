@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Storage } from '@google-cloud/storage'
-import { nanoid } from 'nanoid'
+
+import { nanoid } from '@/lib/utils'
 
 const UPLOAD_FOLDER = 'public-tmp'
 const BUCKET_NAME = process.env.GCP_STORAGE_BUCKET_NAME

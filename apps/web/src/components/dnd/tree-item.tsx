@@ -98,7 +98,14 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
           ) : null} */}
           {/* {children ? children : null} */}
           {typeof children === 'function'
-            ? children({ id: itemId, handleProps, onRemove, clone, childCount })
+            ? children({
+                id: itemId,
+                handleProps,
+                onRemove,
+                clone,
+                ghost,
+                childCount,
+              })
             : children}
           {/* {!clone && onRemove && <CloseIcon onClick={onRemove} sx={{ cursor: 'pointer' }} />} */}
           {/* {isHovered && !clone && actions && <Actions actions={actions} />} */}
