@@ -27,7 +27,7 @@ export default function RootLayout({
     return (
       <ClerkProvider>
         <html lang="en" className="h-full">
-          <body className={clsx('h-full', inter.className)}>
+          <body className={clsx('h-full')}>
             <AppLayout sidebar={userId ? <AppSidebar /> : null}>
               {children}
             </AppLayout>

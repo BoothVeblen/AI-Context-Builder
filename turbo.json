@@ -10,7 +10,9 @@
     "CLERK_SECRET_KEY",
     "GCP_STORAGE_BUCKET_NAME",
     "DATABASE_URL",
-    "IS_DOCKER"
+    "IS_DOCKER",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_PATH"
   ],
   "pipeline": {
     "build": {

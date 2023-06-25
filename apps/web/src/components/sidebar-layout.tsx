@@ -9,7 +9,7 @@ export default function SidebarLayout({ sidebar, children }: IProps) {
       <aside className="flex w-60 flex-col border-r border-slate-100">
         {sidebar}
       </aside>
-      <main className="flex-1 overflow-y-auto px-8 py-6">{children}</main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   )
 }

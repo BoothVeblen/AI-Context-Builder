@@ -59,10 +59,16 @@ export const PreviewPdf = (props: PreviewProps) => {
   )
 }
 
-export const PdfImage = () => (
+export const PdfImage = ({
+  width,
+  height,
+}: {
+  width?: string
+  height?: string
+}) => (
   <svg
-    width="25"
-    height="32"
+    width={width || '25'}
+    height={height || '32'}
     viewBox="0 0 25 32"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
