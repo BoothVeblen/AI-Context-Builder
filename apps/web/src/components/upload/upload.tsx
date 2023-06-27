@@ -1,15 +1,24 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
+import axios from 'axios'
 import { Upload as UploadIcon } from 'lucide-react'
 import RcUpload from 'rc-upload'
 import type { UploadProps as RcUploadProps } from 'rc-upload'
 import useMergedState from 'rc-util/lib/hooks/useMergedState'
 import { flushSync } from 'react-dom'
 
+import { cn } from '@/lib/utils'
+
 import { Button } from '../ui/button'
 import { Toggle } from '../ui/toggle'
 import { ImageFile, PDFFile } from './component'
 import { RcFile, UploadChangeParam, UploadFile, UploadProps } from './type'
-import { file2Obj, getFileItem, removeFileItem, updateFileList } from './utils'
+import {
+  file2Obj,
+  getFileItem,
+  removeFileItem,
+  updateFileList,
+  uploadFile,
+} from './utils'
 
 export const LIST_IGNORE = `__LIST_IGNORE_${Date.now()}__`
 
@@ -31,7 +40,11 @@ const Upload = (props: UploadProps) => {
     className,
     disabled: mergedDisabled,
     customRequest,
+    handleFiles,
+    // controller,
   } = props
+  const upload = React.useRef<RcUpload>(null)
+
   const [mergedFileList, setMergedFileList] = useMergedState(
     defaultFileList || [],
     {
@@ -39,9 +52,13 @@ const Upload = (props: UploadProps) => {
       postState: (list: UploadFile[]) => list ?? [],
     }
   )
-
   const [_, setDragState] = React.useState<string>('drop')
-  const upload = React.useRef<RcUpload>(null)
+  const [cancelCount, setCancelCount] = React.useState(0)
+
+  // cancel axios request when uploading
+  const controller = useMemo(() => new AbortController(), [cancelCount])
+  const CancelToken = axios.CancelToken
+  const source = CancelToken.source()
 
   React.useMemo(() => {
     const timestamp = Date.now()
@@ -84,10 +101,15 @@ const Upload = (props: UploadProps) => {
       }
 
       flushSync(() => {
-        onChange?.(changeInfo)
+        if (onChange) {
+          onChange?.(changeInfo)
+        } else {
+          // google api for upload
+          uploadFile({ source, controller, ...changeInfo, handleFiles })
+        }
       })
     },
-    [maxCount, onChange, setMergedFileList]
+    [controller, handleFiles, maxCount, onChange, setMergedFileList, source]
   )
 
   const mergedBeforeUpload = async (file: RcFile, fileListArgs: RcFile[]) => {
@@ -241,6 +263,9 @@ const Upload = (props: UploadProps) => {
         if (ret === false) {
           return
         }
+        source.cancel()
+        controller.abort()
+        setCancelCount((c) => c + 1)
 
         const removedFileList = removeFileItem(file, mergedFileList)
         if (removedFileList?.length) {
@@ -264,7 +289,14 @@ const Upload = (props: UploadProps) => {
         }
       })
     },
-    [mergedFileList, onInternalChange, onRemove, setMergedFileList]
+    [
+      controller,
+      mergedFileList,
+      onInternalChange,
+      onRemove,
+      setMergedFileList,
+      source,
+    ]
   )
 
   const onFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -365,8 +397,8 @@ const Upload = (props: UploadProps) => {
       <ImageFile
         key={file?.url || file?.uid}
         file={file}
-        onRemove={() => handleRemove(file)}
-        className={`h-16 w-16 ${className}`}
+        onRemove={handleRemove}
+        className={cn('h-16 w-16', className)}
         showUploadList={showUploadList}
       />
     ) : (
@@ -385,35 +417,41 @@ const Upload = (props: UploadProps) => {
     handleRemove,
   ])
   return (
-    <div className={`p-8 ${className}`}>
-      <div className={` flex flex-col gap-4`} onClick={onFileDrop}>
+    <div className={` ${className}`}>
+      <div
+        className={cn(
+          'flex h-full w-full cursor-pointer flex-col  items-center justify-center',
+          listType === 'image' ? 'gap-0' : 'gap-2'
+        )}
+        onClick={onFileDrop}
+      >
         {showUploadIcon}
         <div
-          className={`
-          flex gap-2 ${
+          className={cn(
+            'flex gap-2',
             listType === 'images-list'
               ? ' w-full flex-row flex-wrap'
               : 'flex-col'
-          }`}
+          )}
         >
           {listType !== 'image' &&
             mergedFileList?.map((file: UploadFile) => {
               return listType === 'pdf' ? (
                 <PDFFile
+                  {...props}
                   file={file}
                   onDownload={handleDownload}
                   onRemove={handleRemove}
                   showUploadList={showUploadList}
-                  {...props}
                   key={file?.uid}
                 />
               ) : (
                 <ImageFile
+                  {...props}
                   file={file}
                   onRemove={handleRemove}
                   showUploadList={showUploadList}
                   key={file?.uid}
-                  {...props}
                 />
               )
             })}
