@@ -1,6 +1,5 @@
 import { ReactNode, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import axios from 'axios'
 import { Camera } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -24,9 +23,8 @@ import {
 } from './ui/form'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
-import { UploadChangeParam, UploadFile } from './upload/type'
+import { UploadFile } from './upload/type'
 import Upload from './upload/upload'
-import { uploadFile } from './upload/utils'
 
 interface IProps {
   dialogTrigger?: ReactNode
@@ -143,8 +141,10 @@ const CreateAppDialog = (props: IProps) => {
                       <Upload
                         onRemove={() => {
                           setImage([])
+                          setDisabled(false)
                         }}
                         listType="image"
+                        accept=".png, .jpeg,.webp,.jpg"
                         fileList={image}
                         handleFiles={handleFiles}
                         customRequest={() => {}}

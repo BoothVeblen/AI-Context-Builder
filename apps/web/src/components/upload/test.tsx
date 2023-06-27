@@ -12,7 +12,6 @@ const TestUpload = (props: UploadProps) => {
     const data = files?.filter((item) => item?.uid !== file?.uid)
     setFiles(data)
   }
-  console.log(files, '-----------files')
   return (
     <Upload
       fileList={files}

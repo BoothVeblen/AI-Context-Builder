@@ -9,7 +9,6 @@ interface IProps {
 
 export default function AppLayout({ children, params }: IProps) {
   const { app_id } = params
-
   return (
     <SidebarLayout sidebar={<AppSidebar appId={app_id} />}>
       {children}
