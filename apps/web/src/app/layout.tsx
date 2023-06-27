@@ -6,6 +6,7 @@ import clsx from 'clsx'
 
 import { auth } from '@/lib/auth'
 import { flags } from '@/lib/flags'
+import { Toaster } from '@/components/ui/toaster'
 import AppLayout from '@/components/app-layout'
 import AppSidebar from '@/components/app-sidebar'
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <AppLayout sidebar={userId ? <AppSidebar /> : null}>
               {children}
             </AppLayout>
+            <Toaster />
           </body>
         </html>
       </ClerkProvider>
@@ -41,6 +43,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="h-full">
         <AppLayout sidebar={<AppSidebar />}>{children}</AppLayout>
+        <Toaster />
       </body>
     </html>
   )

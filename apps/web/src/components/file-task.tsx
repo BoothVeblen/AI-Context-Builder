@@ -61,7 +61,7 @@ const AddorEditTask = (props: IProps) => {
       <SheetTrigger asChild>
         <Button variant="outline">Edit Task</Button>
       </SheetTrigger>
-      <SheetContent position="right" size="sm">
+      <SheetContent className="w-1/4">
         <SheetHeader>
           <SheetTitle>
             <div className="mb-8 flex items-center justify-between pr-4">

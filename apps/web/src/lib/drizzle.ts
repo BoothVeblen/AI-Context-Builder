@@ -40,4 +40,6 @@ const pool = flags.isNeon
         'postgres://postgres:postgres@db:5432/postgres',
     })
 
-export const db = flags.isNeon ? drizzleServerless(pool) : drizzle(pool)
+export const db = flags.isNeon
+  ? drizzleServerless(pool as PoolServerless)
+  : drizzle(pool)

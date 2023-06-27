@@ -10,14 +10,14 @@ const textVariant = cva('inline-block', {
       h2: 'text-5xl font-extrabold text-gray-800',
       h3: 'text-3xl font-bold text-gray-800',
       h4: 'text-base font-bold text-gray-800',
-      h5: 'text-xl font-bold text-gray-800', //20px
+      h5: 'text-xl font-bold text-gray-800', // 20px
       h6: 'text-base font-bold text-gray-800',
-      subtitle1: 'text-base font-semibold text-black', //16, 600
+      subtitle1: 'text-base font-semibold text-black', // 16px, 600
       subtitle2: 'text-sm font-semibold text-black',
-      body1: 'text-base font-medium	 text-black', //16px, 500
-      body2: 'text-sm font-medium	 text-black', //14px
-      default: 'text-sm font-normal text-black leading-5', //14px,400
-      caption: 'text-xs font-medium	text-gray-500 leading-5	', //12px,500
+      body1: 'text-base font-medium text-black', // 16px, 500
+      body2: 'text-sm font-medium text-black', // 14px
+      default: 'text-sm font-normal leading-5 text-black', // 14px, 400
+      caption: 'text-xs font-medium leading-5 text-gray-500', // 12px, 500
     },
   },
   defaultVariants: {
