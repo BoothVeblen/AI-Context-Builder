@@ -18,7 +18,7 @@ export default async function AuthButton() {
   const email = emailAddresses?.[0].emailAddress
 
   return (
-    <div className="flex h-16 items-center bg-slate-100">
+    <div className="flex h-16 items-center">
       {userId ? (
         <div className="flex items-center space-x-2 px-4">
           <UserButton />

@@ -6,6 +6,12 @@ module.exports = {
     'src/components/**/*.{js,ts,jsx,tsx,mdx}',
     'src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    {
+      pattern:
+        /bg-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-600/,
+    },
+  ],
   theme: {
     container: {
       center: true,

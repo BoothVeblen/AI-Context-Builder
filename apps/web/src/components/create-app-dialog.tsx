@@ -1,9 +1,13 @@
 import { ReactNode, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Camera } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useSWRConfig } from 'swr'
+import useSWRMutation from 'swr/mutation'
 import { z } from 'zod'
 
+import { fetcher } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -33,32 +37,45 @@ interface IProps {
 
 interface FormValuesProps {
   name: string
-  desc?: string
-  image?: string
+  description?: string
+  icon?: string
 }
 const formSchema = z.object({
   name: z
     .string()
-    .min(2, {
+    .min(1, {
       message: 'App name is required.',
     })
     .max(50, { message: 'App name must be less than 50 characters.' }),
-  desc: z
+  description: z
     .string()
     .max(120, {
       message: 'Short description must be less than 120 characters.',
     })
     .min(0),
-  image: z.string().min(0),
+  icon: z.string().min(0),
 })
 
 const defaultValues = {
   name: '',
-  desc: '',
-  image: '',
+  description: '',
+  icon: '',
 }
+
+function addApp(
+  url: string,
+  { arg }: { arg: { name: string; description?: string; icon?: string } }
+) {
+  return fetcher(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+  })
+}
+
 const CreateAppDialog = (props: IProps) => {
   const { dialogTrigger } = props
+  const router = useRouter()
+  const { mutate } = useSWRConfig()
   const [open, setOpen] = useState<boolean>(false)
   const [disabled, setDisabled] = useState<boolean>(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,9 +86,18 @@ const CreateAppDialog = (props: IProps) => {
 
   const [image, setImage] = useState<UploadFile[]>([])
 
-  const onSubmit = (data: FormValuesProps) => {
-    console.log(data, '----------data')
-    setOpen(false)
+  const { trigger, isMutating } = useSWRMutation('/api/me/apps', addApp)
+
+  const onSubmit = async (data: FormValuesProps) => {
+    try {
+      const json = await trigger(data)
+      console.log('CreateAppDialog onSubmit json:', json)
+      setOpen(false)
+      mutate('/api/me/workspace')
+      router.push(`/app/${json.appId}/session/${json.sessionId}`)
+    } catch (error) {
+      console.log('CreateAppDialog onSubmit error:', error)
+    }
   }
   const onCancel = (open: boolean) => {
     setOpen(open)
@@ -86,7 +112,7 @@ const CreateAppDialog = (props: IProps) => {
       setDisabled(false)
     }
     setImage(file)
-    setValue('image', file[0]?.url || '')
+    setValue('icon', file[0]?.url || '')
   }
 
   return (
@@ -115,13 +141,14 @@ const CreateAppDialog = (props: IProps) => {
             />
             <FormField
               control={form.control}
-              name="desc"
+              name="description"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Short Description</FormLabel>
                   <FormControl>
                     <Textarea
                       minRows={3}
+                      maxRows={8}
                       placeholder="Type your description here"
                       {...field}
                     />
@@ -132,8 +159,8 @@ const CreateAppDialog = (props: IProps) => {
             />
             <FormField
               control={form.control}
-              name="image"
-              render={({ field }) => {
+              name="icon"
+              render={() => {
                 return (
                   <FormItem>
                     <FormLabel>Image</FormLabel>
@@ -164,8 +191,8 @@ const CreateAppDialog = (props: IProps) => {
               <Button variant="outline" onClick={() => onCancel(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={disabled}>
-                Create
+              <Button type="submit" disabled={disabled || isMutating}>
+                {isMutating ? 'Creating...' : 'Create'}
               </Button>
             </div>
           </form>

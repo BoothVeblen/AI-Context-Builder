@@ -16,11 +16,15 @@ export const IconBox = (props: IconBoxProps) => (
   </Button>
 )
 
-const ChatHeader = () => {
+interface IProps {
+  name: string
+}
+
+const ChatHeader = ({ name }: IProps) => {
   return (
     <div className=" w-full border-b border-slate-100 ">
-      <div className="flex w-full items-center justify-between px-8 py-3">
-        <div className="flex">chat 1</div>
+      <div className="flex w-full items-center justify-between px-6 py-3">
+        <h2 className="font-medium">{name}</h2>
         <div className="flex"></div>
       </div>
     </div>

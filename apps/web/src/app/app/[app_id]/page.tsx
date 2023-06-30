@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation'
 
+import { getLatestSessionId } from '@/db/sessions/actions'
+
 interface IProps {
   params: { app_id: string }
 }
 
-export default function AppPage({ params }: IProps) {
+export default async function AppPage({ params }: IProps) {
   const { app_id } = params
-  // TODO: use app_id to fetch the latest session id
-  // if no session id found, create one
-
-  redirect(`/app/${app_id}/session/s1`)
+  const session_id = await getLatestSessionId(app_id)
+  redirect(`/app/${app_id}/session/${session_id}`)
 }

@@ -12,7 +12,11 @@
     "DATABASE_URL",
     "IS_DOCKER",
     "OPENAI_API_KEY",
-    "OPENAI_BASE_PATH"
+    "OPENAI_BASE_PATH",
+    "VERCEL_URL",
+    "VERCEL_BRANCH_URL",
+    "VERCEL_ENV",
+    "GOOGLE_APPLICATION_CREDENTIALS"
   ],
   "pipeline": {
     "build": {

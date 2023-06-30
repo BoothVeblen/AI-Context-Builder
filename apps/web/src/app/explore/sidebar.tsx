@@ -33,6 +33,7 @@ export default async function ExploreSidebar() {
       <div className="flex-1 overflow-y-auto px-1 py-3">
         <FeaturedList defaultValue={FEATURED_LIST_DATA} />
       </div>
+      <div className="m-full h-px bg-slate-100" />
       <AuthButton />
     </>
   )
