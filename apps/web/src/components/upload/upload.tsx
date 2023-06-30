@@ -41,7 +41,7 @@ const Upload = (props: UploadProps) => {
     disabled: mergedDisabled,
     customRequest,
     handleFiles,
-    // controller,
+    showFileList = true,
   } = props
   const upload = React.useRef<RcUpload>(null)
 
@@ -393,7 +393,7 @@ const Upload = (props: UploadProps) => {
   const showUploadIcon = React.useMemo(() => {
     const file = mergedFileList?.[0]
     const showImage = listType === 'image' && mergedFileList?.length !== 0
-    return showImage ? (
+    return showImage && showFileList ? (
       <ImageFile
         key={file?.url || file?.uid}
         file={file}
@@ -415,6 +415,7 @@ const Upload = (props: UploadProps) => {
     props?.children,
     defaultButton,
     handleRemove,
+    showFileList,
   ])
   return (
     <div className={` ${className}`}>
@@ -426,36 +427,38 @@ const Upload = (props: UploadProps) => {
         onClick={onFileDrop}
       >
         {showUploadIcon}
-        <div
-          className={cn(
-            'flex gap-2',
-            listType === 'images-list'
-              ? ' w-full flex-row flex-wrap'
-              : 'flex-col'
-          )}
-        >
-          {listType !== 'image' &&
-            mergedFileList?.map((file: UploadFile) => {
-              return listType === 'pdf' ? (
-                <PDFFile
-                  {...props}
-                  file={file}
-                  onDownload={handleDownload}
-                  onRemove={handleRemove}
-                  showUploadList={showUploadList}
-                  key={file?.uid}
-                />
-              ) : (
-                <ImageFile
-                  {...props}
-                  file={file}
-                  onRemove={handleRemove}
-                  showUploadList={showUploadList}
-                  key={file?.uid}
-                />
-              )
-            })}
-        </div>
+        {showFileList && (
+          <div
+            className={cn(
+              'flex gap-2',
+              listType === 'images-list'
+                ? ' w-full flex-row flex-wrap'
+                : 'flex-col'
+            )}
+          >
+            {listType !== 'image' &&
+              mergedFileList?.map((file: UploadFile) => {
+                return listType === 'pdf' ? (
+                  <PDFFile
+                    {...props}
+                    file={file}
+                    onDownload={handleDownload}
+                    onRemove={handleRemove}
+                    showUploadList={showUploadList}
+                    key={file?.uid}
+                  />
+                ) : (
+                  <ImageFile
+                    {...props}
+                    file={file}
+                    onRemove={handleRemove}
+                    showUploadList={showUploadList}
+                    key={file?.uid}
+                  />
+                )
+              })}
+          </div>
+        )}
       </div>
     </div>
   )

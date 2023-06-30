@@ -77,6 +77,7 @@ export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
   controller?: AbortController
   handleFiles?: (files: UploadFile<any>[]) => void
   defaultFileList?: Array<UploadFile<T>>
+  showFileList?: boolean
   fileList?: Array<UploadFile<T>>
   type?: 'drag' | 'select'
   listType?: 'images-list' | 'pdf' | 'image'
