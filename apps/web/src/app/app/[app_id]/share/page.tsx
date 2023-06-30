@@ -14,9 +14,10 @@ const ShareApp = () => {
   const { app_id } = useParams()
   const [copyBtnText, setCopyBtnText] = useState('Copy')
   const { copy } = useCopyToClipboard()
+
   const protocol = document.location.protocol
   const host = window.location.host
-  const [link, setLink] = useState(`${protocol}://${host}/app/${app_id}`)
+  const link = `${protocol}//${host}/app/${app_id}`
 
   const handleClick = async () => {
     const hasCopied = await copy(link)

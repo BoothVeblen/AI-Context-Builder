@@ -7,5 +7,5 @@ interface IProps {
 export default function SettingsPage({ params }: IProps) {
   const { app_id } = params
 
-  redirect(`/app/${app_id}/settings/workflow`)
+  redirect(`/app/${app_id}/settings/basics`)
 }

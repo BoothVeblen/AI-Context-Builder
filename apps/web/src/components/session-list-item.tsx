@@ -17,9 +17,14 @@ function removeSession(url: string) {
 interface ISessionItem {
   id: string
   name: string
+  isOnlyOneSession: boolean
 }
 
-export default function SessionListItem({ id, name }: ISessionItem) {
+export default function SessionListItem({
+  id,
+  name,
+  isOnlyOneSession,
+}: ISessionItem) {
   const router = useRouter()
   const params = useParams()
   const appId = params.app_id
@@ -56,7 +61,7 @@ export default function SessionListItem({ id, name }: ISessionItem) {
       >
         <MessageCircleIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="truncate">{name}</span>
-        {isSelected && (
+        {!isOnlyOneSession && isSelected && (
           <button
             className="absolute right-2 rounded-full bg-slate-100 p-1 text-center hover:bg-white"
             aria-hidden="true"

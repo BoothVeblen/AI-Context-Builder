@@ -43,8 +43,9 @@ interface FormValuesProps {
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, {
-      message: 'App name is required.',
+    .nonempty('App name is required.')
+    .min(2, {
+      message: 'App name must be at least 2 characters.',
     })
     .max(50, { message: 'App name must be less than 50 characters.' }),
   description: z
