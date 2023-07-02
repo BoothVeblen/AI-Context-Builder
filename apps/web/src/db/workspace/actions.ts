@@ -21,6 +21,22 @@ export async function addToWorkspace(appId: string) {
   const { userId } = auth()
   if (!userId) return Promise.resolve(null)
 
+  const foundAppAtWorkspace = await db
+    .select()
+    .from(WorkspaceTable)
+    .where(
+      and(
+        eq(WorkspaceTable.user_id, userId),
+        eq(WorkspaceTable.app_id, appId),
+        eq(WorkspaceTable.archived, false)
+      )
+    )
+    .limit(1)
+
+  if (foundAppAtWorkspace.length > 0) {
+    return Promise.resolve({ appId, foundApp: true })
+  }
+
   const val = { short_id: nanoid(), app_id: appId, user_id: userId }
   await db.insert(WorkspaceTable).values(val).returning()
 

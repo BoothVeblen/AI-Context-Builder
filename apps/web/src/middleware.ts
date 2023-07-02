@@ -4,7 +4,7 @@ import { authMiddleware } from '@clerk/nextjs'
 import { flags } from './lib/flags'
 
 export default authMiddleware({
-  debug: flags.isDev,
+  // debug: flags.isDev,
   publicRoutes: flags.enabledAuth ? undefined : [], // protect all routes with auth if enabledAuth is true
   // publicRoutes: flags.enabledAuth ? ['/', '/explore'] : [], // old logic, just for reference
   beforeAuth: () => {

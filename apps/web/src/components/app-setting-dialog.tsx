@@ -3,14 +3,19 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Settings, Share, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  LogOutIcon,
+  Settings,
+  Share,
+} from 'lucide-react'
 import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { cn, fetcher } from '@/lib/utils'
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -34,18 +39,24 @@ function removeApp(url: string) {
 interface IProps {
   appId: string
   name: string
+  isOwner: boolean
 }
 
-const AppSettingDialog = ({ appId, name }: IProps) => {
+const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
   const [open, setOpen] = useState<boolean>(false)
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false)
+
   const menus = [
-    {
-      id: 'settings',
-      name: 'App Setting',
-      icon: <Settings size={16} />,
-      link: `/app/${appId}/settings`,
-    },
+    ...(isOwner
+      ? [
+          {
+            id: 'settings',
+            name: 'App Setting',
+            icon: <Settings size={16} />,
+            link: `/app/${appId}/settings`,
+          },
+        ]
+      : []),
     {
       id: 'share',
       name: 'Share',
@@ -54,8 +65,8 @@ const AppSettingDialog = ({ appId, name }: IProps) => {
     },
     {
       id: 'delete',
-      name: 'Delete App',
-      icon: <Trash2 size={16} />,
+      name: 'Leave App',
+      icon: <LogOutIcon size={16} />,
       link: '',
       danger: true,
     },
@@ -64,14 +75,14 @@ const AppSettingDialog = ({ appId, name }: IProps) => {
   const router = useRouter()
   const { mutate } = useSWRConfig()
   const { trigger, isMutating } = useSWRMutation(
-    `/api/apps/${appId}`,
+    `/api/me/workspace/app/${appId}`,
     removeApp
   )
 
   async function handleRemove() {
     try {
       const json = await trigger()
-      console.log('json:', json)
+      console.log('leave app json:', json)
       mutate('/api/me/workspace')
       router.push('/explore')
     } catch (error) {
@@ -123,10 +134,9 @@ const AppSettingDialog = ({ appId, name }: IProps) => {
       <AlertDialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete &quot;{name}&quot; App?</AlertDialogTitle>
+            <AlertDialogTitle>Leave &quot;{name}&quot; App?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{name}&quot; App? This
-              action cannot be undone.
+              Are you sure you want to leave &quot;{name}&quot; App?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -136,7 +146,7 @@ const AppSettingDialog = ({ appId, name }: IProps) => {
               onClick={handleRemove}
               disabled={isMutating}
             >
-              {isMutating ? 'Deleting...' : 'Delete App'}
+              {isMutating ? 'Leaving...' : 'Leave App'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
