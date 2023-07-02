@@ -58,6 +58,7 @@
     "ms": "^3.0.0-canary.1",
     "nanoid": "^4.0.2",
     "next": "13.4.7",
+    "next-themes": "^0.2.1",
     "openai-edge": "^1.1.0",
     "pg": "^8.11.1",
     "postcss": "8.4.24",

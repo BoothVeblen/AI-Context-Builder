@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import AppLayout from '@/components/app-layout'
 import AppSidebar from '@/components/app-sidebar'
 import Provider from '@/components/provider'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata = {
   title: 'Context Builder',
@@ -22,12 +23,16 @@ export default async function RootLayout({
 
   return (
     <Provider>
-      <html lang="en" className="h-full">
+      <html lang="en" className="h-full" suppressHydrationWarning>
         <body className="h-full">
-          <AppLayout sidebar={userId ? <AppSidebar appList={appList} /> : null}>
-            {children}
-          </AppLayout>
-          <Toaster />
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <AppLayout
+              sidebar={userId ? <AppSidebar appList={appList} /> : null}
+            >
+              {children}
+            </AppLayout>
+            <Toaster />
+          </ThemeProvider>
         </body>
       </html>
     </Provider>
