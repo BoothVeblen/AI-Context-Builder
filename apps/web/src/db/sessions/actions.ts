@@ -79,7 +79,11 @@ export async function removeSession(appId: string, sessionId: string) {
     .select()
     .from(SessionsTable)
     .where(
-      and(eq(SessionsTable.created_by, userId), eq(SessionsTable.app_id, appId))
+      and(
+        eq(SessionsTable.created_by, userId),
+        eq(SessionsTable.app_id, appId),
+        eq(SessionsTable.archived, false)
+      )
     )
     .orderBy(desc(SessionsTable.created_at))
     .limit(1)
@@ -112,5 +116,6 @@ export async function getSession(sessionId: string) {
     .select()
     .from(SessionsTable)
     .where(eq(SessionsTable.short_id, sessionId))
+    .leftJoin(AppsTable, eq(SessionsTable.app_id, AppsTable.short_id))
   return Promise.resolve(items[0])
 }

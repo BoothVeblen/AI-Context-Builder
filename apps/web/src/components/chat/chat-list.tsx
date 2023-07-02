@@ -11,6 +11,9 @@ interface IProps {
   waiting: boolean
   scrollRef: Ref<HTMLDivElement>
   setAutoScroll: (s: boolean) => void
+  appId: string
+  appName: string
+  appIcon: string
 }
 
 const ChatList = ({
@@ -19,9 +22,10 @@ const ChatList = ({
   scrollRef,
   setAutoScroll,
   error,
+  appId,
+  appName,
+  appIcon,
 }: IProps) => {
-  const model_avatar = 'https://github.com/withcontext-ai.png'
-  const user_avatar = 'https://github.com/shadcn.png'
   return (
     <div
       className="flex flex-1 flex-col gap-12 overflow-auto px-6 pb-24 pt-6"
@@ -33,15 +37,21 @@ const ChatList = ({
           <ChatCard
             message={message}
             key={message?.id}
-            model_avatar={model_avatar}
-            user_avatar={user_avatar}
             error={error}
             isEnd={index === messages.length - 1}
+            appName={appName}
+            appIcon={appIcon}
+            appId={appId}
           />
         )
       })}
       {waiting && (
-        <ChatCard message={{ id: '', content: '', role: 'assistant' }} />
+        <ChatCard
+          message={{ id: '', content: '', role: 'assistant' }}
+          appId={appId}
+          appName={appName}
+          appIcon={appIcon}
+        />
       )}
     </div>
   )

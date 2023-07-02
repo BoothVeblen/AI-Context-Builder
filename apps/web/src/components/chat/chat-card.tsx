@@ -1,10 +1,11 @@
 'use client'
 
+import { useUser } from '@clerk/nextjs'
 import { Message } from 'ai'
 import { format, isToday, isYesterday } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
+import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Text from '../ui/text'
@@ -16,6 +17,9 @@ interface IProps {
   model_avatar?: string
   user_avatar?: string
   isEnd?: boolean
+  appId: string
+  appName: string
+  appIcon: string
 }
 
 const AlertErrorIcon = ({ className }: { className: string }) => (
@@ -69,19 +73,26 @@ const formatTime = (time: number) => {
 }
 
 const ChatCard = (props: IProps) => {
-  const { message, model_avatar, user_avatar, error = '', isEnd } = props
+  const { message, error = '', isEnd, appName, appIcon, appId } = props
   const isUser = message?.role === 'user'
   const showError = isEnd && error && !isUser
+
+  const { user } = useUser()
+
+  const color = getAvatarBgColor(appId || '')
+  const username = user?.primaryEmailAddress?.emailAddress
+  const icon = isUser ? user?.imageUrl : appIcon
+  const name = (isUser ? username : appName) || ''
+
   return (
     <div className="flex flex-col ">
       <div className="flex gap-2 ">
         <div className="relative h-14 w-14">
-          <Avatar className="relative h-12 w-12">
-            <AvatarImage
-              src={!isUser ? model_avatar : user_avatar}
-              alt="@shadcn"
-            />
-            <AvatarFallback>AI</AvatarFallback>
+          <Avatar className={cn('relative h-12 w-12', `bg-${color}-600`)}>
+            <AvatarImage src={icon} alt={name} />
+            <AvatarFallback className="bg-transparent text-white">
+              {getFirstLetter(name)}
+            </AvatarFallback>
           </Avatar>
           {showError && (
             <AlertErrorIcon className="absolute bottom-0 right-3" />
@@ -90,7 +101,7 @@ const ChatCard = (props: IProps) => {
 
         <div className={cn('flex flex-col')}>
           <div className="mb-5 flex items-center gap-1">
-            <Text variant="body2">{isUser ? 'Me' : 'AI Assistant'}</Text>
+            <Text variant="body2">{isUser ? 'Me' : appName}</Text>
             <Text variant="caption">
               {message?.createdAt && formatTime(Number(message?.createdAt))}
             </Text>

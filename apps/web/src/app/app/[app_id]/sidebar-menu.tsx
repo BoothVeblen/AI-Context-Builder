@@ -7,11 +7,11 @@ import { GitCommitIcon, ShareIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
-  {
-    id: 'workflow',
-    name: 'Workflow',
-    Icon: GitCommitIcon,
-  },
+  // {
+  //   id: 'workflow',
+  //   name: 'Workflow',
+  //   Icon: GitCommitIcon,
+  // },
   {
     id: 'share',
     name: 'Share',

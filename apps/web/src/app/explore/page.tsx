@@ -5,10 +5,7 @@ import ExploreSidebar from './sidebar'
 export default async function ExplorePage() {
   return (
     <SidebarLayout sidebar={<ExploreSidebar />}>
-      <div className="h-96">Main area</div>
-      <div className="h-96">Main area</div>
-      <div className="h-96">Main area</div>
-      <div className="h-96">Main area</div>
+      <div className="p-2">TODO</div>
     </SidebarLayout>
   )
 }
