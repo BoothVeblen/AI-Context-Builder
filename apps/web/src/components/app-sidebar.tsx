@@ -51,7 +51,7 @@ export default function AppSidebar({ appList }: IProps) {
                   pathname === '/explore' && 'rounded-2xl'
                 )}
               >
-                <AvatarImage src="https://github.com/withcontext-ai.png" />
+                <AvatarImage src="/logo.png" />
                 <AvatarFallback>CO</AvatarFallback>
               </Avatar>
             </Link>
@@ -85,7 +85,7 @@ export default function AppSidebar({ appList }: IProps) {
                         className={cn(
                           'h-12 w-12 rounded-3xl bg-white transition-all group-hover:rounded-2xl',
                           isSelected && 'rounded-2xl',
-                          `bg-${color}-600`
+                          !appItem.app_icon ? `bg-${color}-600` : ''
                         )}
                       >
                         {appItem.app_icon && (

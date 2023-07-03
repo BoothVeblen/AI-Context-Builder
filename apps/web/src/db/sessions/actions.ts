@@ -42,12 +42,19 @@ export async function addSession(appId: string) {
 }
 
 export async function getSessions(appId: string) {
+  const { userId } = auth()
+  if (!userId) return []
+
   return db
     .select()
     .from(SessionsTable)
     .orderBy(desc(SessionsTable.created_at))
     .where(
-      and(eq(SessionsTable.app_id, appId), eq(SessionsTable.archived, false))
+      and(
+        eq(SessionsTable.app_id, appId),
+        eq(SessionsTable.created_by, userId),
+        eq(SessionsTable.archived, false)
+      )
     )
 }
 

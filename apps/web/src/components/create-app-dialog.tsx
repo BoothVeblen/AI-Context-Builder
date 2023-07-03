@@ -50,8 +50,8 @@ const formSchema = z.object({
     .max(50, { message: 'App name must be less than 50 characters.' }),
   description: z
     .string()
-    .max(120, {
-      message: 'Short description must be less than 120 characters.',
+    .max(300, {
+      message: 'Short description must be less than 300 characters.',
     })
     .min(0),
   icon: z.string().min(0),
