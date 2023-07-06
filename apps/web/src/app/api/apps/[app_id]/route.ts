@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { removeApp } from '@/db/apps/actions'
+import { editApp, removeApp } from '@/db/apps/actions'
+import { NewApp } from '@/db/apps/schema'
 
 // Get an app
 export async function GET(
@@ -11,13 +12,14 @@ export async function GET(
   return NextResponse.json({ success: true, data: { app_id } })
 }
 
-// TODO: Update an app
+// Update an app
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { app_id: string } }
 ) {
   const { app_id } = params
-  const body = await req.json()
+  const body = (await req.json()) as Partial<NewApp>
+  await editApp(app_id, body)
   return NextResponse.json({ success: true, data: { app_id, body } })
 }
 

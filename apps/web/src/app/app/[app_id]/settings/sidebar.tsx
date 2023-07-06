@@ -2,13 +2,15 @@
 
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, TrashIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
+import DeleteAppButton from './delete-app-button'
+
 const commonStyle =
-  'flex cursor-pointer flex-col rounded-md p-3 hover:bg-slate-100'
+  'flex cursor-pointer flex-col rounded-md p-3 hover:bg-slate-200'
 
 export default function Sidebar() {
   const router = useRouter()
@@ -39,7 +41,7 @@ export default function Sidebar() {
         <Link
           className={cn(
             commonStyle,
-            url?.includes('basics') ? 'bg-slate-100' : ''
+            url?.includes('basics') ? 'bg-slate-200' : ''
           )}
           href={`/app/${appId}/settings/basics`}
         >
@@ -48,10 +50,10 @@ export default function Sidebar() {
             Some basic configurations of the App.
           </div>
         </Link>
-        {/* <Link
+        <Link
           className={cn(
             commonStyle,
-            url?.includes('workflow') ? 'bg-slate-100' : ''
+            url?.includes('workflow') ? 'bg-slate-200' : ''
           )}
           replace
           href={`/app/${appId}/settings/workflow`}
@@ -61,18 +63,12 @@ export default function Sidebar() {
             Workflow related configurations of the App.
           </div>
         </Link>
-        <Link
-          className={cn(
-            commonStyle,
-            url?.includes('context') ? 'bg-slate-100' : ''
-          )}
-          href={''}
-        >
-          <div className="text-sm font-medium">Context</div>
-          <div className="text-sm text-slate-500">
-            Import your own data for LLM context enhancement.
-          </div>
-        </Link> */}
+      </div>
+
+      <div className="my-2 h-px shrink-0 px-3" />
+
+      <div className="px-3">
+        <DeleteAppButton id="a1" name="App 1" />
       </div>
     </div>
   )

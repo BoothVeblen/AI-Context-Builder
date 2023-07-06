@@ -54,6 +54,16 @@ export async function getApp(appId: string) {
   return Promise.resolve(items[0])
 }
 
+export async function editApp(id: string, newValue: Partial<NewApp>) {
+  const { userId } = auth()
+  if (!userId) return Promise.resolve([])
+
+  return db
+    .update(AppsTable)
+    .set(newValue)
+    .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
+}
+
 export async function removeApp(id: string) {
   return db
     .update(AppsTable)

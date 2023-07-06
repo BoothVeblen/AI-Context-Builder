@@ -40,7 +40,7 @@ export default function SessionListHeader({ appId }: IProps) {
       <div className="-mx-2 flex h-9 items-center justify-between p-2">
         <div className="text-sm text-slate-900">New Chat</div>
         <button
-          className="rounded-full p-1 hover:bg-slate-100"
+          className="rounded-full p-1 hover:bg-slate-200"
           aria-hidden="true"
           onClick={handleAdd}
           disabled={isMutating}

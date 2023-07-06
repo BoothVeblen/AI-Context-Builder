@@ -29,16 +29,17 @@ function MenuItem({
   isSelected: boolean
 }) {
   return (
-    <Link href={href}>
-      <li
+    <li>
+      <Link
+        href={href}
         className={cn(
-          'flex h-11 items-center px-2 hover:bg-slate-100',
-          isSelected && 'cursor-none bg-slate-100'
+          'flex h-11 items-center rounded-lg px-2 hover:bg-slate-200',
+          isSelected && 'bg-slate-200'
         )}
       >
         {children}
-      </li>
-    </Link>
+      </Link>
+    </li>
   )
 }
 
@@ -48,7 +49,7 @@ export default function Menu() {
   const appId = params.app_id
 
   return (
-    <ul className="p-1">
+    <ul className="space-y-1 p-1">
       {MENU_ITEMS.map(({ id, name, Icon }) => {
         const href = `/app/${appId}/${id}`
         const isSelected = pathname === href

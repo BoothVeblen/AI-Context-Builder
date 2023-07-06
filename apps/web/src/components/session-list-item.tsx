@@ -60,7 +60,7 @@ export default function SessionListItem({
         <Link
           href={href}
           className={clsx(
-            isSelected ? 'bg-slate-100' : 'hover:bg-slate-100',
+            isSelected ? 'bg-slate-200' : 'hover:bg-slate-200',
             'relative group flex items-center gap-x-2 p-2 rounded-md text-sm font-medium text-slate-900'
           )}
         >
@@ -68,7 +68,7 @@ export default function SessionListItem({
           <span className="truncate">{name}</span>
           {!isOnlyOneSession && isSelected && (
             <button
-              className="absolute right-2 rounded-full bg-slate-100 p-1 text-center hover:bg-white"
+              className="absolute right-2 rounded-full bg-slate-200 p-1 text-center hover:bg-white"
               aria-hidden="true"
               onClick={() => setOpen(true)}
               disabled={isMutating}
