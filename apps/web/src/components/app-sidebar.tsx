@@ -39,6 +39,10 @@ export default function AppSidebar({ appList }: IProps) {
   // console.log('data:', appListData)
   // console.log('error:', error)
 
+  const isHome =
+    ['/', '/apps', '/datasets', '/explore'].includes(pathname) ||
+    pathname.includes('/explore/')
+
   return (
     <>
       <div className="group relative mt-6 flex shrink-0 items-center justify-center">
@@ -48,7 +52,7 @@ export default function AppSidebar({ appList }: IProps) {
               <Avatar
                 className={cn(
                   'h-12 w-12 rounded-3xl bg-white transition-all group-hover:rounded-2xl',
-                  pathname === '/explore' && 'rounded-2xl'
+                  isHome && 'rounded-2xl'
                 )}
               >
                 <AvatarImage src="/logo.png" />
@@ -61,7 +65,7 @@ export default function AppSidebar({ appList }: IProps) {
         <div
           className={cn(
             'absolute left-0 top-1/2 h-0 w-1 -translate-x-2 -translate-y-1/2 rounded-r-sm bg-white transition-all group-hover:h-5 group-hover:translate-x-0',
-            pathname === '/explore' && 'h-10 translate-x-0 group-hover:h-10'
+            isHome && 'h-10 translate-x-0 group-hover:h-10'
           )}
         />
       </div>
