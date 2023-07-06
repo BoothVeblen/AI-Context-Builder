@@ -136,7 +136,8 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Leave &quot;{name}&quot; App?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to leave &quot;{name}&quot; App?
+              Are you sure you want to leave &quot;{name}&quot; App? If you
+              leave, the app will not appear on the left panel.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
