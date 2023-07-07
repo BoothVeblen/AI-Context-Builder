@@ -45,6 +45,7 @@ interface FormValuesProps {
 const formSchema = z.object({
   name: z
     .string()
+    .trim()
     .nonempty('App name is required.')
     .min(2, {
       message: 'App name must be at least 2 characters.',
@@ -55,8 +56,8 @@ const formSchema = z.object({
     .max(300, {
       message: 'Short description must be less than 300 characters.',
     })
-    .min(0),
-  icon: z.string().min(0),
+    .optional(),
+  icon: z.string().optional(),
 })
 
 const defaultValues = {

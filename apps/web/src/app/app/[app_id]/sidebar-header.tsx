@@ -42,7 +42,7 @@ export default function Header({ appId, name, desc, icon, isOwner }: IProps) {
         </div>
       </div>
       {desc && (
-        <div className="whitespace-pre-line p-4 text-xs font-medium text-slate-500">
+        <div className="whitespace-pre-line break-words p-4 text-xs font-medium leading-5 text-slate-500">
           {desc}
         </div>
       )}

@@ -26,7 +26,7 @@ export const nanoid = customAlphabet(
 ) // 7-character random string
 
 // export const getFirstLetter = (str: string) => str.charAt(0).toUpperCase()
-export const getFirstLetter = (str: string) => runes(str)?.[0].toUpperCase()
+export const getFirstLetter = (str: string) => runes(str)?.[0]?.toUpperCase()
 
 export const BASE_URL =
   process.env.VERCEL_URL || process.env.VERCEL_BRANCH_URL

@@ -47,16 +47,16 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false)
 
   const menus = [
-    // ...(isOwner
-    //   ? [
-    //       {
-    //         id: 'settings',
-    //         name: 'App Settings',
-    //         icon: <Settings size={16} />,
-    //         link: `/app/${appId}/settings`,
-    //       },
-    //     ]
-    //   : []),
+    ...(isOwner
+      ? [
+          {
+            id: 'settings',
+            name: 'App Settings',
+            icon: <Settings size={16} />,
+            link: `/app/${appId}/settings`,
+          },
+        ]
+      : []),
     {
       id: 'share',
       name: 'Share',
