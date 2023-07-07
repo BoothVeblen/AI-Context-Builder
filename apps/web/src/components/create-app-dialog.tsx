@@ -86,7 +86,7 @@ const CreateAppDialog = (props: IProps) => {
     resolver: zodResolver(formSchema),
     defaultValues,
   })
-  const { reset, setValue } = form
+  const { reset, setValue, clearErrors } = form
 
   const [image, setImage] = useState<UploadFile[]>([])
 
@@ -107,6 +107,7 @@ const CreateAppDialog = (props: IProps) => {
     setOpen(open)
     reset()
     setImage([])
+    clearErrors()
   }
 
   const handleFiles = (file: UploadFile<any>[]) => {

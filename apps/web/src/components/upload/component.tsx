@@ -132,16 +132,20 @@ export const PDFFile = (props: FileItemProps) => {
               {(file?.status === 'success' || file?.status === 'done') &&
                 file?.url && (
                   <>
-                    <IconBox onClick={() => props?.onDownload!(file)}>
-                      {showIcon?.downloadIcon || (
-                        <Download size={16} strokeWidth={3} color="#000" />
-                      )}
-                    </IconBox>
-                    <IconBox onClick={() => preview(file)}>
-                      {showIcon?.previewIcon || (
-                        <Eye size={16} strokeWidth={3} />
-                      )}
-                    </IconBox>
+                    {showIcon?.showDownloadIcon && (
+                      <IconBox onClick={() => props?.onDownload!(file)}>
+                        {showIcon?.downloadIcon || (
+                          <Download size={16} strokeWidth={3} color="#000" />
+                        )}
+                      </IconBox>
+                    )}
+                    {showIcon?.showPreviewIcon && (
+                      <IconBox onClick={() => preview(file)}>
+                        {showIcon?.previewIcon || (
+                          <Eye size={16} strokeWidth={3} />
+                        )}
+                      </IconBox>
+                    )}
                   </>
                 )}
               <IconBox
