@@ -1,5 +1,4 @@
-import HomeSidebar from '@/components/home-sidebar'
-import SidebarLayout from '@/components/sidebar-layout'
+import RootWrapper from '@/components/root-wrapper'
 
 interface IProps {
   params: {
@@ -11,8 +10,8 @@ export default async function Page({ params }: IProps) {
   const { category_id } = params
 
   return (
-    <SidebarLayout sidebar={<HomeSidebar />}>
+    <RootWrapper pageTitle={`Explore: ${category_id}`}>
       <div className="p-2">TODO: explore {category_id}</div>
-    </SidebarLayout>
+    </RootWrapper>
   )
 }

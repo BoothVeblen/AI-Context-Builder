@@ -38,7 +38,9 @@ export default function Header({ appId, name, desc, icon, isOwner }: IProps) {
         )}
         <div className="sticky top-0 flex items-center justify-between bg-gradient-to-b from-black/50 to-transparent px-4 py-2.5 text-white">
           <h1 className="mr-2 truncate text-lg font-semibold">{name}</h1>
-          <AppSettingDialog appId={appId} name={name} isOwner={isOwner} />
+          <div className="hidden lg:block">
+            <AppSettingDialog appId={appId} name={name} isOwner={isOwner} />
+          </div>
         </div>
       </div>
       {desc && (

@@ -3,8 +3,7 @@ import { PlusIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import DatasetCard from '@/components/dataset-card'
-import HomeSidebar from '@/components/home-sidebar'
-import SidebarLayout from '@/components/sidebar-layout'
+import RootWrapper from '@/components/root-wrapper'
 
 const LIST = [
   {
@@ -36,9 +35,9 @@ const LIST = [
 
 export default async function Page() {
   return (
-    <SidebarLayout sidebar={<HomeSidebar />}>
+    <RootWrapper pageTitle="My Datasets">
       <div className="flex flex-col">
-        <div className="flex h-12 items-center justify-between px-6">
+        <div className="hidden h-12 items-center justify-between px-6 lg:flex">
           <h1 className="font-medium">My Datasets</h1>
           <Link href="/datasets">
             <Button size="sm">
@@ -49,13 +48,13 @@ export default async function Page() {
         </div>
         <div className="m-full h-px bg-slate-100" />
         <div className="p-6">
-          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {LIST.map(({ id, title }) => (
               <DatasetCard key={id} id={id} title={title} />
             ))}
           </ul>
         </div>
       </div>
-    </SidebarLayout>
+    </RootWrapper>
   )
 }

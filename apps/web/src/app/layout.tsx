@@ -1,10 +1,6 @@
 import './globals.css'
 
-import { auth } from '@/lib/auth'
-import { getWorkspace } from '@/db/workspace/actions'
 import { Toaster } from '@/components/ui/toaster'
-import AppLayout from '@/components/app-layout'
-import AppSidebar from '@/components/app-sidebar'
 import Provider from '@/components/provider'
 import { ThemeProvider } from '@/components/theme-provider'
 
@@ -18,19 +14,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { userId } = auth()
-  const appList = await getWorkspace()
-
   return (
     <Provider>
       <html lang="en" className="h-full" suppressHydrationWarning>
         <body className="h-full">
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <AppLayout
-              sidebar={userId ? <AppSidebar appList={appList} /> : null}
-            >
-              {children}
-            </AppLayout>
+            {children}
             <Toaster />
           </ThemeProvider>
         </body>

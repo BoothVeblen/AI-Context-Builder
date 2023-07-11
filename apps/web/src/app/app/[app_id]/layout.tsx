@@ -1,17 +1,21 @@
-import SidebarLayout from '@/components/sidebar-layout'
+import RootLayout from '@/components/root-layout'
 
-import AppSidebar from './sidebar'
+import Sidebar from './sidebar'
 
 interface IProps {
   children: React.ReactNode
   params: { app_id: string; session_id: string }
 }
 
-export default function AppLayout({ children, params }: IProps) {
+export default function Layout({ children, params }: IProps) {
   const { app_id } = params
+
   return (
-    <SidebarLayout sidebar={<AppSidebar appId={app_id} />}>
+    <RootLayout
+      sidebar={<Sidebar appId={app_id} />}
+      mainClassnames="h-[calc(100%-56px)] lg:pl-[312px] lg:h-full"
+    >
       {children}
-    </SidebarLayout>
+    </RootLayout>
   )
 }

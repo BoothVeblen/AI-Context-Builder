@@ -20,7 +20,7 @@ export default function AppCard({ id, name, description, icon }: IProps) {
 
   return (
     <Link href={`/app/${id}`}>
-      <Card className="relative h-full hover:shadow-md">
+      <Card className="relative h-full hover:shadow-md lg:min-h-[232px]">
         <div className="absolute top-20 h-px w-full bg-slate-200" />
         <CardHeader className="p-4">
           {icon ? (

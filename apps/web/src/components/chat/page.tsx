@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useChat } from 'ai/react'
 
+import usePageTitle from '@/hooks/use-page-title'
 import { useScrollToBottom } from '@/hooks/useScrollToBottom'
 
 import ChatHeader from './chat-header'
@@ -41,6 +42,8 @@ const Chat = ({ sessionId, sessionName, appName, appIcon, appId }: IProps) => {
   }
 
   const showResend = useMemo(() => messages?.length > 0, [messages])
+
+  usePageTitle(sessionName)
 
   return (
     <div className="flex h-full w-full flex-col">

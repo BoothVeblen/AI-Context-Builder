@@ -2,7 +2,9 @@
 
 import * as React from 'react'
 import { UniqueIdentifier } from '@dnd-kit/core'
+import { useWindowSize } from 'usehooks-ts'
 
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { TreeItem } from '@/components/dnd/types'
 
 import TaskDetail from './task-detail'
@@ -31,6 +33,9 @@ export default function TaskList() {
     setSelectedId(null)
   }
 
+  const { width } = useWindowSize()
+  const isSmallScreen = width < 1024
+
   return (
     <div className="flex flex-1">
       <div className="flex-1">
@@ -47,9 +52,21 @@ export default function TaskList() {
         </div>
       </div>
       {selectedId && (
-        <div className="w-96 border-l border-slate-100 p-6">
+        <div className="hidden w-96 border-l border-slate-100 p-6 lg:block">
           <TaskDetail onClose={closeTaskDetail} />
         </div>
+      )}
+      {isSmallScreen && (
+        <Sheet
+          open={!!selectedId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null)
+          }}
+        >
+          <SheetContent side="bottom" className="min-h-[80vh]">
+            <TaskDetail onClose={closeTaskDetail} />
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   )

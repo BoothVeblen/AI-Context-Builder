@@ -13,7 +13,7 @@ export default async function SettingsLayout({ children, params }: IProps) {
   const appDetail = await getApp(app_id)
 
   return (
-    <div className="fixed inset-0 flex h-full w-full bg-white">
+    <div className="fixed inset-0 z-50 flex h-full w-full bg-white">
       <div className="w-[276px] shrink-0 border-r border-slate-200 bg-slate-50">
         <Sidebar appId={app_id} appName={appDetail.name} />
       </div>

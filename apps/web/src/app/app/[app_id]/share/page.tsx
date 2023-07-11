@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import * as React from 'react'
 import { useParams } from 'next/navigation'
 
+import usePageTitle from '@/hooks/use-page-title'
 import useCopyToClipboard from '@/hooks/useCopyToClipboard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +13,7 @@ import { FacingIcon, InsIcon, NotionIcon, VersionIcon, WebIcon } from './icons'
 
 const ShareApp = () => {
   const { app_id } = useParams()
-  const [copyBtnText, setCopyBtnText] = useState('Copy')
+  const [copyBtnText, setCopyBtnText] = React.useState('Copy')
   const { copy } = useCopyToClipboard()
 
   const protocol = document.location.protocol
@@ -28,16 +29,21 @@ const ShareApp = () => {
       setCopyBtnText('Copy')
     }, 2000)
   }
+
+  usePageTitle('Share App')
+
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-10 px-6 py-3">
-        <Text variant="body1">Share App</Text>
+        <Text variant="body1" className="hidden lg:block">
+          Share App
+        </Text>
         <Text className="text-slate-500">
           Your conversation will not be shared with others.
         </Text>
       </div>
       <div className="m-full h-px bg-slate-100" />
-      <div className="pl-[155px] pt-[100px]">
+      <div className="p-4 lg:pl-[155px] lg:pt-[100px]">
         {/* <div className="mb-6 gap-2">
           <Text>embed this App in</Text>
           <div className="mt-2 flex w-full gap-4">
@@ -60,7 +66,7 @@ const ShareApp = () => {
         </div> */}
         <div className="gap-2">
           <Text>Copy link</Text>
-          <div className="mt-2 flex gap-1">
+          <div className="mt-2 flex gap-2">
             <Input className="w-[324px]" value={link} disabled />
             <Button onClick={handleClick}>{copyBtnText}</Button>
           </div>

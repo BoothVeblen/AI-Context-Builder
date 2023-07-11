@@ -1,6 +1,5 @@
 import AppCard from '@/components/app-card'
-import HomeSidebar from '@/components/home-sidebar'
-import SidebarLayout from '@/components/sidebar-layout'
+import RootWrapper from '@/components/root-wrapper'
 
 const LIST = [
   {
@@ -28,13 +27,14 @@ const LIST = [
 
 export default async function Page() {
   return (
-    <SidebarLayout sidebar={<HomeSidebar />}>
+    <RootWrapper pageTitle="Explore">
       <div className="flex flex-col">
-        <h1 className="px-6 py-3 font-medium">Explore</h1>
-        <div className="m-full h-px bg-slate-100" />
+        <h1 className="hidden border-b border-slate-100 px-6 py-3 font-medium lg:block">
+          Explore
+        </h1>
         <div className="p-6">
           <h2 className="text-sm font-medium">All Categories</h2>
-          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {LIST.map(({ id, name, description, icon }) => (
               <AppCard
                 key={id}
@@ -47,6 +47,6 @@ export default async function Page() {
           </ul>
         </div>
       </div>
-    </SidebarLayout>
+    </RootWrapper>
   )
 }
