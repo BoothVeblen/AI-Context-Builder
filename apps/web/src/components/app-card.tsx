@@ -40,7 +40,7 @@ export default function AppCard({ id, name, description, icon }: IProps) {
             </div>
           )}
           <CardTitle className="truncate text-xl">{name}</CardTitle>
-          <CardDescription className="line-clamp-4 text-xs">
+          <CardDescription className="line-clamp-4 break-words text-xs">
             {description}
           </CardDescription>
         </CardHeader>

@@ -40,10 +40,11 @@ export default function DeleteAppButton({ id, name }: IProps) {
       <Button
         variant="ghost"
         size="lg"
-        className="w-full"
+        className="flex w-full items-center justify-between px-3"
         onClick={() => setOpen(true)}
       >
-        <TrashIcon className="mr-2 h-4 w-4" /> Delete this App
+        <span>Delete this App</span>
+        <TrashIcon className="mr-2 h-4 w-4" />
       </Button>
       <ConfirmDialog
         open={open}

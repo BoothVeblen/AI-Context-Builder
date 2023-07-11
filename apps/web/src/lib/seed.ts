@@ -8,11 +8,11 @@ export async function seed() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS apps (
       id SERIAL PRIMARY KEY,
-      short_id VARCHAR(255) UNIQUE NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      description VARCHAR(255) NOT NULL,
-      icon VARCHAR(255) NOT NULL,
-      created_by VARCHAR(255) NOT NULL,
+      short_id VARCHAR(12) UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      created_by TEXT NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE,
       archived BOOLEAN DEFAULT FALSE
@@ -25,11 +25,11 @@ export async function seed() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS sessions (
       id SERIAL PRIMARY KEY,
-      short_id VARCHAR(255) UNIQUE NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      app_id VARCHAR(255) NOT NULL,
+      short_id VARCHAR(12) UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      app_id VARCHAR(12) NOT NULL,
       FOREIGN KEY (app_id) REFERENCES apps(short_id),
-      created_by VARCHAR(255) NOT NULL,
+      created_by TEXT NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE,
       archived BOOLEAN DEFAULT FALSE
@@ -40,9 +40,9 @@ export async function seed() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS workspace (
       id SERIAL PRIMARY KEY,
-      short_id VARCHAR(255) UNIQUE NOT NULL,
-      user_id VARCHAR(255) NOT NULL,
-      app_id VARCHAR(255) NOT NULL,
+      short_id VARCHAR(12) UNIQUE NOT NULL,
+      user_id TEXT NOT NULL,
+      app_id VARCHAR(12) NOT NULL,
       FOREIGN KEY (app_id) REFERENCES apps(short_id),
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE,
