@@ -6,7 +6,10 @@ import { Pool } from 'pg'
 import { flags } from './flags'
 
 const pool = flags.isNeon
-  ? new PoolServerless({ connectionString: process.env.DATABASE_URL })
+  ? new PoolServerless({
+      connectionString: process.env.DATABASE_URL,
+      connectionTimeoutMillis: 10 * 1000, // wait 10s before timing out when connecting a new client
+    })
   : new Pool({
       connectionString:
         process.env.DATABASE_URL ||
