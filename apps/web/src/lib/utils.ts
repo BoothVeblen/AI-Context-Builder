@@ -41,7 +41,7 @@ export const BASE_URL =
 export const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args)
     .then((res) => res.json())
-    .then((res) => res?.data)
+    .then((res) => (res.success ? res.data : res.error))
 
 export function getAvatarBgColor(value: string) {
   const colors = [

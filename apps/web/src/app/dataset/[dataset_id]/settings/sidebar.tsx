@@ -87,6 +87,7 @@ const SlideBar = ({
       const json = await trigger()
       console.log('delete dataset json:', json)
       router.push('/datasets')
+      router.refresh()
     } catch (error) {
       console.log('delete dataset error:', error)
     }

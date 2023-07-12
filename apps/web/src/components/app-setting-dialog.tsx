@@ -84,7 +84,8 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
       const json = await trigger()
       console.log('leave app json:', json)
       mutate('/api/me/workspace')
-      router.push('/explore')
+      router.push('/apps')
+      router.refresh()
     } catch (error) {
       console.log('AppSettingDialog handleRemove error:', error)
     }

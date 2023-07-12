@@ -1,8 +1,9 @@
 'use client'
 
+import { useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, Loader2Icon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -20,9 +21,12 @@ interface IProps {
 export default function Sidebar({ appId, appName }: IProps) {
   const router = useRouter()
   const url = usePathname() || ''
+  const [isPending, startTransition] = useTransition()
 
   function handleGoBack() {
-    router.back()
+    startTransition(() => {
+      router.back()
+    })
   }
 
   return (
@@ -33,7 +37,11 @@ export default function Sidebar({ appId, appName }: IProps) {
           className="h-8 w-8 p-0"
           onClick={handleGoBack}
         >
-          <ArrowLeftIcon className="h-4 w-4" />
+          {isPending ? (
+            <Loader2Icon className="h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowLeftIcon className="h-4 w-4" />
+          )}
         </Button>
         <div className="text-lg font-semibold">Back</div>
       </div>

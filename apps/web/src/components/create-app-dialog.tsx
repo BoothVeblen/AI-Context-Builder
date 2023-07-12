@@ -86,7 +86,7 @@ const CreateAppDialog = (props: IProps) => {
     resolver: zodResolver(formSchema),
     defaultValues,
   })
-  const { reset, setValue, clearErrors } = form
+  const { reset, setValue } = form
 
   const [image, setImage] = useState<UploadFile[]>([])
 
@@ -99,6 +99,7 @@ const CreateAppDialog = (props: IProps) => {
       setOpen(false)
       mutate('/api/me/workspace')
       router.push(`/app/${json.appId}/session/${json.sessionId}`)
+      router.refresh()
     } catch (error) {
       console.log('CreateAppDialog onSubmit error:', error)
     }
@@ -107,7 +108,6 @@ const CreateAppDialog = (props: IProps) => {
     setOpen(open)
     reset()
     setImage([])
-    clearErrors()
   }
 
   const handleFiles = (file: UploadFile<any>[]) => {
@@ -193,7 +193,11 @@ const CreateAppDialog = (props: IProps) => {
               }}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onCancel(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onCancel(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={disabled || isMutating}>

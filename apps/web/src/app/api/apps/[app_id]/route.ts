@@ -19,8 +19,12 @@ export async function PATCH(
 ) {
   const { app_id } = params
   const body = (await req.json()) as Partial<NewApp>
-  await editApp(app_id, body)
-  return NextResponse.json({ success: true, data: { app_id, body } })
+  const response = (await editApp(app_id, body)) as any
+  if (response.error) {
+    return NextResponse.json({ success: false, error: response.error })
+  } else {
+    return NextResponse.json({ success: true, data: { app_id, body } })
+  }
 }
 
 // Delete an app

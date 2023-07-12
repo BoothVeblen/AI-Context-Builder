@@ -83,6 +83,7 @@ const DatasetForm = ({
       setSaved(true)
       setError('')
       router.push('/datasets')
+      router.refresh()
       console.log(`${datasetId ? 'edit' : 'add'} Dataset onSubmit json:`, json)
     } catch (error) {
       setError(error as string)
