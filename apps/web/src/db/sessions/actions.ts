@@ -97,6 +97,9 @@ export async function removeSession(appId: string, sessionId: string) {
 }
 
 export async function getLatestSessionId(appId: string) {
+  const { userId } = auth()
+  if (!userId) return null
+
   const foundApp = await db
     .select()
     .from(AppsTable)
@@ -107,7 +110,11 @@ export async function getLatestSessionId(appId: string) {
     .select()
     .from(SessionsTable)
     .where(
-      and(eq(SessionsTable.app_id, appId), eq(SessionsTable.archived, false))
+      and(
+        eq(SessionsTable.created_by, userId),
+        eq(SessionsTable.app_id, appId),
+        eq(SessionsTable.archived, false)
+      )
     )
     .orderBy(desc(SessionsTable.created_at))
     .limit(1)

@@ -33,9 +33,11 @@ export default function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+        <AlertDialogHeader className="min-w-0">
+          <AlertDialogTitle className="break-words">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="break-words">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
