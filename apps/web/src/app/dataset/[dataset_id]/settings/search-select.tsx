@@ -63,7 +63,7 @@ const SearchSelect = ({
                   role="combobox"
                   aria-expanded={open}
                   className={cn(
-                    'w-[308px] justify-between',
+                    'w-[332px] justify-between',
                     !field.value && 'text-muted-foreground'
                   )}
                 >
@@ -88,7 +88,7 @@ const SearchSelect = ({
                         form.setValue('type', value)
                         setOpen(false)
                       }}
-                      disabled={type?.value === 'comming soon'}
+                      disabled={type?.value === 'coming soon'}
                     >
                       {type.label}
                       <CheckIcon

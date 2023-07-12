@@ -10,6 +10,7 @@ import { z } from 'zod'
 import useScrollSpy from '@/hooks/use-scroll-spy'
 
 import DatasetForm from './dataset-form'
+import { FileProps } from './document-loader'
 import SlideBar from './sidebar'
 
 export interface SectionType {
@@ -25,11 +26,11 @@ const FormSchema = z.object({
     .max(50, { message: 'Dataset name must be less than 50 characters.' }),
   loaderType: z.string().optional(),
   splitType: z.string().optional(),
-  embeddingTyp: z.string().optional(),
-  files: z.array(z.string()).optional(),
-  chunkSize: z.number(),
-  chunkOverlap: z.number(),
-  storeType: z.string(),
+  embeddingType: z.string().optional(),
+  files: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
+  chunkSize: z.number().optional(),
+  chunkOverlap: z.number().optional(),
+  storeType: z.string().optional(),
   collectionName: z.string().optional(),
   chromaUrl: z.string().optional(),
   apiKey: z.string().optional(),
@@ -40,7 +41,15 @@ const FormSchema = z.object({
 
 export type SchemaProps = z.infer<typeof FormSchema>
 
-const DatasetSetting = ({ defaultValue }: { defaultValue?: SchemaProps }) => {
+const DatasetSetting = ({
+  name = '',
+  config,
+  datasetId,
+}: {
+  name?: string
+  config?: Record<string, any>
+  datasetId?: string
+}) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sectionRefs = [
     useRef(null),
@@ -61,29 +70,49 @@ const DatasetSetting = ({ defaultValue }: { defaultValue?: SchemaProps }) => {
   const [showMore, setShowMore] = useState<boolean>(false)
   const defaultValues = useMemo(
     () =>
-      defaultValue || {
-        name: '',
-        loaderType: 'pdf loader',
-        splitType: 'character textsplitter',
-        files: [],
-        chunkSize: 1000,
-        chunkOverlap: 1000,
-        embeddingType: 'openAI embedding',
-        storeType: 'pinecone',
-        collectionName: '',
-        chromaUrl: '',
-        apiKey: '',
-        instanceName: '',
-        developmentName: '',
-        apiVersion: '',
-      },
-    [defaultValue]
+      name
+        ? {
+            name,
+            ...config,
+          }
+        : {
+            name: '',
+            loaderType: 'pdf loader',
+            splitType: 'character textsplitter',
+            files: [],
+            chunkSize: 1000,
+            chunkOverlap: 1000,
+            embeddingType: 'openAI embedding',
+            storeType: 'pinecone',
+            collectionName: '',
+            chromaUrl: '',
+            apiKey: '',
+            instanceName: '',
+            developmentName: '',
+            apiVersion: '',
+          },
+    [config, name]
   )
+
+  const checkFiles = () => {
+    const current = form.getValues()?.files
+    const origin = defaultValues?.files
+    if (current?.length !== origin?.length) {
+      return true
+    }
+    current?.forEach((item) => {
+      const index = origin?.findIndex((m: FileProps) => m?.url === item?.url)
+      if (index === -1) {
+        return true
+      }
+    })
+    return false
+  }
 
   const checkIsUpdate = () => {
     const current = form.getValues()
-    // @ts-ignore
-    if (difference(current?.files, defaultValues?.files)?.length) {
+    const fileUpdate = checkFiles()
+    if (fileUpdate) {
       return true
     }
     for (let k in current) {
@@ -116,15 +145,18 @@ const DatasetSetting = ({ defaultValue }: { defaultValue?: SchemaProps }) => {
           handleGoBack={handleGoBack}
           showMore={showMore}
           scrollRef={scrollRef}
+          datasetId={datasetId}
           activeSection={activeSection}
         />
       </div>
       <DatasetForm
+        datasetId={datasetId}
         showMore={showMore}
         error={error}
         setError={setError}
         setSaved={setSaved}
         form={form}
+        files={config?.files}
         setShowMore={setShowMore}
         scrollRef={scrollRef}
         sectionRefs={sectionRefs}

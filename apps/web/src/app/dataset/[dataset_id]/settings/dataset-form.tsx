@@ -1,7 +1,9 @@
-import { RefObject } from 'react'
+import { RefObject, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { UseFormReturn } from 'react-hook-form'
+import useSWRMutation from 'swr/mutation'
 
-import { cn } from '@/lib/utils'
+import { cn, fetcher } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -12,8 +14,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { UploadFile } from '@/components/upload/type'
 
-import DocumentLoader from './document-loader'
+import DocumentLoader, { FileProps, stringUrlToFile } from './document-loader'
 import { SchemaProps } from './setting-page'
 import TextSplits from './splitter'
 import TextEmbedding from './text-embedding'
@@ -21,7 +24,9 @@ import VectorStores from './vector-stores'
 
 interface IProps {
   error: string
+  datasetId?: string
   showMore?: boolean
+  files?: FileProps[]
   setError: (s: string) => void
   setSaved: (s: boolean) => void
   form: UseFormReturn<any>
@@ -32,6 +37,7 @@ interface IProps {
 
 const DatasetForm = ({
   error,
+  datasetId,
   setError,
   setSaved,
   form,
@@ -39,20 +45,52 @@ const DatasetForm = ({
   showMore,
   scrollRef,
   sectionRefs,
+  files,
 }: IProps) => {
+  const uploadFiles = useMemo(() => {
+    return files
+      ? files.reduce((m: UploadFile<any>[], item: FileProps) => {
+          const file = stringUrlToFile(item)
+          m?.push(file)
+          return m
+        }, [])
+      : []
+  }, [files])
+
+  const [data, setData] = useState<UploadFile<any>[]>(uploadFiles)
+
   const handelCancel = () => {
     setError('')
     form.reset()
+    // reset the files
+    setData(uploadFiles)
+  }
+  function addOrEditDataset(url: string, { arg }: { arg: SchemaProps }) {
+    return fetcher(url, {
+      method: datasetId ? 'PATCH' : 'POST',
+      body: JSON.stringify(arg),
+    })
   }
 
-  const onSubmit = (data: SchemaProps) => {
-    setSaved(true)
-    setError('')
-    console.log(data, '---data')
+  const { trigger, isMutating } = useSWRMutation(
+    `/api/datasets/${datasetId || 'add-dataset'}`,
+    addOrEditDataset
+  )
+  const router = useRouter()
+  const onSubmit = async (data: SchemaProps) => {
+    try {
+      const json = await trigger(data)
+      setSaved(true)
+      setError('')
+      router.push('/datasets')
+      console.log(`${datasetId ? 'edit' : 'add'} Dataset onSubmit json:`, json)
+    } catch (error) {
+      setError(error as string)
+    }
   }
   return (
     <div
-      className="h-full w-full overflow-auto px-6 pb-[100px] pt-12"
+      className="h-full w-full overflow-auto px-14 pb-[100px] pt-12"
       ref={scrollRef}
     >
       <div className="sm:w-full md:max-w-[600px]">
@@ -64,7 +102,7 @@ const DatasetForm = ({
               className="border-b-[1px] py-6"
             >
               <div className="mb-6 text-2xl font-semibold leading-8">
-                DataSet Name
+                Dataset Name
               </div>
               <FormField
                 control={form.control}
@@ -72,7 +110,7 @@ const DatasetForm = ({
                 render={({ field }) => (
                   <FormItem className="w-[332px]">
                     <FormLabel className="flex">
-                      DataSet Name <div className="text-red-500">*</div>
+                      Dataset Name <div className="text-red-500">*</div>
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="Input your dataset name" {...field} />
@@ -82,7 +120,12 @@ const DatasetForm = ({
                 )}
               />
             </section>
-            <DocumentLoader form={form} sectionRef={sectionRefs[1]} />
+            <DocumentLoader
+              form={form}
+              sectionRef={sectionRefs[1]}
+              data={data}
+              setData={setData}
+            />
             {showMore ? (
               <>
                 <TextSplits form={form} sectionRef={sectionRefs[2]} />
@@ -113,11 +156,14 @@ const DatasetForm = ({
                   type="reset"
                   onClick={handelCancel}
                   variant="outline"
+                  disabled={isMutating}
                   className={cn(error ? 'border-none bg-red-500' : '')}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Submit</Button>
+                <Button type="submit" disabled={isMutating}>
+                  {isMutating ? 'Submitting...' : 'Submit'}
+                </Button>
               </div>
             </div>
           </form>
