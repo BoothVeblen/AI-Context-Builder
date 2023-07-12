@@ -74,6 +74,7 @@ export async function getWorkspace() {
       SessionsTable,
       and(
         eq(AppsTable.short_id, SessionsTable.app_id),
+        eq(SessionsTable.created_by, userId),
         eq(SessionsTable.archived, false)
       )
     )
