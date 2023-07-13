@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { redirect } from 'next/navigation'
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
@@ -42,20 +43,26 @@ export async function addSession(appId: string) {
 }
 
 export async function getSessions(appId: string) {
-  const { userId } = auth()
-  if (!userId) return []
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
 
-  return db
-    .select()
-    .from(SessionsTable)
-    .orderBy(desc(SessionsTable.created_at))
-    .where(
-      and(
-        eq(SessionsTable.app_id, appId),
-        eq(SessionsTable.created_by, userId),
-        eq(SessionsTable.archived, false)
+    return db
+      .select()
+      .from(SessionsTable)
+      .orderBy(desc(SessionsTable.created_at))
+      .where(
+        and(
+          eq(SessionsTable.app_id, appId),
+          eq(SessionsTable.created_by, userId),
+          eq(SessionsTable.archived, false)
+        )
       )
-    )
+  } catch (error) {
+    redirect('/')
+  }
 }
 
 export async function removeSession(appId: string, sessionId: string) {
@@ -97,37 +104,77 @@ export async function removeSession(appId: string, sessionId: string) {
 }
 
 export async function getLatestSessionId(appId: string) {
-  const { userId } = auth()
-  if (!userId) return null
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
 
-  const foundApp = await db
-    .select()
-    .from(AppsTable)
-    .where(eq(AppsTable.short_id, appId))
-  if (!foundApp?.[0]) return null
+    const foundApp = await db
+      .select()
+      .from(AppsTable)
+      .where(eq(AppsTable.short_id, appId))
+    if (!foundApp?.[0]) {
+      throw new Error('App not found')
+    }
 
-  const foundSession = await db
-    .select()
-    .from(SessionsTable)
-    .where(
-      and(
-        eq(SessionsTable.created_by, userId),
-        eq(SessionsTable.app_id, appId),
-        eq(SessionsTable.archived, false)
+    const foundSession = await db
+      .select()
+      .from(SessionsTable)
+      .where(
+        and(
+          eq(SessionsTable.created_by, userId),
+          eq(SessionsTable.app_id, appId),
+          eq(SessionsTable.archived, false)
+        )
       )
-    )
-    .orderBy(desc(SessionsTable.created_at))
-    .limit(1)
-  if (!foundSession?.[0]) return null
+      .orderBy(desc(SessionsTable.created_at))
+      .limit(1)
+    if (!foundSession?.[0]) {
+      const sessionVal = {
+        short_id: nanoid(),
+        name: 'Chat 1',
+        app_id: appId,
+        created_by: userId,
+      }
+      const newSession = await db
+        .insert(SessionsTable)
+        .values(sessionVal)
+        .returning()
+      return newSession[0].short_id
+    }
 
-  return foundSession[0].short_id
+    return foundSession[0].short_id
+  } catch (error: any) {
+    redirect('/')
+  }
 }
 
 export async function getSession(sessionId: string) {
-  const items = await db
-    .select()
-    .from(SessionsTable)
-    .where(eq(SessionsTable.short_id, sessionId))
-    .leftJoin(AppsTable, eq(SessionsTable.app_id, AppsTable.short_id))
-  return Promise.resolve(items[0])
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
+
+    const items = await db
+      .select()
+      .from(SessionsTable)
+      .where(
+        and(
+          eq(SessionsTable.short_id, sessionId),
+          eq(SessionsTable.created_by, userId)
+        )
+      )
+      .leftJoin(AppsTable, eq(SessionsTable.app_id, AppsTable.short_id))
+
+    const sessionDetail = items[0]
+    if (!sessionDetail) {
+      throw new Error('Session not found')
+    }
+
+    return sessionDetail
+  } catch (error: any) {
+    redirect('/')
+  }
 }

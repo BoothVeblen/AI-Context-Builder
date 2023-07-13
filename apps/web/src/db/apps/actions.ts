@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { revalidateTag, unstable_cache } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { and, desc, eq } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
@@ -40,16 +41,22 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 export async function getApps() {
   return await unstable_cache(
     async () => {
-      const { userId } = auth()
-      if (!userId) return Promise.resolve([])
+      try {
+        const { userId } = auth()
+        if (!userId) {
+          throw new Error('Not authenticated')
+        }
 
-      return db
-        .select()
-        .from(AppsTable)
-        .orderBy(desc(AppsTable.created_at))
-        .where(
-          and(eq(AppsTable.created_by, userId), eq(AppsTable.archived, false))
-        )
+        return db
+          .select()
+          .from(AppsTable)
+          .orderBy(desc(AppsTable.created_at))
+          .where(
+            and(eq(AppsTable.created_by, userId), eq(AppsTable.archived, false))
+          )
+      } catch (error) {
+        redirect('/')
+      }
     },
     [`apps`],
     {
@@ -62,11 +69,21 @@ export async function getApps() {
 export async function getApp(appId: string) {
   return await unstable_cache(
     async () => {
-      const items = await db
-        .select()
-        .from(AppsTable)
-        .where(eq(AppsTable.short_id, appId))
-      return Promise.resolve(items[0])
+      try {
+        const items = await db
+          .select()
+          .from(AppsTable)
+          .where(eq(AppsTable.short_id, appId))
+
+        const appDetail = items[0]
+        if (!appDetail) {
+          throw new Error('App not found')
+        }
+
+        return appDetail
+      } catch (error) {
+        redirect('/')
+      }
     },
     [`app:${appId}`],
     {
@@ -77,20 +94,22 @@ export async function getApp(appId: string) {
 }
 
 export async function editApp(id: string, newValue: Partial<NewApp>) {
-  const { userId } = auth()
-  if (!userId) {
-    return {
-      error: 'Not authenticated',
-    }
-  }
-
   try {
+    const { userId } = auth()
+    if (!userId) {
+      return {
+        error: 'Not authenticated',
+      }
+    }
+
     const response = await db
       .update(AppsTable)
       .set(newValue)
       .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
+
     await revalidateTag(`app:${id}`)
     await revalidateTag(`apps`)
+
     return response
   } catch (error: any) {
     return {
@@ -100,20 +119,21 @@ export async function editApp(id: string, newValue: Partial<NewApp>) {
 }
 
 export async function removeApp(id: string) {
-  const { userId } = auth()
-  if (!userId) {
-    return {
-      error: 'Not authenticated',
-    }
-  }
-
   try {
+    const { userId } = auth()
+    if (!userId) {
+      return {
+        error: 'Not authenticated',
+      }
+    }
+
     const response = await db
       .update(AppsTable)
       .set({ archived: true, updated_at: new Date() })
       .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
-      .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
+
     await revalidateTag(`apps`)
+
     return response
   } catch (error: any) {
     return {
