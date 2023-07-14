@@ -30,6 +30,7 @@ export default function DeleteAppButton({ id, name }: IProps) {
       console.log('remove app json:', json)
       mutate('/api/me/workspace')
       router.push('/apps')
+      router.refresh()
     } catch (error) {
       console.log('AppSettingDialog handleRemove error:', error)
     }
