@@ -1,10 +1,12 @@
-import { RefObject, useMemo, useState } from 'react'
+import { RefObject, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UseFormReturn } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
+import { useDebounce } from 'usehooks-ts'
+import { z } from 'zod'
 
-import { cn, fetcher } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { fetcher } from '@/lib/utils'
 import {
   Form,
   FormControl,
@@ -20,27 +22,29 @@ import DocumentLoader, { FileProps, stringUrlToFile } from './document-loader'
 import { SchemaProps } from './setting-page'
 import TextSplits from './splitter'
 import TextEmbedding from './text-embedding'
+import { FormSchema } from './utils'
 import VectorStores from './vector-stores'
 
 interface IProps {
-  error: string
   datasetId?: string
   showMore?: boolean
   files?: FileProps[]
-  setError: (s: string) => void
-  setSaved: (s: boolean) => void
-  form: UseFormReturn<any>
+  defaultValues: SchemaProps
   setShowMore?: (s: boolean) => void
   scrollRef: RefObject<HTMLDivElement>
   sectionRefs: RefObject<HTMLDivElement>[]
 }
 
+function editDataset(url: string, { arg }: { arg: SchemaProps }) {
+  return fetcher(url, {
+    method: 'PATCH',
+    body: JSON.stringify(arg),
+  })
+}
+
 const DatasetForm = ({
-  error,
   datasetId,
-  setError,
-  setSaved,
-  form,
+  defaultValues,
   setShowMore,
   showMore,
   scrollRef,
@@ -58,37 +62,65 @@ const DatasetForm = ({
   }, [files])
 
   const [data, setData] = useState<UploadFile<any>[]>(uploadFiles)
+  const [values, setValues] = useState<SchemaProps>(defaultValues)
 
-  const handelCancel = () => {
-    setError('')
-    form.reset()
-    // reset the files
-    setData(uploadFiles)
-  }
-  function addOrEditDataset(url: string, { arg }: { arg: SchemaProps }) {
-    return fetcher(url, {
-      method: datasetId ? 'PATCH' : 'POST',
-      body: JSON.stringify(arg),
-    })
-  }
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    values,
+  })
 
-  const { trigger, isMutating } = useSWRMutation(
-    `/api/datasets/${datasetId || 'add-dataset'}`,
-    addOrEditDataset
-  )
+  const { handleSubmit } = form
+  const { trigger } = useSWRMutation(`/api/datasets/${datasetId}`, editDataset)
   const router = useRouter()
+  const current = useDebounce(form.getValues(), 1000)
+
   const onSubmit = async (data: SchemaProps) => {
     try {
       const json = await trigger(data)
-      setSaved(true)
-      setError('')
-      router.push('/datasets')
+      setValues(json.body)
       router.refresh()
-      console.log(`${datasetId ? 'edit' : 'add'} Dataset onSubmit json:`, json)
+      console.log(`edit Dataset onSubmit json:`, json)
     } catch (error) {
-      setError(error as string)
+      console.log('edit dataset error', error)
     }
   }
+
+  const checkFiles = useMemo(() => {
+    const files = current?.files
+    const origin = values?.files
+    if (files?.length !== origin?.length) {
+      return true
+    }
+    files?.forEach((item: FileProps) => {
+      const index = origin?.findIndex((m: FileProps) => m?.url === item?.url)
+      if (index === -1) {
+        return true
+      }
+    })
+    return false
+  }, [current?.files, values?.files])
+
+  const checkIsUpdate = useMemo(() => {
+    if (checkFiles) {
+      return true
+    }
+    for (let k in current) {
+      // @ts-ignore
+      if (k !== 'files' && current?.[k] !== values?.[k]) {
+        return true
+      }
+    }
+    return false
+  }, [checkFiles, current, values])
+
+  useEffect(() => {
+    if (checkIsUpdate) {
+      handleSubmit(onSubmit)()
+    } else {
+      return
+    }
+  }, [current])
+
   return (
     <div
       className="h-full w-full overflow-auto px-14 pb-[100px] pt-12"
@@ -96,7 +128,7 @@ const DatasetForm = ({
     >
       <div className="sm:w-full md:max-w-[600px]">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+          <form className="w-full">
             <section
               id="dataset-name"
               ref={sectionRefs[0]}
@@ -145,28 +177,6 @@ const DatasetForm = ({
                 </div>
               </div>
             )}
-            <div
-              className={cn(
-                'fixed bottom-6 mt-2 flex w-[600px] items-center justify-between rounded-lg border bg-white	px-4 py-2 shadow-xl',
-                error ? 'bg-red-500 text-slate-100' : ''
-              )}
-            >
-              <div className="max-w-[500px]"> {error}</div>
-              <div className="flex justify-end gap-2 ">
-                <Button
-                  type="reset"
-                  onClick={handelCancel}
-                  variant="outline"
-                  disabled={isMutating}
-                  className={cn(error ? 'border-none bg-red-500' : '')}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isMutating}>
-                  {isMutating ? 'Submitting...' : 'Submit'}
-                </Button>
-              </div>
-            </div>
           </form>
         </Form>
       </div>

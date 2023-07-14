@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { PlusIcon } from 'lucide-react'
 
 import { getDatasets } from '@/db/datasets/actions'
-import { Button } from '@/components/ui/button'
 import DatasetCard from '@/components/dataset-card'
 import RootWrapper from '@/components/root-wrapper'
+
+import CreateDialog from './create-dataset'
 
 export default async function Page() {
   const datasets = await getDatasets()
@@ -13,12 +13,7 @@ export default async function Page() {
       <div className="flex flex-col">
         <div className="hidden h-12 items-center justify-between px-6 lg:flex">
           <h1 className="font-medium">My Datasets</h1>
-          <Link href="/dataset/new">
-            <Button size="sm">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Add Dataset
-            </Button>
-          </Link>
+          <CreateDialog />
         </div>
         <div className="m-full h-px bg-slate-100" />
         <div className="p-6">

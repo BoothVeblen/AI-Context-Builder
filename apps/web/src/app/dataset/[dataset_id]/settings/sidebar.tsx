@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button'
 import { SectionType } from './setting-page'
 
 interface IProps {
-  handleGoBack: () => void
   datasetId?: string
   showMore?: boolean
   scrollRef: RefObject<HTMLDivElement>
@@ -59,7 +58,6 @@ function deleteDataset(url: string) {
 }
 
 const SlideBar = ({
-  handleGoBack,
   showMore,
   scrollRef,
   activeSection,
@@ -98,7 +96,10 @@ const SlideBar = ({
         <Button
           variant="outline"
           className="h-8 w-8 p-0"
-          onClick={handleGoBack}
+          onClick={() => {
+            router.push('/datasets')
+            router.refresh()
+          }}
         >
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
@@ -124,37 +125,35 @@ const SlideBar = ({
         </div>
       </div>
       <div className="m-full h-px bg-slate-100" />
-      {datasetId && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <div className="w-full px-3 py-4">
-              <Button variant="ghost" className="w-full justify-between">
-                Delete this Dataset
-                <Trash2 size={18} />
-              </Button>
-            </div>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="w-[512px]">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Dataset?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete “Customer Service Documentation”
-                Dataset? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={isMutating}
-                className="bg-red-500 text-white hover:bg-red-500"
-                onClick={handelDelete}
-              >
-                Delete Dataset
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <div className="w-full px-3 py-4">
+            <Button variant="ghost" className="w-full justify-between">
+              Delete this Dataset
+              <Trash2 size={18} />
+            </Button>
+          </div>
+        </AlertDialogTrigger>
+        <AlertDialogContent className="w-[512px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Dataset?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete “Customer Service Documentation”
+              Dataset? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMutating}
+              className="bg-red-500 text-white hover:bg-red-500"
+              onClick={handelDelete}
+            >
+              {isMutating ? 'Deleting Dataset' : 'Delete Dataset'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

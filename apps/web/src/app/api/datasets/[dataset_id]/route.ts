@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { addDataset, editDataset, removeDataset } from '@/db/datasets/actions'
@@ -28,6 +29,8 @@ export async function PATCH(
 
   const body = (await req.json()) as Partial<NewDataset>
   await editDataset(dataset_id, body)
+  await revalidateTag(`dataset:${dataset_id}`)
+  await revalidateTag(`datasets`)
   return NextResponse.json({ success: true, data: { dataset_id, body } })
 }
 
