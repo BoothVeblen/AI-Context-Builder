@@ -97,7 +97,6 @@ export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
     if (response?.error) {
       toast({ variant: 'destructive', description: response.error })
     } else {
-      toast({ description: 'Update successfully.' })
       router.refresh()
     }
   }

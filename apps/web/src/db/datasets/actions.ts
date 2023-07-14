@@ -23,15 +23,16 @@ export async function addDataset(
     config,
   }
   const newDataset = await db.insert(DatasetsTable).values(data).returning()
-  await revalidateTag(`datasets`)
+  await revalidateTag(`/user/${userId}/datasets`)
   const datasetId = newDataset[0]?.short_id
   return { datasetId, name: newDataset[0].name }
 }
 
 export async function getDatasets() {
+  const { userId } = auth()
+
   return await unstable_cache(
     async () => {
-      const { userId } = auth()
       if (!userId) return Promise.resolve([])
       return db
         .select()
@@ -44,10 +45,10 @@ export async function getDatasets() {
           )
         )
     },
-    [`datasets`],
+    [`/user/${userId}/datasets`],
     {
       revalidate: 15 * 60,
-      tags: [`datasets`],
+      tags: [`/user/${userId}/datasets`],
     }
   )()
 }
@@ -61,10 +62,10 @@ export async function getDataset(datasetId: string) {
         .where(eq(DatasetsTable.short_id, datasetId))
       return Promise.resolve(items[0])
     },
-    [`dataset:${datasetId}`],
+    [`/dataset/${datasetId}`],
     {
       revalidate: 15 * 60,
-      tags: [`dataset:${datasetId}`],
+      tags: [`/dataset/${datasetId}`],
     }
   )()
 }
@@ -79,8 +80,8 @@ export async function editDataset(id: string, newValue: Partial<NewDataset>) {
     .where(
       and(eq(DatasetsTable.short_id, id), eq(DatasetsTable.created_by, userId))
     )
-  await revalidateTag(`dataset:${id}`)
-  await revalidateTag(`datasets`)
+  await revalidateTag(`/dataset/${id}`)
+  await revalidateTag(`/user/${userId}/datasets`)
   return response
 }
 
@@ -93,6 +94,6 @@ export async function removeDataset(id: string) {
     .where(
       and(eq(DatasetsTable.short_id, id), eq(DatasetsTable.created_by, userId))
     )
-  await revalidateTag(`datasets`)
+  await revalidateTag(`/user/${userId}/datasets`)
   return response
 }

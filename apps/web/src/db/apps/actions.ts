@@ -33,16 +33,17 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
     .returning()
 
   await addToWorkspace(appId)
-  await revalidateTag(`apps`)
+  await revalidateTag(`/user/${userId}/apps`)
 
   return { appId, sessionId: newSession[0]?.short_id }
 }
 
 export async function getApps() {
+  const { userId } = auth()
+
   return await unstable_cache(
     async () => {
       try {
-        const { userId } = auth()
         if (!userId) {
           throw new Error('Not authenticated')
         }
@@ -58,10 +59,10 @@ export async function getApps() {
         redirect('/')
       }
     },
-    [`apps`],
+    [`/user/${userId}/apps`],
     {
       revalidate: 15 * 60,
-      tags: [`apps`],
+      tags: [`/user/${userId}/apps`],
     }
   )()
 }
@@ -85,10 +86,10 @@ export async function getApp(appId: string) {
         redirect('/')
       }
     },
-    [`app:${appId}`],
+    [`/app/${appId}`],
     {
       revalidate: 15 * 60, // revalidate in 15 minutes
-      tags: [`app:${appId}`],
+      tags: [`/app/${appId}`],
     }
   )()
 }
@@ -107,8 +108,8 @@ export async function editApp(id: string, newValue: Partial<NewApp>) {
       .set(newValue)
       .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
 
-    await revalidateTag(`app:${id}`)
-    await revalidateTag(`apps`)
+    await revalidateTag(`/app/${id}`)
+    await revalidateTag(`/user/${userId}/apps`)
 
     return response
   } catch (error: any) {
@@ -132,7 +133,7 @@ export async function removeApp(id: string) {
       .set({ archived: true, updated_at: new Date() })
       .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
 
-    await revalidateTag(`apps`)
+    await revalidateTag(`/user/${userId}/apps`)
 
     return response
   } catch (error: any) {
