@@ -1,8 +1,8 @@
 'use client'
 
-import { RefObject } from 'react'
+import { RefObject, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon, Trash2 } from 'lucide-react'
+import { ArrowLeftIcon, Loader2Icon, Trash2 } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'
 
 import { cn, fetcher } from '@/lib/utils'
@@ -66,6 +66,7 @@ const SlideBar = ({
   name,
 }: IProps) => {
   const data = showMore ? [...sections, ...moreSessions] : sections
+  const [isPending, startTransition] = useTransition()
   const { trigger, isMutating } = useSWRMutation(
     `/api/datasets/${datasetId}`,
     deleteDataset
@@ -99,11 +100,16 @@ const SlideBar = ({
           variant="outline"
           className="h-8 w-8 p-0"
           onClick={() => {
-            router.push('/datasets')
-            router.refresh()
+            startTransition(() => {
+              router.push('/datasets')
+            })
           }}
         >
-          <ArrowLeftIcon className="h-4 w-4" />
+          {isPending ? (
+            <Loader2Icon className="h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowLeftIcon className="h-4 w-4" />
+          )}
         </Button>
         <div className="text-lg font-semibold">Back</div>
       </div>
