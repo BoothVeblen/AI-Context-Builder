@@ -22,7 +22,7 @@ export interface SessionProps {
 }
 const types = [
   { label: 'Character TextSplitter', value: 'character textsplitter' },
-  { label: 'Coming soon...', value: 'coming soon' },
+  { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
 const TextSplits = ({ form, sectionRef }: SessionProps) => {

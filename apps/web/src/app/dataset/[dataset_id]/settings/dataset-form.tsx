@@ -7,6 +7,7 @@ import { useDebounce } from 'usehooks-ts'
 import { z } from 'zod'
 
 import { fetcher } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -167,14 +168,15 @@ const DatasetForm = ({
               </>
             ) : (
               <div className="flex w-full justify-center py-6">
-                <div
-                  className="cursor-pointer rounded-md border px-4 py-1	"
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     setShowMore?.(true)
                   }}
                 >
                   Show more options
-                </div>
+                </Button>
               </div>
             )}
           </form>

@@ -18,7 +18,7 @@ import { SessionProps } from './splitter'
 
 const types = [
   { label: 'PDF loader', value: 'pdf loader' },
-  { label: 'Coming soon...', value: 'coming soon' },
+  { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
 export interface FileProps {

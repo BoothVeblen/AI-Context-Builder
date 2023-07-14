@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { SectionType } from './setting-page'
 
 interface IProps {
+  name: string
   datasetId?: string
   showMore?: boolean
   scrollRef: RefObject<HTMLDivElement>
@@ -62,6 +63,7 @@ const SlideBar = ({
   scrollRef,
   activeSection,
   datasetId,
+  name,
 }: IProps) => {
   const data = showMore ? [...sections, ...moreSessions] : sections
   const { trigger, isMutating } = useSWRMutation(
@@ -138,8 +140,8 @@ const SlideBar = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Dataset?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete “Customer Service Documentation”
-              Dataset? This action cannot be undone.
+              Are you sure you want to delete “{name}” Dataset? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

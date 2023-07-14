@@ -14,7 +14,7 @@ import { SessionProps } from './splitter'
 
 const types = [
   { label: 'OpenAI Embedding', value: 'openAI embedding' },
-  { label: 'Coming soon...', value: 'coming soon' },
+  { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
 const TextEmbedding = ({ form, sectionRef }: SessionProps) => {

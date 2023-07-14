@@ -14,7 +14,7 @@ import { SessionProps } from './splitter'
 
 const types = [
   { label: 'Pinecone', value: 'pinecone' },
-  { label: 'Coming soon...', value: 'coming soon' },
+  { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
 const VectorStores = ({ form, sectionRef }: SessionProps) => {
