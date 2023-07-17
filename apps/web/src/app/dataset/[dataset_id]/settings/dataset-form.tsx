@@ -34,6 +34,7 @@ interface IProps {
   setShowMore?: (s: boolean) => void
   scrollRef: RefObject<HTMLDivElement>
   sectionRefs: RefObject<HTMLDivElement>[]
+  setUploading?: (s: boolean) => void
 }
 
 function editDataset(url: string, { arg }: { arg: SchemaProps }) {
@@ -51,6 +52,7 @@ const DatasetForm = ({
   scrollRef,
   sectionRefs,
   files,
+  setUploading,
 }: IProps) => {
   const uploadFiles = useMemo(() => {
     return files
@@ -159,6 +161,7 @@ const DatasetForm = ({
               sectionRef={sectionRefs[1]}
               data={data}
               setData={setData}
+              setUploading={setUploading}
             />
             {showMore ? (
               <>

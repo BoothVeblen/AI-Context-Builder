@@ -118,7 +118,7 @@ export const PDFFile = (props: FileItemProps) => {
           <div className={`flex-b flex w-[90%] items-center gap-2 `}>
             <PdfImage />
             <div className="flex w-full flex-col gap-1">
-              <div className={`line-clamp-1 ${fileNameStyle}`}>
+              <div className={`line-clamp-1 break-all ${fileNameStyle}`}>
                 {file?.name}
               </div>
               {file?.status === 'uploading' &&

@@ -39,9 +39,16 @@ export const stringUrlToFile = (file: FileProps) => {
 interface IProps extends SessionProps {
   data: UploadFile<any>[]
   setData: (data: UploadFile<any>[]) => void
+  setUploading?: (s: boolean) => void
 }
 
-const DocumentLoader = ({ form, sectionRef, setData, data }: IProps) => {
+const DocumentLoader = ({
+  form,
+  sectionRef,
+  setData,
+  data,
+  setUploading,
+}: IProps) => {
   const getSuccessFile = (values: UploadFile[]) => {
     const success = values
       ?.filter((item) => item?.url && item?.status === 'success')
@@ -50,6 +57,11 @@ const DocumentLoader = ({ form, sectionRef, setData, data }: IProps) => {
         return m
       }, [])
     form.setValue('files', [...success])
+    if (success?.length === values?.length) {
+      setUploading?.(false)
+    } else {
+      setUploading?.(true)
+    }
   }
   const handleFiles = (values: UploadFile[]) => {
     setData([...values])

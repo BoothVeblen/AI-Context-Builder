@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject, useMemo, useRef, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 
 import useScrollSpy from '@/hooks/use-scroll-spy'
@@ -42,7 +42,21 @@ const DatasetSetting = ({
 
   const [showMore, setShowMore] = useState<boolean>(false)
   const defaultValues = useMemo(() => ({ name, ...config }), [config, name])
+  const [uploading, setUploading] = useState(false)
+  const unloadCallback = (event: BeforeUnloadEvent) => {
+    event.preventDefault()
+    event.returnValue = ''
+    return ''
+  }
 
+  useEffect(() => {
+    if (uploading) {
+      window.addEventListener('beforeunload', unloadCallback)
+      return () => {
+        window.removeEventListener('beforeunload', unloadCallback)
+      }
+    }
+  })
   return (
     <div className="absolute inset-0 flex h-full w-full bg-white">
       <div className="w-[276px] border-r border-slate-200 bg-slate-50">
@@ -61,6 +75,7 @@ const DatasetSetting = ({
         files={config?.files}
         setShowMore={setShowMore}
         scrollRef={scrollRef}
+        setUploading={setUploading}
         sectionRefs={sectionRefs}
       />
     </div>
