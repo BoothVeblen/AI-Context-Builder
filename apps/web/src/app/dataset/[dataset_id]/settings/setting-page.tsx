@@ -58,7 +58,7 @@ const DatasetSetting = ({
     }
   })
   return (
-    <div className="absolute inset-0 flex h-full w-full bg-white">
+    <div className="absolute inset-0 hidden h-full w-full bg-white lg:flex">
       <div className="w-[276px] border-r border-slate-200 bg-slate-50">
         <SlideBar
           showMore={showMore}

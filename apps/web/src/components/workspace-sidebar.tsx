@@ -145,22 +145,24 @@ export default function WorkspaceSidebar({ appList }: IProps) {
               </li>
             )
           })}
-          <CreateAppDialog
-            dialogTrigger={
-              <li className="group flex justify-center">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-12 w-12 cursor-pointer rounded-3xl bg-white transition-all group-hover:rounded-2xl">
-                      <AvatarFallback className="bg-white">
-                        <PlusIcon />
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Create an app</TooltipContent>
-                </Tooltip>
-              </li>
-            }
-          />
+          <div className="hidden lg:block">
+            <CreateAppDialog
+              dialogTrigger={
+                <li className="group flex justify-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-12 w-12 cursor-pointer rounded-3xl bg-white transition-all group-hover:rounded-2xl">
+                        <AvatarFallback className="bg-white">
+                          <PlusIcon />
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Create an app</TooltipContent>
+                  </Tooltip>
+                </li>
+              }
+            />
+          </div>
         </ul>
       </nav>
     </div>

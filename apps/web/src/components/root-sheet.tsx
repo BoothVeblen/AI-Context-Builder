@@ -50,7 +50,7 @@ export default function RootSheet({ children, defaultPageTitle }: IProps) {
           </SheetContent>
         </Sheet>
         {pageTitle && (
-          <div className="flex-1 text-sm font-semibold leading-6 text-gray-900">
+          <div className="flex-1 text-sm font-medium leading-6 text-gray-900">
             {pageTitle}
           </div>
         )}
