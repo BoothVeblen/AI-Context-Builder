@@ -11,8 +11,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { FileProps } from '@/components/upload/utils'
 
-import { FileProps } from './document-loader'
 import SearchSelect from './search-select'
 
 export interface SessionProps {

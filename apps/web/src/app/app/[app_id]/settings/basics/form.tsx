@@ -1,16 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera, Loader2 } from 'lucide-react'
-import { nanoid } from 'nanoid'
+import { isEqual } from 'lodash'
 import { useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
+import { useDebounce } from 'usehooks-ts'
 import { z } from 'zod'
 
-import { cn, fetcher, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { fetcher, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import {
   Form,
   FormControl,
@@ -22,8 +21,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
-import { UploadFile, UploadFileStatus } from '@/components/upload/type'
 import Upload from '@/components/upload/upload'
+import { FileProps } from '@/components/upload/utils'
 
 function editApp(
   url: string,
@@ -57,38 +56,35 @@ interface IProps {
   appId: string
   defaultValues: {
     name: string
-    description: string
-    icon: string
+    description?: string
+    icon?: string
   }
 }
 
 export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
   const { trigger } = useSWRMutation(`/api/apps/${appId}`, editApp)
   const { toast } = useToast()
-  const stringUrlToFile = () => {
-    const icon = defaultValues?.icon
-    const status: UploadFileStatus = 'success'
-    return icon
-      ? [
-          {
-            url: icon,
-            name: '',
-            uid: nanoid(),
-            status,
-          },
-        ]
-      : []
-  }
-  const [image, setImage] = useState<UploadFile<any>[]>(stringUrlToFile())
-  const [disabled, setDisabled] = useState<boolean>(false)
+  const values = defaultValues?.icon
+    ? [
+        {
+          url: defaultValues?.icon,
+          name: '',
+        },
+      ]
+    : []
+  const [image, setImage] = useState<FileProps[]>(values)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
-    mode: 'onBlur',
   })
 
   const { watch, handleSubmit } = form
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const formValue = useMemo(() => watch(), [JSON.stringify(watch())])
+  const debouncedFormValue = useDebounce(formValue, 1000)
+  const latestFormValueRef = useRef(defaultValues)
 
   const router = useRouter()
   const onSubmit = async () => {
@@ -97,30 +93,26 @@ export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
     if (response?.error) {
       toast({ variant: 'destructive', description: response.error })
     } else {
+      latestFormValueRef.current = newValue
       router.refresh()
     }
   }
-  const handleFiles = (file: UploadFile<any>[]) => {
-    const lens = file?.length
-    if (file[lens - 1]?.status === 'uploading') {
-      setDisabled(true)
+
+  useEffect(() => {
+    if (!isEqual(debouncedFormValue, latestFormValueRef.current)) {
+      handleSubmit(onSubmit)()
     }
-    setImage([file[lens - 1]])
-    if (file[lens - 1]?.url) {
-      const newUrl = file[lens - 1]?.url || ''
-      form.setValue('icon', newUrl)
-      setDisabled(false)
-      onSubmit()
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(debouncedFormValue)])
 
   const color = getAvatarBgColor(appId)
+  const bgText = getFirstLetter(watch().name || '')
 
   return (
     <div>
       <h6 className="mb-6	text-2xl font-semibold leading-8">Basics</h6>
       <Form {...form}>
-        <form onBlur={handleSubmit(onSubmit)} className="space-y-8">
+        <form className="space-y-8">
           <FormField
             control={form.control}
             name="name"
@@ -157,49 +149,19 @@ export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
       </Form>
       <div className="mt-6">
         <div className="mb-2">Image</div>
-        <div
-          className={cn(
-            'relative flex h-16 w-16 items-center justify-center rounded-lg border-0 bg-orange-600',
-            watch().icon ? '' : `bg-${color}-600 text-white`,
-            image[0]?.status === 'error' ? 'border-[#ff4d4f]' : '',
-            image[0]?.status === 'uploading' ? 'bg-gray-50' : '',
-            image[0]?.status === 'success'
-              ? 'border border-gray-100 bg-white'
-              : ''
-          )}
-        >
-          {image?.length === 0 ? (
-            getFirstLetter(watch().name || '')
-          ) : image[0]?.status === 'uploading' ? (
-            <div className="bg-slate-100">
-              <Loader2 className="h-3 w-3 animate-spin" />
-            </div>
-          ) : (
-            <div>
-              <img src={image[0]?.url} alt="image" />
-            </div>
-          )}
-          <Upload
-            listType="image"
-            accept=".png,.jpeg,.webp,.jpg"
-            fileList={image}
-            handleFiles={(file) => handleFiles(file)}
-            customRequest={() => {}}
-            showFileList={false}
-            onRemove={() => setImage([])}
-            disabled={disabled}
-            className="z-1 absolute bottom-[-8px] right-[-8px] h-6 w-6 rounded-full border bg-white text-black"
-          >
-            <Button
-              className="h-6 w-6 rounded-full border"
-              variant="outline"
-              size="icon"
-              disabled={disabled}
-            >
-              <Camera size={16} strokeWidth={2} />
-            </Button>
-          </Upload>
-        </div>
+        <Upload
+          listType="update-image"
+          accept=".png,.jpeg,.webp,.jpg"
+          fileList={image}
+          bgColor={color}
+          listProps={false}
+          bgText={bgText}
+          onChangeFileList={(files) => {
+            const current = files[files?.length - 1]
+            form.setValue('icon', current?.url)
+            setImage(files)
+          }}
+        />
       </div>
     </div>
   )

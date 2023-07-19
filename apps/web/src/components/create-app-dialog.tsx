@@ -3,7 +3,6 @@
 import { ReactNode, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
@@ -29,8 +28,8 @@ import {
 } from './ui/form'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
-import { UploadFile } from './upload/type'
 import Upload from './upload/upload'
+import { FileProps } from './upload/utils'
 
 interface IProps {
   dialogTrigger?: ReactNode
@@ -81,15 +80,14 @@ const CreateAppDialog = (props: IProps) => {
   const router = useRouter()
   const { mutate } = useSWRConfig()
   const [open, setOpen] = useState<boolean>(false)
-  const [disabled, setDisabled] = useState<boolean>(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
   })
   const { reset, setValue } = form
 
-  const [image, setImage] = useState<UploadFile[]>([])
-
+  const [image, setImage] = useState<FileProps[]>([])
+  const [uploading, setUploading] = useState(false)
   const { trigger, isMutating } = useSWRMutation('/api/me/apps', addApp)
 
   const onSubmit = async (data: FormValuesProps) => {
@@ -110,12 +108,7 @@ const CreateAppDialog = (props: IProps) => {
     setImage([])
   }
 
-  const handleFiles = (file: UploadFile<any>[]) => {
-    if (file[0]?.status === 'uploading') {
-      setDisabled(true)
-    } else {
-      setDisabled(false)
-    }
+  const onChangeFileList = (file: FileProps[]) => {
     setImage(file)
     setValue('icon', file[0]?.url || '')
   }
@@ -171,21 +164,12 @@ const CreateAppDialog = (props: IProps) => {
                     <FormLabel>Image</FormLabel>
                     <FormControl>
                       <Upload
-                        onRemove={() => {
-                          setImage([])
-                          setDisabled(false)
-                        }}
                         listType="image"
+                        setUploading={setUploading}
                         accept=".png, .jpeg,.webp,.jpg"
                         fileList={image}
-                        handleFiles={handleFiles}
-                        customRequest={() => {}}
-                        className=" h-16 w-16 rounded-lg border border-slate-300 bg-slate-50	"
-                      >
-                        <div className="flex h-16 w-16 items-center justify-center border-none bg-slate-50">
-                          <Camera size={28} />
-                        </div>
-                      </Upload>
+                        onChangeFileList={onChangeFileList}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +184,7 @@ const CreateAppDialog = (props: IProps) => {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={disabled || isMutating}>
+              <Button type="submit" disabled={isMutating || uploading}>
                 {isMutating ? 'Creating...' : 'Create'}
               </Button>
             </div>

@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 
 import {
@@ -10,8 +9,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { UploadFile, UploadFileStatus } from '@/components/upload/type'
+import { UploadFileStatus } from '@/components/upload/type'
 import Upload from '@/components/upload/upload'
+import { FileProps } from '@/components/upload/utils'
 
 import SearchSelect from './search-select'
 import { SessionProps } from './splitter'
@@ -20,11 +20,6 @@ const types = [
   { label: 'PDF loader', value: 'pdf loader' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
-
-export interface FileProps {
-  name?: string
-  url?: string
-}
 
 export const stringUrlToFile = (file: FileProps) => {
   const status: UploadFileStatus = 'success'
@@ -37,8 +32,8 @@ export const stringUrlToFile = (file: FileProps) => {
 }
 
 interface IProps extends SessionProps {
-  data: UploadFile<any>[]
-  setData: (data: UploadFile<any>[]) => void
+  data: FileProps[]
+  setData: (data: FileProps[]) => void
   setUploading?: (s: boolean) => void
 }
 
@@ -49,30 +44,11 @@ const DocumentLoader = ({
   data,
   setUploading,
 }: IProps) => {
-  const getSuccessFile = (values: UploadFile[]) => {
-    const success = values
-      ?.filter((item) => item?.url && item?.status === 'success')
-      ?.reduce((m: FileProps[], file: UploadFile) => {
-        m?.push({ url: file?.url || '', name: file?.name || '' })
-        return m
-      }, [])
-    form.setValue('files', [...success])
-    if (success?.length === values?.length) {
-      setUploading?.(false)
-    } else {
-      setUploading?.(true)
-    }
-  }
-  const handleFiles = (values: UploadFile[]) => {
+  const onChangeFileList = (values: FileProps[]) => {
     setData([...values])
-    getSuccessFile(values)
+    form.setValue('files', [...values])
   }
 
-  const handleRemove = (file: UploadFile) => {
-    const newData = data?.filter((item) => item?.uid !== file?.uid)
-    setData([...newData])
-    getSuccessFile(newData)
-  }
   return (
     <section
       id="loaders"
@@ -106,16 +82,15 @@ const DocumentLoader = ({
               <FormControl>
                 <Upload
                   className="items-start justify-start"
-                  showUploadList={{
+                  listProps={{
                     showDownloadIcon: false,
                     showPreviewIcon: false,
                   }}
-                  onRemove={handleRemove}
+                  setUploading={setUploading}
                   listType="pdf"
                   accept="application/pdf"
                   fileList={data}
-                  handleFiles={handleFiles}
-                  customRequest={() => {}}
+                  onChangeFileList={onChangeFileList}
                 />
               </FormControl>
               <FormMessage />

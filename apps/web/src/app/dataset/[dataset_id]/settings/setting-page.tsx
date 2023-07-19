@@ -42,21 +42,7 @@ const DatasetSetting = ({
 
   const [showMore, setShowMore] = useState<boolean>(false)
   const defaultValues = useMemo(() => ({ name, ...config }), [config, name])
-  const [uploading, setUploading] = useState(false)
-  const unloadCallback = (event: BeforeUnloadEvent) => {
-    event.preventDefault()
-    event.returnValue = ''
-    return ''
-  }
 
-  useEffect(() => {
-    if (uploading) {
-      window.addEventListener('beforeunload', unloadCallback)
-      return () => {
-        window.removeEventListener('beforeunload', unloadCallback)
-      }
-    }
-  })
   return (
     <div className="absolute inset-0 hidden h-full w-full bg-white lg:flex">
       <div className="w-[276px] border-r border-slate-200 bg-slate-50">
@@ -75,7 +61,6 @@ const DatasetSetting = ({
         files={config?.files}
         setShowMore={setShowMore}
         scrollRef={scrollRef}
-        setUploading={setUploading}
         sectionRefs={sectionRefs}
       />
     </div>

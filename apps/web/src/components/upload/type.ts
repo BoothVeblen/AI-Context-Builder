@@ -5,6 +5,8 @@ import type {
   UploadProps as RcUploadProps,
 } from 'rc-upload/lib/interface'
 
+import { FileProps } from './utils'
+
 export interface HttpRequestHeader {
   [key: string]: string
 }
@@ -46,24 +48,18 @@ export interface UploadFile<T = any> {
   uid: string
   size?: number
   name: string
-  fileName?: string
   lastModified?: number
-  lastModifiedDate?: Date
   url?: string
   status?: UploadFileStatus
   percent?: number
-  thumbUrl?: string
-  crossOrigin?: React.ImgHTMLAttributes<HTMLImageElement>['crossOrigin']
   originFileObj?: File
   response?: T
   error?: any
-  linkProps?: any
   type?: string
-  xhr?: T
   preview?: string
 }
-// export type UploadListProgressProps = Omit<ProgressProps, 'percent' | 'type'>
-type BeforeUploadValueType = void | boolean | string | Blob | File
+
+export type BeforeUploadValueType = void | boolean | string | Blob | File
 
 export interface UploadChangeParam<T = UploadFile> {
   // https://github.com/ant-design/ant-design/issues/14420
@@ -75,17 +71,19 @@ export interface UploadChangeParam<T = UploadFile> {
 export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
   name?: string
   controller?: AbortController
-  handleFiles?: (files: UploadFile<any>[]) => void
+  onChangeFileList?: (files: FileProps[]) => void
+  setUploading?: (s: boolean) => void
+  bgColor?: string
+  bgText?: string
   defaultFileList?: Array<UploadFile<T>>
   showFileList?: boolean
-  fileList?: Array<UploadFile<T>>
+  fileList?: FileProps[]
   type?: 'drag' | 'select'
-  listType?: 'images-list' | 'pdf' | 'image'
+  listType?: 'images-list' | 'pdf' | 'image' | 'update-image'
   action?:
     | string
     | ((file: RcFile) => string)
     | ((file: RcFile) => PromiseLike<string>)
-  directory?: boolean
   data?:
     | Record<string, unknown>
     | ((
@@ -93,7 +91,7 @@ export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
       ) => Record<string, unknown> | Promise<Record<string, unknown>>)
   method?: 'POST' | 'PUT' | 'PATCH' | 'post' | 'put' | 'patch'
   headers?: HttpRequestHeader
-  showUploadList?: boolean | ShowUploadListInterface
+  listProps?: boolean | listPropsInterface
   multiple?: boolean
   accept?: string
   beforeUpload?: (
@@ -111,14 +109,13 @@ export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
   withCredentials?: boolean
   openFileDialogOnClick?: boolean
   locale?: UploadLocale
-  id?: string
   progress?: ReactNode
   maxCount?: number
   children?: React.ReactNode
   disabled?: boolean
 }
 
-export interface ShowUploadListInterface<T = any> {
+export interface listPropsInterface<T = any> {
   showRemoveIcon?: boolean
   showPreviewIcon?: boolean
   showDownloadIcon?: boolean
@@ -146,7 +143,7 @@ export interface FileItemProps<T = any> {
   file: UploadFile
   progress?: ReactNode | number
   className?: string
-  showUploadList?: boolean | ShowUploadListInterface
+  listProps?: boolean | listPropsInterface
   fileNameStyle?: string
   locale?: UploadLocale
 }

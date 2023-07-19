@@ -17,9 +17,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { UploadFile } from '@/components/upload/type'
+import { FileProps } from '@/components/upload/utils'
 
-import DocumentLoader, { FileProps, stringUrlToFile } from './document-loader'
+import DocumentLoader, { stringUrlToFile } from './document-loader'
 import { SchemaProps } from './setting-page'
 import TextSplits from './splitter'
 import TextEmbedding from './text-embedding'
@@ -56,7 +56,7 @@ const DatasetForm = ({
 }: IProps) => {
   const uploadFiles = useMemo(() => {
     return files
-      ? files.reduce((m: UploadFile<any>[], item: FileProps) => {
+      ? files.reduce((m: FileProps[], item: FileProps) => {
           const file = stringUrlToFile(item)
           m?.push(file)
           return m
@@ -64,7 +64,7 @@ const DatasetForm = ({
       : []
   }, [files])
 
-  const [data, setData] = useState<UploadFile<any>[]>(uploadFiles)
+  const [data, setData] = useState<FileProps[]>(uploadFiles)
   const [values, setValues] = useState<SchemaProps>(defaultValues)
 
   const form = useForm<z.infer<typeof FormSchema>>({

@@ -1,13 +1,19 @@
-import axios, { CancelTokenSource } from 'axios'
+import axios from 'axios'
 
-import type { InternalUploadFile, RcFile, UploadFile } from './type'
-import { ShowUploadListInterface } from './type'
+import { nanoid } from '@/lib/utils'
+
+import type {
+  InternalUploadFile,
+  RcFile,
+  UploadFile,
+  UploadFileStatus,
+} from './type'
+import { listPropsInterface } from './type'
 
 export function file2Obj(file: RcFile): InternalUploadFile {
   return {
     ...file,
     lastModified: file.lastModified,
-    lastModifiedDate: file.lastModifiedDate,
     name: file.name,
     size: file.size,
     type: file.type,
@@ -52,13 +58,11 @@ export function removeFileItem(
   return removed
 }
 
-export const checkShowIcon = (
-  showUploadList: boolean | ShowUploadListInterface
-) => {
-  if (typeof showUploadList === 'object') {
-    return { show: true, ...showUploadList }
+export const checkShowIcon = (listProps: boolean | listPropsInterface) => {
+  if (typeof listProps === 'object') {
+    return { show: true, ...listProps }
   } else {
-    return { show: showUploadList }
+    return { show: listProps }
   }
 }
 
@@ -77,42 +81,71 @@ export const getBase64 = (img: RcFile, callback: (url: string) => void) => {
 
 const changeCurrentFile = async (
   file: UploadFile,
-  fileList: UploadFile[],
-  handleFiles?: (files: UploadFile<any>[]) => void
+  mergedFileList: UploadFile[],
+  setMergedFileList?: (files: UploadFile<any>[]) => void
 ) => {
-  const index = fileList?.indexOf(
+  const index = mergedFileList?.indexOf(
     // @ts-ignore
     (item: { uid: any }) => item?.uid === file?.uid
   )
+
   if (index !== -1) {
-    fileList[index] = file
+    mergedFileList[index] = file
   }
-  handleFiles?.(fileList)
+  setMergedFileList?.(mergedFileList)
+}
+
+const handleSuccess = ({
+  mergedFileList,
+  onChangeFileList,
+}: {
+  mergedFileList: UploadFile[]
+  onChangeFileList?: (files: FileProps[]) => void
+}) => {
+  const success = mergedFileList?.filter(
+    (item) => item?.status === 'success' && item?.url
+  )
+  const data = success?.reduce((m: FileProps[], item: UploadFile) => {
+    m.push({
+      url: item?.url || '',
+      uid: nanoid(),
+      type: item?.type,
+      name: item?.name,
+    })
+    return m
+  }, [])
+  onChangeFileList?.(data)
 }
 
 export const uploadFile = async ({
   file,
-  fileList,
+  mergedFileList,
+  fileList = [],
   controller,
-  handleFiles,
-  source,
+  onChangeFileList,
+  setMergedFileList,
+  setIsUploading,
 }: {
   file: UploadFile
-  fileList: UploadFile[]
-  source?: CancelTokenSource
+  mergedFileList: UploadFile<any>[]
+  fileList?: FileProps[]
   controller?: AbortController
-  handleFiles?: (files: UploadFile<any>[]) => void
+  onChangeFileList?: (files: FileProps[]) => void
+  setMergedFileList?: (files: UploadFile<any>[]) => void
+  setIsUploading: (s: boolean) => void
 }) => {
+  setIsUploading(true)
   if (!file) return
   file.status = 'uploading'
   file.percent = 0
-  await changeCurrentFile(file, fileList, handleFiles)
+  await changeCurrentFile(file, mergedFileList, setMergedFileList)
   const filename = encodeURIComponent(file?.name || '')
   const res = await fetch(`/api/upload-url/gcp?filename=${filename}`)
   const { success, data } = await res.json()
   if (!success) {
     file.status = 'error'
-    await changeCurrentFile(file, fileList, handleFiles)
+    setIsUploading(false)
+    await changeCurrentFile(file, mergedFileList, setMergedFileList)
   }
 
   const { upload_url, upload_fields, file_url } = data as {
@@ -129,21 +162,23 @@ export const uploadFile = async ({
       formData.append(key, value)
     }
   )
+
   axios
     .post(upload_url, formData, {
       signal: controller?.signal,
-      cancelToken: source?.token,
       onUploadProgress: async (progressEvent) => {
         file.status = 'uploading'
         const { progress = 0 } = progressEvent
         file.percent = progress * 100
-        await changeCurrentFile(file, fileList, handleFiles)
+        await changeCurrentFile(file, mergedFileList, setMergedFileList)
       },
     })
     .then(async () => {
       file.status = 'success'
       file.url = file_url
-      await changeCurrentFile(file, fileList, handleFiles)
+      setIsUploading(false)
+      handleSuccess({ mergedFileList, onChangeFileList })
+      await changeCurrentFile(file, mergedFileList, setMergedFileList)
     })
     .catch((error) => {
       if (axios.isCancel(error)) {
@@ -152,4 +187,44 @@ export const uploadFile = async ({
       file.status = 'error'
       console.error(error)
     })
+}
+
+export const stringUrlToFile = (url: string) => {
+  const status: UploadFileStatus = 'success'
+  return url
+    ? [
+        {
+          url,
+          name: '',
+          uid: nanoid(),
+          status,
+        },
+      ]
+    : []
+}
+
+export type FileProps = {
+  name: string
+  url: string
+  uid?: string
+  type?: string
+}
+export const changeToUploadFile = (
+  value: Array<FileProps | string> | string
+) => {
+  const isFiles = Array.isArray(value)
+  if (isFiles) {
+    const data = value?.reduce((m: UploadFile[], item: FileProps | string) => {
+      const isImage = typeof item === 'string'
+      const status: UploadFileStatus = 'success'
+      const cur = isImage
+        ? stringUrlToFile(item)[0]
+        : { ...item, status, uid: nanoid() }
+      m.push(cur)
+      return m
+    }, [])
+    return data
+  } else {
+    return stringUrlToFile(value)
+  }
 }

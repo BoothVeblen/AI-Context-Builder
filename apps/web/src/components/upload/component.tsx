@@ -35,6 +35,7 @@ interface PreviewProps {
 export const IconBox = (props: IconBoxProps) => (
   <Button
     variant="outline"
+    type="button"
     className={`flex h-8 w-8 items-center justify-center rounded-md border p-0 ${cn(
       props?.className
     )}`}
@@ -96,8 +97,8 @@ export const PdfImage = ({
 )
 
 export const PDFFile = (props: FileItemProps) => {
-  const { file, showUploadList, fileNameStyle, onRemove } = props
-  const showIcon = checkShowIcon(showUploadList || false)
+  const { file, listProps, fileNameStyle, onRemove } = props
+  const showIcon = checkShowIcon(listProps || false)
   const [open, setOpen] = useState<boolean>(false)
   const preview = (file: UploadFile) => {
     if (props?.onPreview) {
@@ -123,7 +124,7 @@ export const PDFFile = (props: FileItemProps) => {
               <div className={`line-clamp-1 break-all ${fileNameStyle}`}>
                 {file?.name}
               </div>
-              {file?.status === 'uploading' &&
+              {(file?.status === 'uploading' || !file?.url) &&
                 (props?.progress || (
                   <Progress value={file?.percent || 0} className="h-1" />
                 ))}
@@ -134,14 +135,14 @@ export const PDFFile = (props: FileItemProps) => {
               {(file?.status === 'success' || file?.status === 'done') &&
                 file?.url && (
                   <>
-                    {showIcon?.showDownloadIcon && (
+                    {showIcon?.showDownloadIcon !== false && (
                       <IconBox onClick={() => props?.onDownload!(file)}>
                         {showIcon?.downloadIcon || (
                           <Download size={16} strokeWidth={3} color="#000" />
                         )}
                       </IconBox>
                     )}
-                    {showIcon?.showPreviewIcon && (
+                    {showIcon?.showPreviewIcon !== false && (
                       <IconBox onClick={() => preview(file)}>
                         {showIcon?.previewIcon || (
                           <Eye size={16} strokeWidth={3} />
@@ -174,8 +175,8 @@ export const PDFFile = (props: FileItemProps) => {
 }
 
 export const ImageFile = (props: FileItemProps) => {
-  const { className, file, showUploadList, onRemove } = props
-  const showIcon = checkShowIcon(showUploadList || false)
+  const { className, file, listProps, onRemove } = props
+  const showIcon = checkShowIcon(listProps || false)
   const [open, setOpen] = useState<boolean>(false)
   const previw = (event: React.SyntheticEvent) => {
     event.stopPropagation()
@@ -189,7 +190,7 @@ export const ImageFile = (props: FileItemProps) => {
     <>
       <div
         className={cn(
-          'relative z-20 h-20 w-20 rounded-lg border  p-2',
+          'relative h-16 w-16 rounded-lg p-2',
           className,
           file?.status === 'error' ? 'border-[#ff4d4f]' : '',
           file?.status === 'uploading' ? 'bg-gray-50' : ''
@@ -197,7 +198,7 @@ export const ImageFile = (props: FileItemProps) => {
         key={file?.uid || file?.url}
       >
         <div className={`relative z-10 flex h-full w-full items-center`}>
-          {file?.status == 'uploading' && !file?.url ? (
+          {file?.status == 'uploading' ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1">
               {props?.locale?.uploading}
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -214,7 +215,7 @@ export const ImageFile = (props: FileItemProps) => {
             )
           )}
         </div>
-        {showUploadList !== false && (
+        {listProps !== false && (
           <Toggle
             onClick={(e: React.SyntheticEvent) => {
               e.stopPropagation()

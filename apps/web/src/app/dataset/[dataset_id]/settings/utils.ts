@@ -8,7 +8,16 @@ export const FormSchema = z.object({
   loaderType: z.string().optional(),
   splitType: z.string().optional(),
   embeddingType: z.string().optional(),
-  files: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
+  files: z
+    .array(
+      z.object({
+        name: z.string(),
+        url: z.string(),
+        type: z.string(),
+        uid: z.string(),
+      })
+    )
+    .optional(),
   chunkSize: z.number().optional(),
   chunkOverlap: z.number().optional(),
   storeType: z.string().optional(),
