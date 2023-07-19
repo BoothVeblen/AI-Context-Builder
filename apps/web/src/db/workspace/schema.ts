@@ -10,13 +10,16 @@ import {
 } from 'drizzle-orm/pg-core'
 
 import { AppsTable } from '../apps/schema'
+import { UsersTable } from '../users/schema'
 
 export const WorkspaceTable = pgTable(
   'workspace',
   {
     id: serial('id').primaryKey(),
     short_id: text('short_id').notNull(),
-    user_id: text('user_id').notNull(),
+    user_id: text('user_id')
+      .references(() => UsersTable.short_id)
+      .notNull(),
     app_id: text('app_id')
       .references(() => AppsTable.short_id)
       .notNull(),

@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core'
 
 import { AppsTable } from '../apps/schema'
+import { UsersTable } from '../users/schema'
 
 export const SessionsTable = pgTable(
   'sessions',
@@ -19,7 +20,9 @@ export const SessionsTable = pgTable(
     app_id: text('app_id')
       .references(() => AppsTable.short_id)
       .notNull(),
-    created_by: text('created_by').notNull(),
+    created_by: text('created_by')
+      .references(() => UsersTable.short_id)
+      .notNull(),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
     archived: boolean('archived').default(false).notNull(),

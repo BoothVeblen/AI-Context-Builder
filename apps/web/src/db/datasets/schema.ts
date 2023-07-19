@@ -10,12 +10,16 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
+import { UsersTable } from '../users/schema'
+
 export const DatasetsTable = pgTable(
   'datasets',
   {
     id: serial('id').primaryKey(),
     short_id: text('short_id').notNull(),
-    created_by: text('created_by').notNull(),
+    created_by: text('created_by')
+      .references(() => UsersTable.short_id)
+      .notNull(),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
     archived: boolean('archived').default(false).notNull(),

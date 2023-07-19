@@ -6,6 +6,21 @@ import { db } from '@/lib/drizzle'
 
 export async function seed() {
   await db.execute(sql`
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    short_id TEXT UNIQUE NOT NULL,
+    last_name TEXT,
+    first_name TEXT,
+    image_url TEXT,
+    username TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE,
+    archived BOOLEAN DEFAULT FALSE
+  );
+`)
+  console.log(`Created "users" table`)
+
+  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS apps (
       id SERIAL PRIMARY KEY,
       short_id VARCHAR(12) UNIQUE NOT NULL,

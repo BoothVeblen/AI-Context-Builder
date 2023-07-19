@@ -9,6 +9,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
+import { UsersTable } from '../users/schema'
+
 export const AppsTable = pgTable(
   'apps',
   {
@@ -17,7 +19,9 @@ export const AppsTable = pgTable(
     name: text('name').notNull(),
     description: text('description').notNull(),
     icon: text('icon').notNull(),
-    created_by: text('created_by').notNull(),
+    created_by: text('created_by')
+      .references(() => UsersTable.short_id)
+      .notNull(),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
     archived: boolean('archived').default(false).notNull(),
