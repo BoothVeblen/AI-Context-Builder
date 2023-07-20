@@ -10,25 +10,42 @@ import ChatHeader from './chat-header'
 import ChatInput from './chat-input'
 import ChatList from './chat-list'
 
-interface IProps {
+export interface ChatProps {
   sessionId: string
   sessionName: string
   appId: string
   appName: string
   appIcon: string
+  isDebug?: boolean
 }
 
-const Chat = ({ sessionId, sessionName, appName, appIcon, appId }: IProps) => {
+const Chat = ({
+  sessionId,
+  sessionName,
+  appName,
+  appIcon,
+  appId,
+  isDebug = false,
+}: ChatProps) => {
   const [waiting, setWaiting] = useState<boolean>(false)
   const { scrollRef, setAutoScroll } = useScrollToBottom()
 
-  const { messages, input, setInput, isLoading, reload, stop, append, error } =
-    useChat({
-      id: sessionId,
-      onResponse: () => {
-        setWaiting(false)
-      },
-    })
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    reload,
+    stop,
+    append,
+    error,
+    setMessages,
+  } = useChat({
+    id: sessionId,
+    onResponse: () => {
+      setWaiting(false)
+    },
+  })
 
   const handelReload = () => {
     setAutoScroll(true)
@@ -45,9 +62,13 @@ const Chat = ({ sessionId, sessionName, appName, appIcon, appId }: IProps) => {
 
   usePageTitle(sessionName)
 
+  const onRestart = () => {
+    setMessages([])
+  }
+
   return (
     <div className="flex h-full w-full flex-col">
-      <ChatHeader name={sessionName} />
+      <ChatHeader name={sessionName} isDebug={isDebug} onRestart={onRestart} />
       <ChatList
         messages={messages}
         waiting={waiting}
@@ -57,6 +78,7 @@ const Chat = ({ sessionId, sessionName, appName, appIcon, appId }: IProps) => {
         appId={appId}
         appName={appName}
         appIcon={appIcon}
+        isDebug={isDebug}
       />
       <ChatInput
         input={input}
@@ -75,6 +97,7 @@ const Chat = ({ sessionId, sessionName, appName, appIcon, appId }: IProps) => {
         showResend={showResend}
         reload={handelReload}
         stop={handelStop}
+        isDebug={isDebug}
       />
     </div>
   )

@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils'
+
 import { Button } from '../ui/button'
 
 interface IconBoxProps {
@@ -18,15 +20,31 @@ export const IconBox = (props: IconBoxProps) => (
 
 interface IProps {
   name: string
+  isDebug?: boolean
+  onRestart?: () => void
 }
 
-const ChatHeader = ({ name }: IProps) => {
+const ChatHeader = ({ name, isDebug, onRestart }: IProps) => {
   return (
-    <div className="hidden w-full border-b border-slate-100 lg:block">
-      <div className="flex w-full items-center justify-between px-6 py-3">
-        <h2 className="font-medium">{name}</h2>
-        <div className="flex"></div>
-      </div>
+    <div
+      className={cn(
+        ' flex w-full flex-col border-slate-100',
+        isDebug ? 'border-0' : 'border-b'
+      )}
+    >
+      {isDebug ? (
+        <div className="flex w-full items-center justify-between text-lg font-medium">
+          Debug
+          <Button variant="outline" onClick={onRestart}>
+            Restart
+          </Button>
+        </div>
+      ) : (
+        <div className="flex w-full items-center justify-between px-6 py-3">
+          <h2 className="font-medium">{name}</h2>
+          <div className="flex"></div>
+        </div>
+      )}
     </div>
   )
 }

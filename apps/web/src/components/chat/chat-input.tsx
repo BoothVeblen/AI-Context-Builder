@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Loader2, RefreshCw, StopCircle } from 'lucide-react'
 
+import { cn } from '@/lib/utils'
 import { useEnterSubmit } from '@/hooks/use-enter-submit'
 
 import { Button } from '../ui/button'
@@ -16,6 +17,7 @@ interface InputProps {
   reload: () => void
   stop: () => void
   showResend?: boolean
+  isDebug?: boolean
 }
 
 const ChatInput = ({
@@ -25,6 +27,7 @@ const ChatInput = ({
   isLoading,
   reload,
   stop,
+  isDebug = false,
   showResend,
 }: InputProps) => {
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -34,7 +37,12 @@ const ChatInput = ({
   const isDisabled = !input || input.trim() === '' || isLoading
 
   return (
-    <div className="relative flex w-full flex-col gap-4 px-6 pb-4">
+    <div
+      className={cn(
+        'relative flex w-full flex-col gap-4',
+        isDebug ? '' : 'px-6 pb-4'
+      )}
+    >
       <div className="absolute top-[-60px] flex w-full	items-center justify-center">
         {showResend && !isLoading && (
           <Button className=" bg-white" onClick={reload} variant="outline">

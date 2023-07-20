@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
 // markdown plugins
-import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -12,24 +11,57 @@ import { Button } from '@/components/ui/button'
 import Text from '@/components/ui/text'
 import { PdfImage, PreviewPdf } from '@/components/upload/component'
 
+import { CodeBlock } from './code-block'
 import { MarkdownProps } from './type'
 
 export const Markdown = (props: MarkdownProps) => {
   const { className, showCustomerCard: showCustomerCard, ...others } = props
   return (
-    <article
-      className={cn('prose prose-p:leading-relaxed prose-pre:p-0', className)}
-    >
-      <ReactMarkdown
-        components={markdownComponent}
-        rehypePlugins={[
-          rehypeRaw,
-          rehypeHighlight,
-          [remarkGfm, { singleTilde: false }],
-        ]}
-        {...others}
-      />
-    </article>
+    <ReactMarkdown
+      className={cn(
+        'prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
+        className
+      )}
+      components={{
+        p({ children }) {
+          return (
+            <p className="prose-sm mb-2 font-normal last:mb-0">{children}</p>
+          )
+        },
+        code({ node, inline, className, children, ...props }) {
+          if (children.length) {
+            if (children[0] == '▍') {
+              return (
+                <span className="mt-1 animate-pulse cursor-default">▍</span>
+              )
+            }
+
+            children[0] = (children[0] as string).replace('`▍`', '▍')
+          }
+
+          const match = /language-(\w+)/.exec(className || '')
+
+          if (inline) {
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            )
+          }
+
+          return (
+            <CodeBlock
+              key={Math.random()}
+              language={(match && match[1]) || ''}
+              value={String(children).replace(/\n$/, '')}
+              {...props}
+            />
+          )
+        },
+      }}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      {...others}
+    />
   )
 }
 
@@ -110,31 +142,4 @@ export const ExampleQuestion = () => {
       </div>
     </div>
   )
-}
-
-const markdownComponent = {
-  h1: ({ ...props }) => <h1 {...props} />,
-  h2: ({ ...props }) => <h2 {...props} />,
-  h3: ({ ...props }) => <h3 {...props} />,
-  h4: ({ ...props }) => <h4 {...props} />,
-  h5: ({ ...props }) => <h5 {...props} />,
-  h6: ({ ...props }) => <h6 {...props} />,
-  p: ({ ...props }) => <p {...props} className="prose-sm font-normal" />,
-  img: ({ ...props }) => (
-    <img
-      className="prose-img:rounded-xl "
-      style={{ display: 'inline-block', marginBottom: -3 }}
-      alt={props.alt}
-      src={props.src}
-      {...props}
-    />
-  ),
-  a: ({ ...props }) => {
-    const isHttp = props.href.includes('http')
-    const isPdf = props.node.properties.href.includes('pdf')
-    if (isPdf) {
-      return <div>preview pdf</div>
-    }
-    return <div>this is http link</div>
-  },
 }
