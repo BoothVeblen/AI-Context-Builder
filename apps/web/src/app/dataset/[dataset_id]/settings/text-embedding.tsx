@@ -13,7 +13,7 @@ import SearchSelect from './search-select'
 import { SessionProps } from './splitter'
 
 const types = [
-  { label: 'OpenAI Embedding', value: 'openAI embedding' },
+  { label: 'OpenAI Embedding', value: 'openAI' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 

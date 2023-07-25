@@ -32,12 +32,12 @@ import { FormSchema } from '../dataset/[dataset_id]/settings/utils'
 
 const defaultValues = {
   name: '',
-  loaderType: 'pdf loader',
-  splitType: 'character textsplitter',
+  loaderType: 'pdf',
+  splitType: 'character',
   files: [],
   chunkSize: 1000,
   chunkOverlap: 1000,
-  embeddingType: 'openAI embedding',
+  embeddingType: 'openAI',
   storeType: 'pinecone',
   collectionName: '',
   chromaUrl: '',

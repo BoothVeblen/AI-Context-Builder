@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject, useState, useTransition } from 'react'
+import { RefObject, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, Loader2Icon, Trash2 } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'

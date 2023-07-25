@@ -21,7 +21,7 @@ export interface SessionProps {
   sectionRef: RefObject<HTMLElement>
 }
 const types = [
-  { label: 'Character TextSplitter', value: 'character textsplitter' },
+  { label: 'Character TextSplitter', value: 'character' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 

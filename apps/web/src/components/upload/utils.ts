@@ -97,9 +97,11 @@ const changeCurrentFile = async (
 
 const handleSuccess = ({
   mergedFileList,
+  fileType,
   onChangeFileList,
 }: {
   mergedFileList: UploadFile[]
+  fileType?: string
   onChangeFileList?: (files: FileProps[]) => void
 }) => {
   const success = mergedFileList?.filter(
@@ -109,7 +111,7 @@ const handleSuccess = ({
     m.push({
       url: item?.url || '',
       uid: nanoid(),
-      type: item?.type,
+      type: fileType || item?.type,
       name: item?.name,
     })
     return m
@@ -120,15 +122,15 @@ const handleSuccess = ({
 export const uploadFile = async ({
   file,
   mergedFileList,
-  fileList = [],
   controller,
   onChangeFileList,
   setMergedFileList,
   setIsUploading,
+  fileType,
 }: {
   file: UploadFile
   mergedFileList: UploadFile<any>[]
-  fileList?: FileProps[]
+  fileType?: string
   controller?: AbortController
   onChangeFileList?: (files: FileProps[]) => void
   setMergedFileList?: (files: UploadFile<any>[]) => void
@@ -177,7 +179,7 @@ export const uploadFile = async ({
       file.status = 'success'
       file.url = file_url
       setIsUploading(false)
-      handleSuccess({ mergedFileList, onChangeFileList })
+      handleSuccess({ mergedFileList, onChangeFileList, fileType })
       await changeCurrentFile(file, mergedFileList, setMergedFileList)
     })
     .catch((error) => {

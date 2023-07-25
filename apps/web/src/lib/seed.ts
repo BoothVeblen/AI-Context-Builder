@@ -64,12 +64,13 @@ export async function seed() {
       archived BOOLEAN DEFAULT FALSE
     );
   `)
-
   console.log(`Created "workspace" table`)
+
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS datasets (
       id SERIAL PRIMARY KEY,
       short_id VARCHAR(12) UNIQUE NOT NULL,
+      api_dataset_id TEXT UNIQUE NOT NULL,
       created_by TEXT NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

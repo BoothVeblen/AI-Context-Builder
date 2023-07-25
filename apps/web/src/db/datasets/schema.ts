@@ -17,6 +17,7 @@ export const DatasetsTable = pgTable(
   {
     id: serial('id').primaryKey(),
     short_id: text('short_id').notNull(),
+    api_dataset_id: text('api_dataset_id').notNull(),
     created_by: text('created_by')
       .references(() => UsersTable.short_id)
       .notNull(),

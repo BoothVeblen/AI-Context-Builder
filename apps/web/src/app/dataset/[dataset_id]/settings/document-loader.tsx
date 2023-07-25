@@ -17,7 +17,7 @@ import SearchSelect from './search-select'
 import { SessionProps } from './splitter'
 
 const types = [
-  { label: 'PDF loader', value: 'pdf loader' },
+  { label: 'PDF loader', value: 'pdf' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
@@ -48,7 +48,8 @@ const DocumentLoader = ({
     setData([...values])
     form.setValue('files', [...values])
   }
-
+  const { watch } = form
+  const type = watch().loaderType
   return (
     <section
       id="loaders"
@@ -88,6 +89,7 @@ const DocumentLoader = ({
                   }}
                   setUploading={setUploading}
                   listType="pdf"
+                  fileType={type}
                   accept="application/pdf"
                   fileList={data}
                   onChangeFileList={onChangeFileList}

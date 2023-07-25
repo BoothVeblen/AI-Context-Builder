@@ -75,6 +75,7 @@ export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
   setUploading?: (s: boolean) => void
   bgColor?: string
   bgText?: string
+  fileType?: string
   defaultFileList?: Array<UploadFile<T>>
   showFileList?: boolean
   fileList?: FileProps[]

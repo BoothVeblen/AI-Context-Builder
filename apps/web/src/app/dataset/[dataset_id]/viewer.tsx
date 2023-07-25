@@ -17,7 +17,6 @@ export default function DatasetViewer({ name, config }: IProps) {
   function handleGoBack() {
     router.back()
   }
-
   return (
     <div className="relative block lg:hidden">
       <div className="sticky top-0 flex h-12 items-center gap-x-6 border-b border-slate-100 bg-white px-4">
