@@ -84,7 +84,6 @@ const SearchSelect = ({
                       value={type.value}
                       key={type.value}
                       onSelect={(value) => {
-                        console.log(value, '---value')
                         form.setValue('type', value)
                         setOpen(false)
                       }}

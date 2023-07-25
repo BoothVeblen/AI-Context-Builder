@@ -8,7 +8,7 @@ export default async function AuthButton() {
 
   const { emailAddresses, firstName, lastName, imageUrl } =
     (await currentUser()) ?? {}
-  const name = `${firstName} ${lastName}`
+  const name = `${firstName ? firstName + ' ' : ''}${lastName || ''}`
   const email = emailAddresses?.[0].emailAddress
 
   return (

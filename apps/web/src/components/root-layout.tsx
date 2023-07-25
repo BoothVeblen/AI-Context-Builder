@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <>
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:flex-col">
         {sidebar}
       </div>
 

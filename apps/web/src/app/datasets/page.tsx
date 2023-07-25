@@ -23,10 +23,21 @@ export default async function Page() {
         </div> */}
         <div className="m-full hidden h-px shrink-0 bg-slate-100 lg:block" />
         <div className="p-6">
-          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {datasets?.map(({ short_id, name }) => (
-              <DatasetCard key={short_id} id={short_id} title={name} />
-            ))}
+          <ul className="xl-[960px] grid grid-cols-1 gap-4 md:grid-cols-2 lg:w-[960px] lg:grid-cols-3">
+            {datasets?.map(({ short_id, name, config }) => {
+              const { files = [], loaderType } = config as any
+              return (
+                <DatasetCard
+                  key={short_id}
+                  id={short_id}
+                  title={name}
+                  iconType={loaderType}
+                  fileNum={files.length}
+                  // totalWords={0}
+                  // linkedAppNum={0}
+                />
+              )
+            })}
           </ul>
         </div>
       </div>
