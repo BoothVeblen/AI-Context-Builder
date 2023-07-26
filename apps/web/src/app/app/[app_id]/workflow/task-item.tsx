@@ -4,6 +4,8 @@ import { WrenchIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TreeItem } from '@/components/dnd/types'
 
+import { useWorkflowContext } from './store'
+
 interface IProps {
   id: UniqueIdentifier
   childItems?: TreeItem[]
@@ -19,6 +21,14 @@ export default function TaskItem({
 }: IProps) {
   const isSelected = id === selectedId
 
+  const workflowData = useWorkflowContext((state) => state.workflowData)
+  const value = workflowData.find((d) => d.id === id)
+
+  const title =
+    value?.subType === 'conversation-chain'
+      ? 'Conversation Chain'
+      : 'Conversational Retrieval QA'
+
   return (
     <div className="pl-12 pt-4">
       <button
@@ -32,7 +42,7 @@ export default function TaskItem({
           <WrenchIcon />
           <div className="text-sm">Tools</div>
         </div>
-        <div className="mt-4 text-sm text-slate-900">Task title</div>
+        <div className="mt-4 text-sm text-slate-900">{title}</div>
       </button>
       {childItems &&
         childItems.length > 0 &&

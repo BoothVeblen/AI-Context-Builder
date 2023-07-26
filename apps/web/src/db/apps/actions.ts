@@ -2,40 +2,89 @@ import 'server-only'
 
 import { revalidateTag, unstable_cache } from 'next/cache'
 import { redirect } from 'next/navigation'
+import axios from 'axios'
 import { and, desc, eq } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
-import { nanoid } from '@/lib/utils'
+import { flags } from '@/lib/flags'
+import { nanoid, safeParse } from '@/lib/utils'
+import {
+  defaultWorkflowData,
+  defaultWorkflowTree,
+} from '@/app/app/[app_id]/settings/workflow/task-default-value'
+import { WorkflowItem } from '@/app/app/[app_id]/settings/workflow/type'
 
 import { SessionsTable } from '../sessions/schema'
 import { addToWorkspace } from '../workspace/actions'
 import { AppsTable, NewApp } from './schema'
 
 export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
-  const { userId } = auth()
-  if (!userId) return null
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
 
-  const appVal = { ...app, short_id: nanoid(), created_by: userId }
-  const newApp = await db.insert(AppsTable).values(appVal).returning()
+    let api_model_id = ''
+    if (flags.enabledAIService) {
+      const { name } = app
+      const chains = defaultWorkflowData.map((task: WorkflowItem) => {
+        const chainType = task.subType
+        const chain = safeParse(task.formValueStr, {})
+        return {
+          chain_type: chainType,
+          ...chain,
+        }
+      })
+      const { data: res } = await axios.post(
+        `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
+        {
+          name,
+          chains,
+        }
+      )
+      console.log('AI service res:', res)
+      if (res.status !== 200) {
+        throw new Error(`AI service error: ${res.message}`)
+      }
+      api_model_id = res?.data?.id
+    }
 
-  const appId = newApp[0]?.short_id
+    const appVal = {
+      ...app,
+      short_id: nanoid(),
+      workflow_tree_str: JSON.stringify(defaultWorkflowTree),
+      workflow_data_str: JSON.stringify(defaultWorkflowData),
+      published_workflow_tree_str: JSON.stringify(defaultWorkflowTree),
+      published_workflow_data_str: JSON.stringify(defaultWorkflowData),
+      api_model_id,
+      created_by: userId,
+    }
+    const newApp = await db.insert(AppsTable).values(appVal).returning()
 
-  const sessionVal = {
-    short_id: nanoid(),
-    name: 'Chat 1',
-    app_id: appId,
-    created_by: userId,
+    const appId = newApp[0]?.short_id
+
+    const sessionVal = {
+      short_id: nanoid(),
+      name: 'Chat 1',
+      app_id: appId,
+      created_by: userId,
+    }
+    const newSession = await db
+      .insert(SessionsTable)
+      .values(sessionVal)
+      .returning()
+
+    await addToWorkspace(appId)
+    await revalidateTag(`user:${userId}:apps`)
+
+    return { appId, sessionId: newSession[0]?.short_id }
+  } catch (error: any) {
+    return {
+      error: error.message,
+    }
   }
-  const newSession = await db
-    .insert(SessionsTable)
-    .values(sessionVal)
-    .returning()
-
-  await addToWorkspace(appId)
-  await revalidateTag(`/user/${userId}/apps`)
-
-  return { appId, sessionId: newSession[0]?.short_id }
 }
 
 export async function getApps() {
@@ -59,10 +108,10 @@ export async function getApps() {
         redirect('/')
       }
     },
-    [`/user/${userId}/apps`],
+    [`user:${userId}:apps`],
     {
       revalidate: 15 * 60,
-      tags: [`/user/${userId}/apps`],
+      tags: [`user:${userId}:apps`],
     }
   )()
 }
@@ -86,15 +135,15 @@ export async function getApp(appId: string) {
         redirect('/')
       }
     },
-    [`/app/${appId}`],
+    [`app:${appId}`],
     {
       revalidate: 15 * 60, // revalidate in 15 minutes
-      tags: [`/app/${appId}`],
+      tags: [`app:${appId}`],
     }
   )()
 }
 
-export async function editApp(id: string, newValue: Partial<NewApp>) {
+export async function editApp(appId: string, newValue: Partial<NewApp>) {
   try {
     const { userId } = auth()
     if (!userId) {
@@ -106,10 +155,12 @@ export async function editApp(id: string, newValue: Partial<NewApp>) {
     const response = await db
       .update(AppsTable)
       .set(newValue)
-      .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
+      .where(
+        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+      )
 
-    await revalidateTag(`/app/${id}`)
-    await revalidateTag(`/user/${userId}/apps`)
+    await revalidateTag(`app:${appId}`)
+    await revalidateTag(`user:${userId}:apps`)
 
     return response
   } catch (error: any) {
@@ -119,21 +170,85 @@ export async function editApp(id: string, newValue: Partial<NewApp>) {
   }
 }
 
-export async function removeApp(id: string) {
+export async function deployApp(appId: string, newValue: Partial<NewApp>) {
   try {
     const { userId } = auth()
     if (!userId) {
-      return {
-        error: 'Not authenticated',
+      throw new Error('Not authenticated')
+    }
+
+    if (flags.enabledAIService) {
+      const { api_model_id } = await getApp(appId)
+      if (!api_model_id) {
+        throw new Error('api_model_id is not found, please create a new app')
+      }
+
+      const workflow = safeParse(newValue.published_workflow_data_str, [])
+      const chains = workflow.map((task: WorkflowItem) => {
+        const chainType = task.subType
+        const chain = safeParse(task.formValueStr, {})
+        return {
+          chain_type: chainType,
+          ...chain,
+        }
+      })
+      console.log('deploy chains:', chains)
+      let { data: res } = await axios.patch(
+        `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`,
+        { chains }
+      )
+      if (res.status !== 200) {
+        throw new Error(`AI service error: ${res.message}`)
+      }
+    }
+
+    const response = await db
+      .update(AppsTable)
+      .set(newValue)
+      .where(
+        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+      )
+
+    await revalidateTag(`app:${appId}`)
+    await revalidateTag(`user:${userId}:apps`)
+
+    return response
+  } catch (error: any) {
+    return {
+      error: error.message,
+    }
+  }
+}
+
+export async function removeApp(appId: string) {
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
+
+    if (flags.enabledAIService) {
+      const { api_model_id } = await getApp(appId)
+      if (!api_model_id) {
+        throw new Error('api_model_id is not found, please create a new app')
+      }
+
+      const { data: res } = await axios.delete(
+        `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`
+      )
+      if (res.status !== 200) {
+        throw new Error(`AI service error: ${res.message}`)
       }
     }
 
     const response = await db
       .update(AppsTable)
       .set({ archived: true, updated_at: new Date() })
-      .where(and(eq(AppsTable.short_id, id), eq(AppsTable.created_by, userId)))
+      .where(
+        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+      )
 
-    await revalidateTag(`/user/${userId}/apps`)
+    await revalidateTag(`user:${userId}:apps`)
 
     return response
   } catch (error: any) {

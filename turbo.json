@@ -16,7 +16,8 @@
     "VERCEL_URL",
     "VERCEL_BRANCH_URL",
     "VERCEL_ENV",
-    "GOOGLE_APPLICATION_CREDENTIALS"
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "AI_SERVICE_API_BASE_URL"
   ],
   "pipeline": {
     "build": {

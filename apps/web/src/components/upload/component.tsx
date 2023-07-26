@@ -64,14 +64,17 @@ export const PdfImage = ({
   width,
   height,
   id,
+  className,
 }: {
   width?: string
   height?: string
   id?: string
+  className?: string
 }) => (
   <svg
     width={width || '25'}
     height={height || '32'}
+    className={className}
     viewBox="0 0 25 32"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

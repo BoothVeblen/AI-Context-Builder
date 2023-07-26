@@ -2,10 +2,10 @@
 
 import * as React from 'react'
 import { usePathname } from 'next/navigation'
-import { useSidebarStore } from '@/store/sidebar'
 import { MenuIcon, XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { useSidebarStore } from '@/store/sidebar'
 import {
   Sheet,
   SheetClose,

@@ -1,13 +1,12 @@
 'use client'
 
-import { useSettingsStore } from '@/store/settings'
-
+import { useWorkflowContext } from './store'
 import WorkflowTree from './workflow-tree'
 
 export default function TaskList() {
-  const workflowTree = useSettingsStore((state) => state.workflowTree)
-  const setWorkflowTree = useSettingsStore((state) => state.setWorkflowTree)
-  const workflowData = useSettingsStore((state) => state.workflowData)
+  const workflowTree = useWorkflowContext((state) => state.workflowTree)
+  const setWorkflowTree = useWorkflowContext((state) => state.setWorkflowTree)
+  const workflowData = useWorkflowContext((state) => state.workflowData)
 
   console.log('workflowTree:', workflowTree)
   console.log('workflowData:', workflowData)

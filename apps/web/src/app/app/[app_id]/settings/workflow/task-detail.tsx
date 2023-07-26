@@ -1,77 +1,47 @@
 'use client'
 
-import {
-  InputItem,
-  ListSelectItem,
-  SelectItem,
-  SlideItem,
-  TextareaItem,
-} from './form-item'
+import * as React from 'react'
 
-const MODELS_OPTIONS = [
-  { label: 'OpenAI-GPT3.5', value: 'openai-gpt3dot5' },
-  { label: 'OpenAI-GPT4', value: 'openai-gpt4' },
-]
-
-const DATASETS_OPTIONS = [
-  { label: 'Customer service documentation', value: 'd1' },
-  { label: 'This is a Document with very very very long title.', value: 'd2' },
-]
+import { useWorkflowContext } from './store'
+import TaskItemConversationChain from './task-item-conversation-chain'
+import TaskItemConversationalRetrievalQA from './task-item-conversational-retrieval-qa'
 
 export default function TaskDetail() {
-  return (
-    <div className="space-y-6 p-6">
-      <h2 className="text-lg font-semibold">Conversational Retrieval QA</h2>
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <div className="text-sm font-medium text-slate-500">LLM</div>
-          <div className="space-y-8">
-            <SelectItem
-              name="model_name"
-              label="Model"
-              options={MODELS_OPTIONS}
-            />
-            <SlideItem
-              name="model_temperature"
-              label="Temperature"
-              min={0}
-              max={2}
-              step={0.1}
-            />
-          </div>
-        </div>
-
-        <div className="-mx-6 h-px shrink-0 bg-slate-100" />
-
-        <div className="space-y-4">
-          <div className="text-sm font-medium text-slate-500">memory</div>
-          <div className="space-y-8">
-            <InputItem name="memory_key" label="Memory Key" />
-          </div>
-        </div>
-
-        <div className="-mx-6 h-px shrink-0 bg-slate-100" />
-
-        <div className="space-y-4">
-          <div className="text-sm font-medium text-slate-500">prompt</div>
-          <div className="space-y-8">
-            <TextareaItem name="prompt_template" label="Template" />
-          </div>
-        </div>
-
-        <div className="-mx-6 h-px shrink-0 bg-slate-100" />
-
-        <div className="space-y-4">
-          <div className="text-sm font-medium text-slate-500">data</div>
-          <div className="space-y-8">
-            <ListSelectItem
-              name="data_datasets"
-              label="Dataset"
-              options={DATASETS_OPTIONS}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+  const selectedTask = useWorkflowContext((state) =>
+    state.workflowData.find((d) => d.id === state.selectedTaskId)
   )
+
+  const selectedTaskFormValue = React.useMemo(() => {
+    try {
+      if (selectedTask?.formValueStr && selectedTask?.formValueStr !== '{}') {
+        return JSON.parse(selectedTask.formValueStr)
+      }
+      return null
+    } catch (error) {
+      return null
+    }
+  }, [selectedTask?.formValueStr])
+
+  if (!selectedTask) return null
+
+  switch (selectedTask.subType) {
+    case 'conversation-chain':
+      return (
+        <TaskItemConversationChain
+          key={selectedTask.id}
+          taskId={selectedTask.id}
+          formValue={selectedTaskFormValue}
+        />
+      )
+    case 'conversational-retrieval-qa':
+      return (
+        <TaskItemConversationalRetrievalQA
+          key={selectedTask.id}
+          taskId={selectedTask.id}
+          formValue={selectedTaskFormValue}
+        />
+      )
+    default:
+      return null
+  }
 }

@@ -46,7 +46,7 @@ import {
 const MENU_LENGTH_MAX_NUMBER = 100
 
 const activationConstraint = {
-  delay: 100,
+  delay: 150,
   tolerance: 10,
   // distance: 8,
 }
@@ -94,6 +94,7 @@ interface Props {
   indicator?: boolean
   removable?: boolean
   onChange?: (items: TreeItem[]) => void
+  checkDragValid?: (parentId: UniqueIdentifier) => boolean
   children?: ITreeItemChildren
 }
 
@@ -104,6 +105,7 @@ export function SortableTree({
   indentationWidth = 24,
   removable,
   onChange,
+  checkDragValid,
   children: childrenComponent,
 }: Props) {
   const [items, setItems] = useState(() => value)
@@ -146,12 +148,17 @@ export function SortableTree({
 
   const isDragValid = useMemo(() => {
     if (projected) {
-      if (projected?.depth === 0) return true
-      if (projected?.depth === 1 && activeItem?.children?.length === 0)
-        return true
+      if (projected.parentId) {
+        const canIntent = checkDragValid?.(projected.parentId)
+        if (!canIntent) return false
+      }
+      // if (projected?.depth === 0) return true
+      // if (projected?.depth === 1 && activeItem?.children?.length === 0)
+      //   return true
     }
-    return false
-  }, [projected, activeItem])
+    return true
+  }, [projected, checkDragValid])
+  // }, [projected, activeItem, checkDragValid])
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
     setActiveId(activeId)
@@ -171,8 +178,8 @@ export function SortableTree({
   function handleDragEnd({ active, over }: DragEndEvent) {
     resetState()
 
-    // if (isDragValid && projected && over) {
-    if (projected && over) {
+    // if (projected && over) {
+    if (isDragValid && projected && over) {
       const { depth, parentId } = projected
       const clonedItems: FlattenedItem[] = JSON.parse(
         JSON.stringify(flattenTree(items))
@@ -295,6 +302,7 @@ export function SortableTree({
                   childCount={getChildCount(items, activeId) + 1}
                   value={`${activeItem.id}`}
                   indentationWidth={indentationWidth}
+                  isDragValid={isDragValid}
                 >
                   {childrenComponent}
                 </SortableTreeItem>

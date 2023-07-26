@@ -8,4 +8,6 @@ export const flags = {
       process.env.CLERK_SECRET_KEY,
     ].every((env) => env != undefined && env !== ''),
   isNeon: process.env.DATABASE_URL?.includes('neon.tech') || false,
+  enabledWorkflow: false,
+  enabledAIService: process.env.AI_SERVICE_API_BASE_URL != null,
 }

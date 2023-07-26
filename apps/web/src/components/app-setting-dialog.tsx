@@ -24,7 +24,7 @@ import {
 import ConfirmDialog from './confirm-dialog'
 import { Button } from './ui/button'
 
-function removeApp(url: string) {
+function leaveApp(url: string) {
   return fetcher(url, { method: 'DELETE' })
 }
 
@@ -68,7 +68,7 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
   const { mutate } = useSWRConfig()
   const { trigger, isMutating } = useSWRMutation(
     `/api/me/workspace/app/${appId}`,
-    removeApp
+    leaveApp
   )
 
   async function handleRemove() {

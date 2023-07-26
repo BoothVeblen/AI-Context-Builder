@@ -105,6 +105,7 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                 clone,
                 ghost,
                 childCount,
+                isDragValid,
               })
             : children}
           {/* {!clone && onRemove && <CloseIcon onClick={onRemove} sx={{ cursor: 'pointer' }} />} */}

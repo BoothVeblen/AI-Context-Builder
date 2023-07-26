@@ -41,7 +41,10 @@ export const BASE_URL =
 export const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args)
     .then((res) => res.json())
-    .then((res) => (res.success ? res.data : res.error))
+    .then((res) => {
+      if (res.success) return res.data
+      throw new Error(res.error)
+    })
 
 export function getAvatarBgColor(value: string) {
   const colors = [
@@ -71,4 +74,13 @@ export function getAvatarBgColor(value: string) {
   const idx = hash % colors.length
 
   return colors[idx]
+}
+
+export function safeParse(str?: string | null, defaultReturn = {}) {
+  try {
+    if (!str) return defaultReturn
+    return JSON.parse(str)
+  } catch (error) {
+    return defaultReturn
+  }
 }
