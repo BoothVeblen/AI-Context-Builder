@@ -28,6 +28,9 @@ export const Markdown = (props: MarkdownProps) => {
             <p className="prose-sm mb-2 font-normal last:mb-0">{children}</p>
           )
         },
+        li({ children }) {
+          return <li className="prose-sm">{children}</li>
+        },
         code({ node, inline, className, children, ...props }) {
           if (children.length) {
             if (children[0] == '▍') {

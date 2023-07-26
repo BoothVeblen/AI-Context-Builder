@@ -110,9 +110,8 @@ const ChatCard = (props: IProps) => {
           <div className="flex items-end">
             <div
               className={cn(
-                'max-w-[280px] rounded-lg p-4 text-sm sm:max-w-xs md:max-w-lg	lg:max-w-3xl xl:max-w-3xl',
-                isDebug &&
-                  'max-w-[240px] rounded-lg p-4 text-sm	sm:max-w-xs md:max-w-md lg:max-w-md xl:max-w-md',
+                'max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg	lg:max-w-3xl xl:max-w-3xl',
+                isDebug && 'max-w-[240px] md:max-w-md lg:max-w-md xl:max-w-md',
                 isUser ? 'bg-primary' : 'bg-gray-100',
                 showError ? 'rounded-lg border border-red-500	bg-red-50' : ''
               )}
