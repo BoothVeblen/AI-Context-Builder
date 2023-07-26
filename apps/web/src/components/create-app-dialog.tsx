@@ -8,7 +8,7 @@ import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { z } from 'zod'
 
-import { fetcher } from '@/lib/utils'
+import { fetcher, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -84,7 +84,7 @@ const CreateAppDialog = (props: IProps) => {
     resolver: zodResolver(formSchema),
     defaultValues,
   })
-  const { reset, setValue } = form
+  const { reset, setValue, watch } = form
 
   const [image, setImage] = useState<FileProps[]>([])
   const [uploading, setUploading] = useState(false)
@@ -164,7 +164,7 @@ const CreateAppDialog = (props: IProps) => {
                     <FormLabel>Image</FormLabel>
                     <FormControl>
                       <Upload
-                        listType="image"
+                        listType={image?.length ? 'update-image' : 'image'}
                         setUploading={setUploading}
                         accept=".png, .jpeg,.webp,.jpg"
                         fileList={image}

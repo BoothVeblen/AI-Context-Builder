@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { CancelTokenSource } from 'axios'
 
 import { nanoid } from '@/lib/utils'
 
@@ -123,6 +123,7 @@ export const uploadFile = async ({
   file,
   mergedFileList,
   controller,
+  source,
   onChangeFileList,
   setMergedFileList,
   setIsUploading,
@@ -132,6 +133,7 @@ export const uploadFile = async ({
   mergedFileList: UploadFile<any>[]
   fileType?: string
   controller?: AbortController
+  source?: CancelTokenSource
   onChangeFileList?: (files: FileProps[]) => void
   setMergedFileList?: (files: UploadFile<any>[]) => void
   setIsUploading: (s: boolean) => void
@@ -168,6 +170,7 @@ export const uploadFile = async ({
   axios
     .post(upload_url, formData, {
       signal: controller?.signal,
+      cancelToken: source?.token,
       onUploadProgress: async (progressEvent) => {
         file.status = 'uploading'
         const { progress = 0 } = progressEvent
@@ -186,6 +189,7 @@ export const uploadFile = async ({
       if (axios.isCancel(error)) {
         console.log('Request canceled', error.message)
       }
+      setIsUploading(false)
       file.status = 'error'
       console.error(error)
     })

@@ -27,8 +27,15 @@ export async function PATCH(
   const { dataset_id } = params
 
   const body = (await req.json()) as Partial<NewDataset>
-  await editDataset(dataset_id, body)
-  return NextResponse.json({ success: true, data: { dataset_id, body } })
+  const response = (await editDataset(dataset_id, body)) as any
+  if (response?.error) {
+    return NextResponse.json({ success: false, error: response?.error })
+  } else {
+    return NextResponse.json({
+      success: true,
+      data: { dataset_id, body },
+    })
+  }
 }
 
 // // Delete a dataset

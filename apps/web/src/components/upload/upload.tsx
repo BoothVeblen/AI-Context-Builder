@@ -70,9 +70,10 @@ const Upload = (props: UploadProps) => {
   const unloadCallback = (event: BeforeUnloadEvent) => {
     event.preventDefault()
     event.returnValue = ''
-    controller.abort()
     return ''
   }
+
+  const handleEndConcert = () => controller.abort()
 
   useEffect(() => {
     setUploading?.(isUploading)
@@ -82,9 +83,11 @@ const Upload = (props: UploadProps) => {
   useEffect(() => {
     if (isUploading) {
       window.addEventListener('beforeunload', unloadCallback)
+      window.addEventListener('unload', handleEndConcert)
     }
     return () => {
       window.removeEventListener('beforeunload', unloadCallback)
+      window.removeEventListener('unload', handleEndConcert)
     }
   }, [isUploading])
 
@@ -106,7 +109,6 @@ const Upload = (props: UploadProps) => {
       flushSync(() => {
         setMergedFileList(cloneList)
       })
-
       const changeInfo: UploadChangeParam<UploadFile> = {
         file: file as UploadFile,
         fileList: cloneList,
@@ -121,7 +123,7 @@ const Upload = (props: UploadProps) => {
           onChange?.(changeInfo)
         } else {
           // google api for upload
-          if (isValid !== false) {
+          if (isValid !== false && changeInfo?.file?.status !== 'removed') {
             uploadFile({
               controller,
               file: changeInfo?.file,
@@ -376,6 +378,7 @@ const Upload = (props: UploadProps) => {
           className="h-6 w-6 rounded-full border"
           variant="outline"
           size="icon"
+          type="button"
           disabled={isUploading}
         >
           <Camera size={16} strokeWidth={2} />

@@ -1,10 +1,10 @@
 'use client'
 
 import * as React from 'react'
-import { SignOutButton, UserProfile } from '@clerk/nextjs'
+import Link from 'next/link'
+import { SignOutButton } from '@clerk/nextjs'
 import { Loader2Icon, LogOutIcon, SettingsIcon } from 'lucide-react'
 
-import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,6 @@ interface IProps {
 
 export default function AuthDropdownMenu({ children }: IProps) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
-  const [isProfileOpen, setIsProfileOpen] = React.useState(false)
   const [isLoggingOut, setIsLoggingOut] = React.useState(false)
 
   return (
@@ -32,12 +31,17 @@ export default function AuthDropdownMenu({ children }: IProps) {
       >
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent className="w-52">
-          <DropdownMenuItem onClick={() => setIsProfileOpen(true)}>
-            <SettingsIcon className="mr-2 h-4 w-4" />
-            <span>Manage account</span>
+          <DropdownMenuItem>
+            <Link href="/profile" className="flex items-center">
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              Manage account
+            </Link>
           </DropdownMenuItem>
           <SignOutButton>
-            <DropdownMenuItem onClick={() => setIsLoggingOut(true)}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => setIsLoggingOut(true)}
+            >
               {isLoggingOut ? (
                 <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -48,12 +52,6 @@ export default function AuthDropdownMenu({ children }: IProps) {
           </SignOutButton>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="max-h-screen overflow-auto border-none p-0 shadow-none sm:max-w-fit">
-          <UserProfile />
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
