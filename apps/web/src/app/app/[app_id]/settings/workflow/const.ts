@@ -12,10 +12,10 @@ export const TYPE_MAP = {
 }
 
 export const SUB_TYPE_MAP = {
-  'conversation-chain': {
+  conversation_chain: {
     title: 'Conversation chain',
   },
-  'conversational-retrieval-qa': {
+  conversational_retrieval_qa_chain: {
     title: 'Conversational Retrieval QA',
   },
 }

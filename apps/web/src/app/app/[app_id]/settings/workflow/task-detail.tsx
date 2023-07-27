@@ -25,7 +25,7 @@ export default function TaskDetail() {
   if (!selectedTask) return null
 
   switch (selectedTask.subType) {
-    case 'conversation-chain':
+    case 'conversation_chain':
       return (
         <TaskItemConversationChain
           key={selectedTask.id}
@@ -33,7 +33,7 @@ export default function TaskDetail() {
           formValue={selectedTaskFormValue}
         />
       )
-    case 'conversational-retrieval-qa':
+    case 'conversational_retrieval_qa_chain':
       return (
         <TaskItemConversationalRetrievalQA
           key={selectedTask.id}

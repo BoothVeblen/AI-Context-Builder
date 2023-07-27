@@ -17,11 +17,11 @@ export default function TaskDetail({ value, onClose }: IProps) {
   const formValue = safeParse(formValueStr, {})
 
   const title =
-    subType === 'conversation-chain'
+    subType === 'conversation_chain'
       ? 'Conversation Chain'
       : 'Conversational Retrieval QA'
   const apiKey = formValue.llm?.api_key
-  const modelName = formValue.llm?.model_name
+  const modelName = formValue.llm?.name
   const temperature = formValue.llm?.temperature
   const topP = formValue.llm?.top_p
   const presencePenalty = formValue.llm?.presence_penalty

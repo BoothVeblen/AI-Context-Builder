@@ -28,7 +28,6 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     let api_model_id = ''
     if (flags.enabledAIService) {
-      const { name } = app
       const chains = defaultWorkflowData.map((task: WorkflowItem) => {
         const chainType = task.subType
         const chain = safeParse(task.formValueStr, {})
@@ -40,7 +39,6 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       const { data: res } = await axios.post(
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
         {
-          name,
           chains,
         }
       )

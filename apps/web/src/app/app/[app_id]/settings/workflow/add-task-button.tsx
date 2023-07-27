@@ -44,12 +44,12 @@ const CONFIG = [
         title: 'Chains',
         children: [
           {
-            subType: 'conversation-chain',
+            subType: 'conversation_chain',
             title: 'Conversation chain',
             desc: 'Basic example of conversation with a Prompt Template and LLM Model',
           },
           {
-            subType: 'conversational-retrieval-qa',
+            subType: 'conversational_retrieval_qa_chain',
             title: 'Conversational Retrieval QA',
             desc: 'Support uploading data source, from the data source find answers',
           },

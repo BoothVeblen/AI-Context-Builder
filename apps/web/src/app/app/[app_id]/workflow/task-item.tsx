@@ -25,7 +25,7 @@ export default function TaskItem({
   const value = workflowData.find((d) => d.id === id)
 
   const title =
-    value?.subType === 'conversation-chain'
+    value?.subType === 'conversation_chain'
       ? 'Conversation Chain'
       : 'Conversational Retrieval QA'
 
