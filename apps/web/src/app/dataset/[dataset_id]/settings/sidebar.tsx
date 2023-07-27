@@ -113,11 +113,11 @@ const SlideBar = ({
         </Button>
         <div className="text-lg font-semibold">Back</div>
       </div>
-      <div className="mt-4 w-full space-y-2 p-3">
-        <div className="text-sm font-medium uppercase text-slate-500">
+      <div className="mt-4 w-full space-y-2 p-2">
+        <div className="pl-3 text-sm font-medium uppercase text-slate-500">
           DATASETS
         </div>
-        <div className="flex flex-col gap-1	text-sm	font-medium">
+        <div className="flex flex-col gap-2	text-sm	font-medium">
           {data?.map((item: SectionType, index: number) => (
             <button
               key={item?.title}
@@ -136,7 +136,10 @@ const SlideBar = ({
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <div className="w-full p-3">
-            <Button variant="ghost" className="w-full justify-between p-3">
+            <Button
+              variant="ghost"
+              className="w-full justify-between px-2 py-3"
+            >
               Delete this Dataset
               <Trash2 size={18} />
             </Button>

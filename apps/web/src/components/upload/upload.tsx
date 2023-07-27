@@ -389,7 +389,9 @@ const Upload = (props: UploadProps) => {
           disabled={isUploading}
           className={cn(
             'relative z-10 flex h-16 w-16 items-center justify-center rounded-lg border p-0',
-            mergedFileList?.length === 0 && `bg-${bgColor}-600 text-white`,
+            mergedFileList?.length === 0
+              ? `bg-${bgColor}-600 text-white`
+              : 'border-none',
             `hover:${bgColor ? `bg-${bgColor}-600` : 'bg-white'}`,
             'hover:text-white'
           )}

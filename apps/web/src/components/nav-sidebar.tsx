@@ -13,17 +13,18 @@ export default async function NavSidebar() {
           Context AI
         </h1>
         <div className="m-full h-px shrink-0 bg-slate-100" />
-        <div className="flex-1 px-1 py-3">
-          <div className="space-y-6">
+        <div className="flex-1 px-2 py-3">
+          <div className="space-y-3">
             <div className="space-y-3">
-              <h2 className="flex items-center space-x-2 px-3">
+              <h2 className="flex items-center space-x-2 p-2">
                 <GlobeIcon size={20} />
                 <span>Explore</span>
               </h2>
               <ExploreList />
             </div>
+            <div className="m-full -mx-2 h-px shrink-0 bg-slate-100" />
             <div className="space-y-3">
-              <h2 className="flex items-center space-x-2 px-3">
+              <h2 className="flex items-center space-x-2 p-2">
                 <BoxIcon size={20} />
                 <span>My space</span>
               </h2>

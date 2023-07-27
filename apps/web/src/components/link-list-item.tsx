@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 
@@ -18,7 +18,7 @@ const LinkListItem = React.forwardRef<
       <li>
         <div
           className={cn(
-            'block select-none space-y-1 rounded-md px-4 py-2 leading-none text-slate-900 no-underline outline-none transition-colors hover:bg-slate-200',
+            'block select-none space-y-1 rounded-md p-2 leading-none text-slate-900 no-underline outline-none transition-colors hover:bg-slate-200',
             isSelected ? 'bg-slate-200' : '',
             className
           )}

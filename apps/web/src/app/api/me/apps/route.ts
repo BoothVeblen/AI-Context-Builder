@@ -16,6 +16,6 @@ export async function POST(req: NextRequest) {
   if (response.error) {
     return NextResponse.json({ success: false, error: response.error })
   } else {
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, data: response })
   }
 }
