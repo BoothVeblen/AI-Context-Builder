@@ -35,7 +35,7 @@ export default function AppCard({
               <img
                 src={icon}
                 alt={id}
-                className="relative h-24 w-24 rounded-lg"
+                className="relative h-24 w-24 rounded-lg object-cover"
               />
             ) : (
               <div

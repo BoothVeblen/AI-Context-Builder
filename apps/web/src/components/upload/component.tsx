@@ -193,14 +193,14 @@ export const ImageFile = (props: FileItemProps) => {
     <>
       <div
         className={cn(
-          'relative h-16 w-16 rounded-lg p-2',
+          'relative h-16 w-16 rounded-lg p-0',
           className,
           file?.status === 'error' ? 'border-[#ff4d4f]' : '',
-          file?.status === 'uploading' ? 'bg-gray-50' : ''
+          file?.status === 'uploading' ? 'bg-gray-50 p-1' : ''
         )}
         key={file?.uid || file?.url}
       >
-        <div className={`relative z-10 flex h-full w-full items-center`}>
+        <div className={`relative flex h-full w-full items-center`}>
           {file?.status == 'uploading' ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1">
               {props?.locale?.uploading}
@@ -210,10 +210,8 @@ export const ImageFile = (props: FileItemProps) => {
             file?.url && (
               <img
                 src={file?.url}
-                width={72}
-                height={72}
+                className="aspect-square h-16 w-16 rounded-md object-cover"
                 alt={file?.name}
-                onClick={(event) => previw(event)}
               />
             )
           )}
@@ -225,7 +223,7 @@ export const ImageFile = (props: FileItemProps) => {
               e.preventDefault()
               onRemove?.(file)
             }}
-            className={`z-20 h-6 w-6 rounded-full border  p-1 ${
+            className={`z-1 h-6 w-6 rounded-full border  p-1 ${
               file?.status === 'uploading' ? 'bg-white' : 'bg-sky-50'
             } absolute right-1 top-1`}
           >
@@ -238,17 +236,19 @@ export const ImageFile = (props: FileItemProps) => {
           {file?.error?.message || props?.locale?.uploadError}
         </div>
       )}
-      <Dialog open={open} onOpenChange={() => setOpen(false)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <img
-            src={file?.url || ''}
-            sizes="(max-width: 500px)"
-            width={500}
-            height={500}
-            alt="oreview image"
-          />
-        </DialogContent>
-      </Dialog>
+      {listProps && (
+        <Dialog open={open} onOpenChange={() => setOpen(false)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <img
+              src={file?.url || ''}
+              sizes="(max-width: 500px)"
+              width={500}
+              height={500}
+              alt="oreview image"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   )
 }

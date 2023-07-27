@@ -363,6 +363,15 @@ const Upload = (props: UploadProps) => {
     delete rcUploadProps.id
   }
 
+  const showUpdateImageList = useMemo(() => {
+    const latest = mergedFileList[mergedFileList?.length - 1]
+    return mergedFileList?.length !== 0 ? (
+      <ImageFile {...props} file={latest} listProps={false} key={latest?.uid} />
+    ) : (
+      bgText
+    )
+  }, [bgText, mergedFileList, props])
+
   const selectDefaultButton = React.useMemo(() => {
     if (listType === 'pdf') {
       return (
@@ -375,13 +384,20 @@ const Upload = (props: UploadProps) => {
     if (listType === 'update-image') {
       return (
         <Button
-          className="h-6 w-6 rounded-full border"
-          variant="outline"
-          size="icon"
           type="button"
+          variant="outline"
           disabled={isUploading}
+          className={cn(
+            'relative z-10 flex h-16 w-16 items-center justify-center rounded-lg border p-0',
+            mergedFileList?.length === 0 && `bg-${bgColor}-600 text-white`,
+            `hover:${bgColor ? `bg-${bgColor}-600` : 'bg-white'}`,
+            'hover:text-white'
+          )}
         >
-          <Camera size={16} strokeWidth={2} />
+          {showUpdateImageList}
+          <div className="z-1 absolute bottom-[-8px] right-[-8px] flex h-6 w-6  items-center justify-center rounded-full border bg-white text-black">
+            <Camera size={16} strokeWidth={2} />
+          </div>
         </Button>
       )
     } else {
@@ -389,13 +405,13 @@ const Upload = (props: UploadProps) => {
         <Button
           type="button"
           variant="outline"
-          className="h-16 w-16 bg-slate-50"
+          className="z-1 h-16 w-16 bg-slate-50 "
         >
           <Camera size={28} />
         </Button>
       )
     }
-  }, [listType])
+  }, [bgColor, isUploading, listType, mergedFileList, showUpdateImageList])
   const defaultButton = React.useMemo(() => {
     // 上传按钮的默认样式
     if (type === 'drag') {
@@ -441,40 +457,15 @@ const Upload = (props: UploadProps) => {
     handleRemove,
     showFileList,
   ])
-  const showUpdateImageList = useMemo(() => {
-    const latest = mergedFileList[mergedFileList?.length - 1]
-    return mergedFileList?.length !== 0 ? (
-      <ImageFile
-        {...props}
-        file={latest}
-        onRemove={handleRemove}
-        listProps={false}
-        key={latest?.uid}
-      />
-    ) : (
-      bgText
-    )
-  }, [bgText, mergedFileList, props])
 
   return (
-    <div
-      className={cn(
-        listType === 'update-image' &&
-          'relative flex h-16 w-16 items-center justify-center rounded-lg border',
-        listType === 'update-image' &&
-          mergedFileList?.length === 0 &&
-          `bg-${bgColor}-600 text-white`
-      )}
-    >
-      {listType === 'update-image' && showUpdateImageList}
+    <div>
       <div
         className={cn(
-          'flex h-full w-full cursor-pointer flex-col  items-start justify-start',
+          'flex  cursor-pointer flex-col  items-start justify-start',
           listType === 'image' ? 'gap-0' : 'gap-2',
-          className,
-          listType === 'update-image'
-            ? 'z-1 absolute bottom-[-8px] right-[-8px] h-6 w-6 rounded-full bg-white text-black'
-            : ''
+          listType === 'pdf' ? 'h-full w-full' : 'h-16 w-16',
+          className
         )}
         onClick={onFileDrop}
       >

@@ -58,7 +58,7 @@ export default function WorkspaceSidebar({ appList }: IProps) {
                 <img
                   src="/logo.png"
                   alt=""
-                  className="aspect-square h-full w-full"
+                  className="aspect-square h-full w-full object-cover"
                 />
                 {/* <AvatarImage src="/logo.png" /> */}
                 {/* <AvatarFallback>CO</AvatarFallback> */}
@@ -101,7 +101,7 @@ export default function WorkspaceSidebar({ appList }: IProps) {
                           <img
                             src={appItem.app_icon}
                             alt=""
-                            className="aspect-square h-full w-full"
+                            className="aspect-square h-full w-full object-cover"
                           />
                         )}
                         {/* {appItem.app_icon && (
