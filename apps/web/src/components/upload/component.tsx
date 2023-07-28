@@ -99,10 +99,9 @@ export const PDFFile = (props: FileItemProps) => {
               <div className={`line-clamp-1 break-all ${fileNameStyle}`}>
                 {file?.name}
               </div>
-              {(file?.status === 'uploading' || !file?.url) &&
-                (props?.progress || (
-                  <Progress value={file?.percent || 0} className="h-1" />
-                ))}
+              {file?.status === 'uploading' && (
+                <Progress value={file?.percent || 0} className="h-1" />
+              )}
             </div>
           </div>
           {showIcon?.show && (

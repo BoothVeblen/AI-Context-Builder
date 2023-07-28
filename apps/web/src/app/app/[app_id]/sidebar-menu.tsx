@@ -54,7 +54,7 @@ export default function Menu() {
   const appId = params.app_id
 
   return (
-    <ul className="space-y-1 p-1">
+    <ul className="space-y-1 p-2">
       {MENU_ITEMS.map(({ id, name, Icon }) => {
         const href = `/app/${appId}/${id}`
         const isSelected = pathname === href

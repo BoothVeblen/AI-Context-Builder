@@ -27,7 +27,7 @@ export default function AppCard({
 
   return (
     <Link href={`/app/${id}`}>
-      <Card className="relative h-[278px] hover:shadow-md">
+      <Card className="relative h-[278px] shadow-none hover:shadow-md">
         <div className="absolute top-20 h-px w-full bg-slate-200" />
         <CardHeader className="p-4">
           <div className="space-y-2">

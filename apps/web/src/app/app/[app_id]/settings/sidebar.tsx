@@ -85,7 +85,7 @@ export default function Sidebar({ appId, appName }: IProps) {
         <div className="h-px bg-slate-200" />
       </div>
 
-      <div className="px-3">
+      <div className="px-2">
         <DeleteAppButton id={appId} name={appName} />
       </div>
     </div>
