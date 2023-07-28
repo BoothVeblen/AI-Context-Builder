@@ -2,7 +2,7 @@ import 'server-only'
 
 import { revalidateTag, unstable_cache } from 'next/cache'
 import axios from 'axios'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { isEqual, omit } from 'lodash'
 
 import { auth } from '@/lib/auth'
@@ -11,6 +11,7 @@ import { flags } from '@/lib/flags'
 import { nanoid } from '@/lib/utils'
 import { FileProps } from '@/components/upload/utils'
 
+import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { DatasetsTable, NewDataset } from './schema'
 
 export async function addDataset(
@@ -53,7 +54,13 @@ export async function getDatasets() {
     async () => {
       if (!userId) return Promise.resolve([])
       return db
-        .select()
+        .select({
+          short_id: DatasetsTable.short_id,
+          name: DatasetsTable.name,
+          config: DatasetsTable.config,
+          api_dataset_id: DatasetsTable.api_dataset_id,
+          linked_app_count: sql`count(${AppsDatasetsTable.app_id})`,
+        })
         .from(DatasetsTable)
         .orderBy(desc(DatasetsTable.created_at))
         .where(
@@ -62,6 +69,11 @@ export async function getDatasets() {
             eq(DatasetsTable.archived, false)
           )
         )
+        .leftJoin(
+          AppsDatasetsTable,
+          eq(AppsDatasetsTable.dataset_id, DatasetsTable.short_id)
+        )
+        .groupBy(DatasetsTable.id)
     },
     [`user:${userId}:datasets`],
     {

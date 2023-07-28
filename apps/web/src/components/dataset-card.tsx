@@ -11,7 +11,7 @@ interface IProps {
   iconType?: string
   fileNum?: number
   totalWords?: number
-  linkedAppNum?: number
+  linkedAppCount?: number
 }
 
 export default function DatasetCard({
@@ -20,7 +20,7 @@ export default function DatasetCard({
   iconType,
   fileNum,
   totalWords,
-  linkedAppNum,
+  linkedAppCount,
 }: IProps) {
   return (
     <Link href={`/dataset/${id}`}>
@@ -43,10 +43,10 @@ export default function DatasetCard({
                 {totalWords} words
               </div>
             )}
-            {linkedAppNum != null && (
+            {linkedAppCount != null && (
               <div className="flex text-xs font-medium text-slate-500">
                 <FileOutput size={18} className="mr-1" />
-                {linkedAppNum} linked apps
+                {linkedAppCount} linked apps
               </div>
             )}
           </CardFooter>

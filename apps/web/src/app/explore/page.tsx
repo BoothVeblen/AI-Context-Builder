@@ -1,32 +1,33 @@
 import AppCard from '@/components/app-card'
 import RootWrapper from '@/components/root-wrapper'
 
-const LIST = [
-  {
-    id: 'CQolMcS',
-    name: 'Employee Handbook',
-    creator: '@Context Builder',
-    description:
-      "This is an employee handbook AI Bot. You can consult Context on company's vacation, benefits, corporate cultures, etc.",
-    icon: 'https://storage.googleapis.com/context-builder/public-tmp/yvz6XUK.jpeg',
-  },
-  {
-    id: 'wV8w8mV',
-    name: 'Onboarding',
-    creator: '@Context Builder',
-    description:
-      'This AI Bot can help new employees quickly understand the schedules and goals of their first day and first month.',
-    icon: 'https://storage.googleapis.com/context-builder/public-tmp/n8fgLWX.jpeg',
-  },
-  {
-    id: 'VtTNc8h',
-    name: 'TikTok User Guide',
-    creator: '@Context Builder',
-    description:
-      'This user guide AI Bot can help you quickly learn how to use TikTok.',
-    icon: 'https://storage.googleapis.com/context-builder/public-tmp/EVoNO2l.jpeg',
-  },
-]
+// const LIST = [
+//   {
+//     id: 'CQolMcS',
+//     name: 'Employee Handbook',
+//     creator: '@Context Builder',
+//     description:
+//       "This is an employee handbook AI Bot. You can consult Context on company's vacation, benefits, corporate cultures, etc.",
+//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/yvz6XUK.jpeg',
+//   },
+//   {
+//     id: 'wV8w8mV',
+//     name: 'Onboarding',
+//     creator: '@Context Builder',
+//     description:
+//       'This AI Bot can help new employees quickly understand the schedules and goals of their first day and first month.',
+//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/n8fgLWX.jpeg',
+//   },
+//   {
+//     id: 'VtTNc8h',
+//     name: 'TikTok User Guide',
+//     creator: '@Context Builder',
+//     description:
+//       'This user guide AI Bot can help you quickly learn how to use TikTok.',
+//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/EVoNO2l.jpeg',
+//   },
+// ]
+const LIST: any[] = []
 
 export default async function Page() {
   return (

@@ -12,7 +12,7 @@ export const UsersTable = pgTable(
   'users',
   {
     id: serial('id').primaryKey(),
-    short_id: text('short_id').notNull(),
+    short_id: text('short_id').unique().notNull(),
     username: text('username'),
     last_name: text('last_name'),
     first_name: text('first_name'),

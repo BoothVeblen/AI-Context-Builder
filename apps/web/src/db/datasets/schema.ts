@@ -1,4 +1,4 @@
-import { InferModel } from 'drizzle-orm'
+import { InferModel, relations } from 'drizzle-orm'
 import {
   boolean,
   index,
@@ -10,22 +10,23 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
+import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { UsersTable } from '../users/schema'
 
 export const DatasetsTable = pgTable(
   'datasets',
   {
     id: serial('id').primaryKey(),
-    short_id: text('short_id').notNull(),
-    api_dataset_id: text('api_dataset_id').notNull(),
+    short_id: text('short_id').unique().notNull(),
+    name: text('name').notNull(),
+    config: json('config'),
+    api_dataset_id: text('api_dataset_id').unique().notNull(),
     created_by: text('created_by')
       .references(() => UsersTable.short_id)
       .notNull(),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
     archived: boolean('archived').default(false).notNull(),
-    name: text('name').notNull(),
-    config: json('config'),
   },
   (datasets) => {
     return {
@@ -37,3 +38,7 @@ export const DatasetsTable = pgTable(
 
 export type Datasets = InferModel<typeof DatasetsTable>
 export type NewDataset = InferModel<typeof DatasetsTable, 'insert'>
+
+export const DatasetsRelations = relations(DatasetsTable, ({ many }) => ({
+  AppsDatasetsTable: many(AppsDatasetsTable),
+}))

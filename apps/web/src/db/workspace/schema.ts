@@ -16,7 +16,7 @@ export const WorkspaceTable = pgTable(
   'workspace',
   {
     id: serial('id').primaryKey(),
-    short_id: text('short_id').notNull(),
+    short_id: text('short_id').unique().notNull(),
     user_id: text('user_id')
       .references(() => UsersTable.short_id)
       .notNull(),

@@ -41,7 +41,7 @@ export default async function Page({ params }: IProps) {
     return {
       icon: (d.config as any).loaderType || 'pdf',
       label: d.name,
-      value: d.short_id,
+      value: d.api_dataset_id,
     }
   })
 

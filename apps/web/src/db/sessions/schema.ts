@@ -15,7 +15,7 @@ export const SessionsTable = pgTable(
   'sessions',
   {
     id: serial('id').primaryKey(),
-    short_id: text('short_id').notNull(),
+    short_id: text('short_id').unique().notNull(),
     name: text('name').notNull(),
     app_id: text('app_id')
       .references(() => AppsTable.short_id)

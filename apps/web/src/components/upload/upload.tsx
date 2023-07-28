@@ -65,6 +65,7 @@ const Upload = (props: UploadProps) => {
   const [cancelCount, setCancelCount] = React.useState(0)
 
   // cancel axios request when uploading
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const controller = useMemo(() => new AbortController(), [cancelCount])
 
   const unloadCallback = (event: BeforeUnloadEvent) => {
@@ -89,6 +90,7 @@ const Upload = (props: UploadProps) => {
       window.removeEventListener('beforeunload', unloadCallback)
       window.removeEventListener('unload', handleEndConcert)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUploading])
 
   const onInternalChange = useCallback(

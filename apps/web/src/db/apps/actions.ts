@@ -3,7 +3,8 @@ import 'server-only'
 import { revalidateTag, unstable_cache } from 'next/cache'
 import { redirect } from 'next/navigation'
 import axios from 'axios'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
+import { difference } from 'lodash'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
@@ -15,6 +16,8 @@ import {
 } from '@/app/app/[app_id]/settings/workflow/task-default-value'
 import { WorkflowItem } from '@/app/app/[app_id]/settings/workflow/type'
 
+import { AppsDatasetsTable } from '../apps_datasets/schema'
+import { DatasetsTable } from '../datasets/schema'
 import { SessionsTable } from '../sessions/schema'
 import { addToWorkspace } from '../workspace/actions'
 import { AppsTable, NewApp } from './schema'
@@ -26,7 +29,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       throw new Error('Not authenticated')
     }
 
-    let api_model_id = ''
+    let api_model_id = null
     if (flags.enabledAIService) {
       const chains = defaultWorkflowData.map((task: WorkflowItem) => {
         const chainType = task.subType
@@ -199,6 +202,80 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
         throw new Error(`AI service error: ${res.message}`)
       }
     }
+
+    // BEGIN link datasets to this app
+    const newWorkflow = safeParse(newValue.published_workflow_data_str, [])
+    const allApiDatasetIds = newWorkflow.reduce(
+      (acc: string[], task: WorkflowItem) => {
+        const d =
+          (safeParse(task.formValueStr, {}).data?.datasets as string[]) || []
+        acc.push(...d)
+        return acc
+      },
+      []
+    ) as string[]
+    const newApiDatasetIds = [...new Set(allApiDatasetIds)]
+
+    const oldApiDatasetIds = (
+      await db
+        .select({ api_dataset_id: DatasetsTable.api_dataset_id })
+        .from(AppsDatasetsTable)
+        .where(eq(AppsDatasetsTable.app_id, appId))
+        .leftJoin(
+          DatasetsTable,
+          eq(DatasetsTable.short_id, AppsDatasetsTable.dataset_id)
+        )
+    ).map((d) => d.api_dataset_id)
+
+    const addedApiDatasetIds = difference(
+      newApiDatasetIds,
+      oldApiDatasetIds
+    ) as string[]
+    const removedApiDatasetIds = difference(
+      oldApiDatasetIds,
+      newApiDatasetIds
+    ) as string[]
+
+    const queue = []
+    if (addedApiDatasetIds.length > 0) {
+      const addedDatasetIds = (
+        await db
+          .select({ id: DatasetsTable.short_id })
+          .from(DatasetsTable)
+          .where(inArray(DatasetsTable.api_dataset_id, addedApiDatasetIds))
+      ).map((d) => d.id)
+      for (const datasetId of addedDatasetIds) {
+        const task = db.insert(AppsDatasetsTable).values({
+          app_id: appId,
+          dataset_id: datasetId,
+        })
+        queue.push(task)
+      }
+    }
+    if (removedApiDatasetIds.length > 0) {
+      const removedDatasetIds = (
+        await db
+          .select({ id: DatasetsTable.short_id })
+          .from(DatasetsTable)
+          .where(inArray(DatasetsTable.api_dataset_id, removedApiDatasetIds))
+      ).map((d) => d.id)
+      for (const datasetId of removedDatasetIds) {
+        const task = db
+          .delete(AppsDatasetsTable)
+          .where(
+            and(
+              eq(AppsDatasetsTable.app_id, appId),
+              eq(AppsDatasetsTable.dataset_id, datasetId)
+            )
+          )
+        queue.push(task)
+      }
+    }
+    if (queue.length > 0) {
+      await Promise.all(queue)
+      await revalidateTag(`user:${userId}:datasets`)
+    }
+    // END link datasets to this app
 
     const response = await db
       .update(AppsTable)
