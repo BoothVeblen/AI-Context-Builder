@@ -7,6 +7,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
 import { flags } from '@/lib/flags'
+import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
@@ -34,6 +35,14 @@ export async function addSession(appId: string) {
     )
     console.log('res:', res)
     if (res.status !== 200) {
+      serverLog.capture({
+        distinctId: userId,
+        event: 'ai_service_error:add_session',
+        properties: {
+          message: res.message,
+          app_id: appId,
+        },
+      })
       throw new Error(`AI service error: ${res.message}`)
     }
     api_session_id = res?.data?.session_id
@@ -59,6 +68,16 @@ export async function addSession(appId: string) {
     .insert(SessionsTable)
     .values(sessionVal)
     .returning()
+
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:add_session',
+    properties: {
+      app_id: appId,
+      session_id: newSession[0]?.short_id,
+      api_session_id,
+    },
+  })
 
   return { sessionId: newSession[0]?.short_id }
 }
@@ -107,6 +126,15 @@ export async function removeSession(appId: string, sessionId: string) {
     .update(SessionsTable)
     .set({ archived: true, updated_at: new Date() })
     .where(eq(SessionsTable.short_id, sessionId))
+
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:remove_session',
+    properties: {
+      app_id: appId,
+      session_id: sessionId,
+    },
+  })
 
   const latestSession = await db
     .select()

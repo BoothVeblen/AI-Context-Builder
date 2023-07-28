@@ -8,6 +8,7 @@ import { isEqual, omit } from 'lodash'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
 import { flags } from '@/lib/flags'
+import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
 import { FileProps } from '@/components/upload/utils'
 
@@ -21,7 +22,7 @@ export async function addDataset(
   if (!userId) return null
   const { name } = dataset
 
-  let api_dataset_id = ''
+  let api_dataset_id = null
   if (flags.enabledAIService) {
     const { data: res } = await axios.post(
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets`,
@@ -29,7 +30,16 @@ export async function addDataset(
         name,
       }
     )
-    if (!res) return null
+    if (res.status !== 200) {
+      serverLog.capture({
+        distinctId: userId,
+        event: 'ai_service_error:add_dataset',
+        properties: {
+          message: res.message,
+        },
+      })
+      return null
+    }
     api_dataset_id = res?.data?.id
   }
 
@@ -42,6 +52,16 @@ export async function addDataset(
     config,
   }
   const newDataset = await db.insert(DatasetsTable).values(data).returning()
+
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:add_dataset',
+    properties: {
+      dataset_id: newDataset[0]?.short_id,
+      api_dataset_id,
+    },
+  })
+
   await revalidateTag(`user:${userId}:datasets`)
   const datasetId = newDataset[0]?.short_id
   return { datasetId, name: newDataset[0].name }
@@ -108,9 +128,10 @@ export async function editDataset(
   if (!userId) return Promise.resolve([])
   const { name, config } = newValue
 
+  let api_dataset_id = null
   if (flags.enabledAIService) {
     const dataset = await getDataset(datasetId)
-    const api_dataset_id = dataset?.api_dataset_id
+    api_dataset_id = dataset?.api_dataset_id
     if (!api_dataset_id) return Promise.resolve([])
 
     const oldFiles = (dataset?.config as any)?.files
@@ -130,7 +151,19 @@ export async function editDataset(
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`,
         editParams
       )
-      if (res.status !== 200) return
+      if (res.status !== 200) {
+        serverLog.capture({
+          distinctId: userId,
+          event: 'ai_service_error:edit_dataset',
+          properties: {
+            message: res.message,
+            dataset_id: datasetId,
+            api_dataset_id,
+            value: editParams,
+          },
+        })
+        return
+      }
     }
   }
 
@@ -143,6 +176,16 @@ export async function editDataset(
         eq(DatasetsTable.created_by, userId)
       )
     )
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:edit_dataset',
+    properties: {
+      dataset_id: datasetId,
+      api_dataset_id,
+      value: newValue,
+    },
+  })
+
   await revalidateTag(`dataset:${datasetId}`)
   await revalidateTag(`user:${userId}:datasets`)
   return response
@@ -152,14 +195,27 @@ export async function removeDataset(datasetId: string) {
   const { userId } = auth()
   if (!userId) return Promise.resolve([])
 
+  let api_dataset_id = null
   if (flags.enabledAIService) {
-    const { api_dataset_id } = await getDataset(datasetId)
+    const dataset = await getDataset(datasetId)
+    api_dataset_id = dataset.api_dataset_id
     if (!api_dataset_id) return Promise.resolve([])
 
     const { data: res } = await axios.delete(
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`
     )
-    if (res?.status !== 200) return Promise.resolve([])
+    if (res?.status !== 200) {
+      serverLog.capture({
+        distinctId: userId,
+        event: 'ai_service_error:remove_dataset',
+        properties: {
+          message: res.message,
+          dataset_id: datasetId,
+          api_dataset_id,
+        },
+      })
+      return Promise.resolve([])
+    }
   }
 
   const response = await db
@@ -171,6 +227,14 @@ export async function removeDataset(datasetId: string) {
         eq(DatasetsTable.created_by, userId)
       )
     )
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:remove_dataset',
+    properties: {
+      dataset_id: datasetId,
+      api_dataset_id,
+    },
+  })
   await revalidateTag(`user:${userId}:datasets`)
   return response
 }

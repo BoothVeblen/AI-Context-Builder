@@ -9,6 +9,7 @@ import { difference } from 'lodash'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
 import { flags } from '@/lib/flags'
+import { serverLog } from '@/lib/posthog'
 import { nanoid, safeParse } from '@/lib/utils'
 import {
   defaultWorkflowData,
@@ -47,6 +48,13 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       )
       console.log('AI service res:', res)
       if (res.status !== 200) {
+        serverLog.capture({
+          distinctId: userId,
+          event: 'ai_service_error:add_app',
+          properties: {
+            message: res.message,
+          },
+        })
         throw new Error(`AI service error: ${res.message}`)
       }
       api_model_id = res?.data?.id
@@ -66,6 +74,15 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     const appId = newApp[0]?.short_id
 
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:add_app',
+      properties: {
+        app_id: appId,
+        api_model_id,
+      },
+    })
+
     let api_session_id = null
     if (flags.enabledAIService) {
       let { data: res } = await axios.post(
@@ -73,6 +90,14 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
         { model_id: api_model_id }
       )
       if (res.status !== 200) {
+        serverLog.capture({
+          distinctId: userId,
+          event: 'ai_service_error:add_session',
+          properties: {
+            message: res.message,
+            app_id: appId,
+          },
+        })
         throw new Error(`AI service error: ${res.message}`)
       }
       api_session_id = res?.data?.session_id
@@ -90,6 +115,16 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       .insert(SessionsTable)
       .values(sessionVal)
       .returning()
+
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:add_session',
+      properties: {
+        app_id: appId,
+        session_id: newSession[0]?.short_id,
+        api_session_id,
+      },
+    })
 
     await addToWorkspace(appId)
     await revalidateTag(`user:${userId}:apps`)
@@ -174,6 +209,15 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
         and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
 
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:edit_app',
+      properties: {
+        app_id: appId,
+        value: newValue,
+      },
+    })
+
     await revalidateTag(`app:${appId}`)
     await revalidateTag(`user:${userId}:apps`)
 
@@ -213,6 +257,15 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
         { chains }
       )
       if (res.status !== 200) {
+        serverLog.capture({
+          distinctId: userId,
+          event: 'ai_service_error:deploy_app',
+          properties: {
+            app_id: appId,
+            api_model_id,
+            message: res.message,
+          },
+        })
         throw new Error(`AI service error: ${res.message}`)
       }
     }
@@ -264,6 +317,14 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
           dataset_id: datasetId,
         })
         queue.push(task)
+        serverLog.capture({
+          distinctId: userId,
+          event: 'success:link_dataset_to_app',
+          properties: {
+            app_id: appId,
+            dataset_id: datasetId,
+          },
+        })
       }
     }
     if (removedApiDatasetIds.length > 0) {
@@ -283,6 +344,14 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
             )
           )
         queue.push(task)
+        serverLog.capture({
+          distinctId: userId,
+          event: 'success:unlink_dataset_from_app',
+          properties: {
+            app_id: appId,
+            dataset_id: datasetId,
+          },
+        })
       }
     }
     if (queue.length > 0) {
@@ -297,6 +366,14 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       .where(
         and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:deploy_app',
+      properties: {
+        app_id: appId,
+        value: newValue,
+      },
+    })
 
     await revalidateTag(`app:${appId}`)
     await revalidateTag(`user:${userId}:apps`)
@@ -326,6 +403,15 @@ export async function removeApp(appId: string) {
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`
       )
       if (res.status !== 200) {
+        serverLog.capture({
+          distinctId: userId,
+          event: 'ai_service_error:remove_app',
+          properties: {
+            app_id: appId,
+            api_model_id,
+            message: res.message,
+          },
+        })
         throw new Error(`AI service error: ${res.message}`)
       }
     }
@@ -336,6 +422,13 @@ export async function removeApp(appId: string) {
       .where(
         and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:remove_app',
+      properties: {
+        app_id: appId,
+      },
+    })
 
     await revalidateTag(`user:${userId}:apps`)
 

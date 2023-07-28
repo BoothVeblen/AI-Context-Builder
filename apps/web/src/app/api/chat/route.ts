@@ -2,12 +2,19 @@
 // import axios from 'axios'
 // import { Configuration, OpenAIApi } from 'openai-edge'
 
+import { auth } from '@/lib/auth'
 import { OpenAIStream } from '@/lib/openai-stream'
+import { serverLog } from '@/lib/posthog'
 
 // IMPORTANT! Set the runtime to edge
 export const runtime = 'edge'
 
 export async function POST(req: Request) {
+  const { userId } = auth()
+  if (!userId) {
+    throw new Error('Not authenticated')
+  }
+
   // Extract the `prompt` from the body of the request
   const { messages } = await req.json()
   const payload = {
@@ -15,6 +22,11 @@ export async function POST(req: Request) {
     stream: true,
     messages,
   }
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:chat:openai',
+    properties: payload,
+  })
   const baseUrl = process.env.OPENAI_BASE_PATH!
   const stream = await OpenAIStream(baseUrl, payload)
   return new Response(stream)

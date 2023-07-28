@@ -4,6 +4,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
+import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
@@ -38,7 +39,16 @@ export async function addToWorkspace(appId: string) {
   }
 
   const val = { short_id: nanoid(), app_id: appId, user_id: userId }
-  await db.insert(WorkspaceTable).values(val).returning()
+  const [newWorkspace] = await db.insert(WorkspaceTable).values(val).returning()
+
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:add_app_to_workspace',
+    properties: {
+      app_id: appId,
+      workspace_id: newWorkspace?.short_id,
+    },
+  })
 
   return Promise.resolve({ appId })
 }
@@ -115,10 +125,22 @@ export async function removeFromWorkspace(appId: string) {
   const { userId } = auth()
   if (!userId) return Promise.resolve(null)
 
-  return db
+  const [removedWorkspace] = await db
     .update(WorkspaceTable)
     .set({ archived: true, updated_at: new Date() })
     .where(
       and(eq(WorkspaceTable.app_id, appId), eq(WorkspaceTable.user_id, userId))
     )
+    .returning()
+
+  serverLog.capture({
+    distinctId: userId,
+    event: 'success:remove_app_from_workspace',
+    properties: {
+      app_id: appId,
+      workspace_id: removedWorkspace?.short_id,
+    },
+  })
+
+  return removedWorkspace
 }
