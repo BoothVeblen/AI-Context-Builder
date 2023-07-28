@@ -8,7 +8,8 @@ import { NewUser, UsersTable } from './schema'
 
 export async function addUser(user: NewUser) {
   try {
-    await db.insert(UsersTable).values(user)
+    const response = await db.insert(UsersTable).values(user).returning()
+    return { response }
   } catch (error: any) {
     console.log('addUser error:', error)
     return {
@@ -19,7 +20,12 @@ export async function addUser(user: NewUser) {
 
 export async function editUser(id: string, newValue: Partial<NewUser>) {
   try {
-    await db.update(UsersTable).set(newValue).where(eq(UsersTable.short_id, id))
+    const response = await db
+      .update(UsersTable)
+      .set(newValue)
+      .where(eq(UsersTable.short_id, id))
+      .returning()
+    return { response }
   } catch (error: any) {
     console.log('editUser error:', error)
     return {

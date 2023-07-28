@@ -66,11 +66,25 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     const appId = newApp[0]?.short_id
 
+    let api_session_id = null
+    if (flags.enabledAIService) {
+      let { data: res } = await axios.post(
+        `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+        { model_id: api_model_id }
+      )
+      if (res.status !== 200) {
+        throw new Error(`AI service error: ${res.message}`)
+      }
+      api_session_id = res?.data?.session_id
+      console.log('api_session_id:', api_session_id)
+    }
+
     const sessionVal = {
       short_id: nanoid(),
       name: 'Chat 1',
       app_id: appId,
       created_by: userId,
+      api_session_id,
     }
     const newSession = await db
       .insert(SessionsTable)
