@@ -15,7 +15,7 @@ export async function POST(
     session_id: api_session_id,
   }
   console.log('payload:', payload)
-  const baseUrl = process.env.AI_SERVICE_API_BASE_URL!
+  const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
   const stream = await OpenAIStream(baseUrl, payload)
   return new Response(stream)
 }
