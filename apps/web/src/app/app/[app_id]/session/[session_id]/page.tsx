@@ -21,6 +21,7 @@ export default async function SessionPage({ params }: IProps) {
           appId={apps?.short_id || ''}
           appName={apps?.name || ''}
           appIcon={apps?.icon || ''}
+          apiSessionId={sessions.api_session_id}
         />
       </div>
       <AppNotFound archived={apps?.archived || false} />

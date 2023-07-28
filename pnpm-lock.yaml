@@ -182,6 +182,9 @@ importers:
       eslint-config-next:
         specifier: 13.4.12
         version: 13.4.12(eslint@8.45.0)(typescript@5.1.6)
+      eventsource-parser:
+        specifier: ^1.0.0
+        version: 1.0.0
       immer:
         specifier: ^10.0.2
         version: 10.0.2

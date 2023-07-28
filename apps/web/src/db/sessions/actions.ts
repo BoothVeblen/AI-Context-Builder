@@ -1,10 +1,12 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
+import axios from 'axios'
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle'
+import { flags } from '@/lib/flags'
 import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
@@ -12,13 +14,31 @@ import { SessionsTable } from './schema'
 
 export async function addSession(appId: string) {
   const { userId } = auth()
-  if (!userId) return null
+  if (!userId) {
+    throw new Error('Not authenticated')
+  }
 
   const foundApp = await db
     .select()
     .from(AppsTable)
     .where(eq(AppsTable.short_id, appId))
-  if (!foundApp?.[0]) return null
+  if (!foundApp?.[0]) {
+    throw new Error('App not found')
+  }
+
+  let api_session_id = null
+  if (flags.enabledAIService) {
+    let { data: res } = await axios.post(
+      `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+      { model_id: foundApp?.[0]?.api_model_id }
+    )
+    console.log('res:', res)
+    if (res.status !== 200) {
+      throw new Error(`AI service error: ${res.message}`)
+    }
+    api_session_id = res?.data?.session_id
+    console.log('api_session_id:', api_session_id)
+  }
 
   const allSessions = await db
     .select({ count: sql<number>`count(*)` })
@@ -32,6 +52,7 @@ export async function addSession(appId: string) {
     short_id: nanoid(),
     name: `Chat ${sessionCount + 1}`,
     app_id: appId,
+    api_session_id,
     created_by: userId,
   }
   const newSession = await db

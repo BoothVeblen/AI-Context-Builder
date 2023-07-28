@@ -9,6 +9,7 @@ import useSWRMutation from 'swr/mutation'
 import { fetcher } from '@/lib/utils'
 
 import { HoverTooltip } from './hover-tooltip'
+import { useToast } from './ui/use-toast'
 
 function addSession(url: string) {
   return fetcher(url, { method: 'POST' })
@@ -21,6 +22,7 @@ interface IProps {
 export default function SessionListHeader({ appId }: IProps) {
   const router = useRouter()
   const { mutate } = useSWRConfig()
+  const { toast } = useToast()
   const { trigger, isMutating } = useSWRMutation(
     `/api/apps/${appId}/sessions`,
     addSession
@@ -32,8 +34,13 @@ export default function SessionListHeader({ appId }: IProps) {
       console.log('SessionListHeader handleAdd json:', json)
       mutate('/api/me/workspace')
       router.push(`/app/${appId}/session/${json.sessionId}`)
-    } catch (error) {
+    } catch (error: any) {
       console.log('SessionListHeader handleAdd error:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Chat Creation Failed',
+        description: error.message,
+      })
     }
   }
 

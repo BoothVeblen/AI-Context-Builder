@@ -17,6 +17,7 @@ export interface ChatProps {
   appName: string
   appIcon: string
   isDebug?: boolean
+  apiSessionId?: string | null
 }
 
 const Chat = ({
@@ -26,6 +27,7 @@ const Chat = ({
   appIcon,
   appId,
   isDebug = false,
+  apiSessionId,
 }: ChatProps) => {
   const [waiting, setWaiting] = useState<boolean>(false)
   const { scrollRef, setAutoScroll } = useScrollToBottom()
@@ -41,6 +43,7 @@ const Chat = ({
     error,
     setMessages,
   } = useChat({
+    api: apiSessionId ? `/api/chat/${apiSessionId}` : undefined,
     id: sessionId,
     onResponse: () => {
       setWaiting(false)
