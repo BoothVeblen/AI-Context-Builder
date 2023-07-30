@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { Message } from 'ai'
 
 import { auth } from '@/lib/auth'
 import { OpenAIStream } from '@/lib/openai-stream'
@@ -12,34 +13,45 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { api_session_id: string } }
 ) {
-  const { userId } = auth()
-  if (!userId) {
-    throw new Error('Not authenticated')
-  }
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
 
-  const { api_session_id } = params
-  const { messages } = await req.json()
-  const payload = {
-    session_id: api_session_id,
-    messages,
+    const { api_session_id } = params
+    const body = await req.json()
+    const messages = body.messages as Message[]
+    const payload = {
+      session_id: api_session_id,
+      messages: messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    }
+    serverLog.capture({
+      distinctId: userId,
+      event: 'success:chat',
+      properties: payload,
+    })
+    const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
+    const stream = await OpenAIStream(baseUrl, payload, {
+      async onCompletion(completion) {
+        const payload = [
+          ...messages,
+          {
+            role: 'assistant',
+            content: completion,
+          },
+        ] as Message[]
+        updateMessagesToSession(api_session_id, payload)
+      },
+    })
+    return new Response(stream)
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500, statusText: error.message }
+    )
   }
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:chat',
-    properties: payload,
-  })
-  const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
-  const stream = await OpenAIStream(baseUrl, payload, {
-    async onCompletion(completion) {
-      const payload = [
-        ...messages,
-        {
-          content: completion,
-          role: 'assistant',
-        },
-      ]
-      updateMessagesToSession(api_session_id, payload)
-    },
-  })
-  return new Response(stream)
 }
