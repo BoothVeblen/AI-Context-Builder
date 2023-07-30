@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Message } from 'ai'
 import { useChat } from 'ai/react'
 
 import usePageTitle from '@/hooks/use-page-title'
@@ -18,6 +19,7 @@ export interface ChatProps {
   appIcon: string
   isDebug?: boolean
   apiSessionId?: string | null
+  initialMessages?: Message[]
 }
 
 const Chat = ({
@@ -28,6 +30,7 @@ const Chat = ({
   appId,
   isDebug = false,
   apiSessionId,
+  initialMessages = [],
 }: ChatProps) => {
   const [waiting, setWaiting] = useState<boolean>(false)
   const { scrollRef, setAutoScroll } = useScrollToBottom()
@@ -45,6 +48,7 @@ const Chat = ({
   } = useChat({
     api: apiSessionId ? `/api/chat/${apiSessionId}` : undefined,
     id: sessionId,
+    initialMessages,
     onResponse: () => {
       setWaiting(false)
     },
