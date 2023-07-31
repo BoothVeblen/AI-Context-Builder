@@ -9,19 +9,21 @@ import { updateMessagesToSession } from '@/db/sessions/actions-edge'
 export const runtime = 'edge'
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { api_session_id: string } }
+  req: NextRequest
+  // { params }: { params: { api_session_id: string } }
 ) {
   const { userId } = auth()
   if (!userId) {
     throw new Error('Not authenticated')
   }
 
-  const { api_session_id } = params
   const body = await req.json()
+  const sessionId = body.sessionId as string
+  const apiSessionId = body.apiSessionId as string
   const messages = body.messages as Message[]
+
   const payload = {
-    session_id: api_session_id,
+    session_id: apiSessionId,
     messages: messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -43,9 +45,10 @@ export async function POST(
         {
           role: 'assistant',
           content: completion,
+          createdAt: new Date(),
         },
       ] as Message[]
-      updateMessagesToSession(api_session_id, payload)
+      updateMessagesToSession(sessionId, payload)
     },
   })
 

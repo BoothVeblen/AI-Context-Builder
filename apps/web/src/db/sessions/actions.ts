@@ -34,7 +34,6 @@ export async function addSession(appId: string) {
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
       { model_id: foundApp?.[0]?.api_model_id }
     )
-    console.log('res:', res)
     if (res.status !== 200) {
       serverLog.capture({
         distinctId: userId,
@@ -47,7 +46,6 @@ export async function addSession(appId: string) {
       throw new Error(`AI service error: ${res.message}`)
     }
     api_session_id = res?.data?.session_id
-    console.log('api_session_id:', api_session_id)
   }
 
   const allSessions = await db
@@ -191,7 +189,6 @@ export async function getLatestSessionId(appId: string) {
           throw new Error(`AI service error: ${res.message}`)
         }
         api_session_id = res?.data?.session_id
-        console.log('api_session_id:', api_session_id)
       }
 
       const sessionVal = {

@@ -46,7 +46,6 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
           chains,
         }
       )
-      console.log('AI service res:', res)
       if (res.status !== 200) {
         serverLog.capture({
           distinctId: userId,
@@ -101,7 +100,6 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
         throw new Error(`AI service error: ${res.message}`)
       }
       api_session_id = res?.data?.session_id
-      console.log('api_session_id:', api_session_id)
     }
 
     const sessionVal = {

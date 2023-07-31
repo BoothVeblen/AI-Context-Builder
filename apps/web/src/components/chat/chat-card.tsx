@@ -64,7 +64,7 @@ const AlertErrorIcon = ({ className }: { className: string }) => (
   </svg>
 )
 
-const formatTime = (time: number) => {
+const formatTime = (time: Date) => {
   if (isToday(time)) {
     return format(time, 'KK:mm aa')
   }
@@ -104,7 +104,7 @@ const ChatCard = (props: IProps) => {
           <div className="mb-5 flex items-center gap-1">
             <Text variant="body2">{isUser ? 'Me' : appName}</Text>
             <Text variant="caption">
-              {message?.createdAt && formatTime(Number(message?.createdAt))}
+              {message?.createdAt && formatTime(new Date(message?.createdAt))}
             </Text>
           </div>
           <div className="flex items-end">
