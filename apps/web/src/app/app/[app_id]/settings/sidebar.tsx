@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon, Loader2Icon } from 'lucide-react'
 
 import { flags } from '@/lib/flags'
@@ -22,11 +22,17 @@ interface IProps {
 export default function Sidebar({ appId, appName }: IProps) {
   const router = useRouter()
   const url = usePathname() || ''
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('nextUrl')
   const [isPending, startTransition] = useTransition()
 
   function handleGoBack() {
     startTransition(() => {
-      router.back()
+      if (nextUrl) {
+        router.push(nextUrl)
+      } else {
+        router.back()
+      }
     })
   }
 
