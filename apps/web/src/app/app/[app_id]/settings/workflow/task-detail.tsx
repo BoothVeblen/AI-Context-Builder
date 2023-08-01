@@ -24,11 +24,17 @@ export default function TaskDetail() {
 
   if (!selectedTask) return null
 
+  const keyLabel =
+    selectedTask.key != null
+      ? `${selectedTask.type}-${selectedTask.key}`
+      : undefined
+
   switch (selectedTask.subType) {
     case 'conversation_chain':
       return (
         <TaskItemConversationChain
           key={selectedTask.id}
+          keyLabel={keyLabel}
           taskId={selectedTask.id}
           formValue={selectedTaskFormValue}
         />
@@ -37,6 +43,7 @@ export default function TaskDetail() {
       return (
         <TaskItemConversationalRetrievalQA
           key={selectedTask.id}
+          keyLabel={keyLabel}
           taskId={selectedTask.id}
           formValue={selectedTaskFormValue}
         />

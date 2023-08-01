@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 import { SUB_TYPE_MAP, TYPE_MAP } from './const'
@@ -44,8 +45,9 @@ export default function WorkflowTreeItem({
 
   const isSelected = selectedTaskId === id
 
-  const { type, subType } = value || {}
+  const { key, type, subType } = value || {}
 
+  const keyLabel = key != null ? `${type}-${key}` : undefined
   const typeTitle = type ? TYPE_MAP[type]?.title : ''
   const TypeIcon = type ? TYPE_MAP[type]?.icon : null
   // @ts-ignore
@@ -55,7 +57,7 @@ export default function WorkflowTreeItem({
     <div className={cn('relative mb-4 w-[360px]', clone && '-rotate-3')}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-lg border bg-white p-4 pb-6',
+          'relative overflow-hidden rounded-lg border bg-white p-4 pb-6 hover:bg-slate-50',
           isSelected && 'border-blue-500',
           ghost && isDragValid && 'border-gray-100',
           ghost && !isDragValid && 'border-red-100'
@@ -63,9 +65,14 @@ export default function WorkflowTreeItem({
         {...handleProps}
         onClick={() => selectTask(id)}
       >
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2 text-slate-500">
           {TypeIcon && <TypeIcon className="h-6 w-6" />}
-          <div className="text-sm text-slate-500">{typeTitle}</div>
+          <div className="text-sm">{typeTitle}</div>
+          {keyLabel && (
+            <Badge variant="secondary" className="h-5">
+              {keyLabel}
+            </Badge>
+          )}
         </div>
         <div className="mt-3 text-sm font-medium text-slate-900">
           {subTypeTitle}

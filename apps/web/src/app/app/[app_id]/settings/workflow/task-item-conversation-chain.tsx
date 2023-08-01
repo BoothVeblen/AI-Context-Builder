@@ -2,22 +2,18 @@
 
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronRightIcon } from 'lucide-react'
+import { ChevronRightIcon, Plus } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 
+import AddTemplateButton from './add-template-button'
 import { MAX_MAX_TOKENS } from './const'
-import {
-  InputItem,
-  ListSelectItem,
-  SelectItem,
-  SlideItem,
-  TextareaItem,
-} from './form-item'
+import { InputItem, SelectItem, SlideItem, TextareaItem } from './form-item'
 import { useWorkflowContext } from './store'
 import { TaskDefaultValueMap } from './task-default-value'
 import useAutoSave from './use-auto-save'
@@ -25,16 +21,18 @@ import useResetForm from './use-reset-form'
 
 interface IProps {
   taskId: string
+  keyLabel?: string
   formValue: any
 }
 
 export default function TaskItemConversationChain({
   taskId,
+  keyLabel,
   formValue,
 }: IProps) {
   return (
     <FormProvider taskId={taskId} formValue={formValue}>
-      <FormItems />
+      <FormItems keyLabel={keyLabel} />
     </FormProvider>
   )
 }
@@ -96,11 +94,14 @@ function FormProvider({ children, taskId, formValue }: FormProviderProps) {
   )
 }
 
-function FormItems() {
+function FormItems({ keyLabel }: { keyLabel?: string }) {
   return (
     <div className="h-full w-[380px] shrink-0 overflow-auto border-l border-slate-200 scrollbar-none">
       <div className="space-y-6 p-6">
-        <h2 className="text-lg font-semibold">Conversation Chain</h2>
+        <div className="space-y-[10px]">
+          <h2 className="text-lg font-semibold">Conversation Chain</h2>
+          {keyLabel && <Badge variant="secondary">key: {keyLabel}</Badge>}
+        </div>
         <div className="space-y-6">
           <FormItemLLM />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
@@ -201,7 +202,15 @@ function FormItemPrompt() {
     <div className="space-y-4">
       <div className="text-sm font-medium text-slate-500">prompt</div>
       <div className="space-y-8">
-        <TextareaItem<IFormSchema> name="prompt.template" label="Template" />
+        <TextareaItem<IFormSchema>
+          name="prompt.template"
+          label={
+            <div className="flex items-center justify-between ">
+              Template
+              <AddTemplateButton />
+            </div>
+          }
+        />
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import { produce } from 'immer'
+import { last } from 'lodash'
 import { createStore, useStore } from 'zustand'
 
 import { nanoid } from '@/lib/utils'
@@ -24,7 +25,7 @@ interface WorkflowState extends WorkflowProps {
   resetCount: number
   setWorkflowTree: (tree: TreeItem[]) => void
   addTask: (type: WorkflowType, subType: string) => void
-  selectTask: (id: string) => void
+  selectTask: (id: string, type?: string) => void
   removeTask: (id: string) => void
   editTaskFormValueStr: (id: string, formValue: string) => void
   resetWorkflow: () => void
@@ -42,7 +43,7 @@ const createWorkflowStore = (initProps?: Partial<WorkflowProps>) => {
     selectedTaskId: null,
     datasetOptions: [],
   }
-  return createStore<WorkflowState>()((set) => ({
+  return createStore<WorkflowState>()((set, get) => ({
     ...defaultProps,
     ...initProps,
 
@@ -60,7 +61,11 @@ const createWorkflowStore = (initProps?: Partial<WorkflowProps>) => {
         produce((draft: WorkflowState) => {
           const id = nanoid()
           const defaultFormValue = (TaskDefaultValueMap as any)[subType] || {}
+          const latestKey = last(
+            draft.workflowData.filter((p) => p.type === type)
+          )?.key
           draft.workflowData.push({
+            key: Number(latestKey ?? -1) + 1,
             id,
             type,
             subType,

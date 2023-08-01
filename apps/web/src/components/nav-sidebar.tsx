@@ -12,7 +12,7 @@ export default async function NavSidebar() {
         <h1 className="flex h-12 shrink-0 items-center px-4 text-lg font-semibold">
           Context AI
         </h1>
-        <div className="m-full h-px shrink-0 bg-slate-100" />
+        <div className="m-full h-px shrink-0 bg-slate-200" />
         <div className="flex-1 px-2 py-3">
           <div className="space-y-3">
             <div className="space-y-3">
@@ -22,7 +22,7 @@ export default async function NavSidebar() {
               </h2>
               <ExploreList />
             </div>
-            <div className="m-full -mx-2 h-px shrink-0 bg-slate-100" />
+            <div className="m-full -mx-2 h-px shrink-0 bg-slate-200" />
             <div className="space-y-3">
               <h2 className="flex items-center space-x-2 p-2">
                 <BoxIcon size={20} />

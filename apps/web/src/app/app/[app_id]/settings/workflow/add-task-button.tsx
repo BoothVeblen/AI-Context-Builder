@@ -85,7 +85,8 @@ export default function AddTaskButton() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button>
-          <PlusIcon className="mr-2 h-4 w-4" /> Add task
+          <PlusIcon className="mr-2 h-4 w-4" />
+          Add task
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-96" align="start">

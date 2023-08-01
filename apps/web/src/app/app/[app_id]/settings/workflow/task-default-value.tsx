@@ -46,6 +46,7 @@ export const defaultWorkflowTree: TreeItem[] = [
 
 export const defaultWorkflowData: WorkflowItem[] = [
   {
+    key: 0,
     id: 'default_conversation_chain_id',
     type: 'tool',
     subType: 'conversation_chain',

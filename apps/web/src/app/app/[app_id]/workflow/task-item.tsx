@@ -33,8 +33,8 @@ export default function TaskItem({
     <div className="pl-12 pt-4">
       <button
         className={cn(
-          'w-[360px] rounded-lg border border-slate-200 px-4 pb-6 pt-3 text-start',
-          isSelected && 'bg-slate-50'
+          'w-[360px] rounded-lg border border-slate-200 px-4 pb-6 pt-3 text-start hover:bg-slate-50',
+          isSelected && 'border-blue-500 bg-slate-50'
         )}
         onClick={() => onSelect(id)}
       >

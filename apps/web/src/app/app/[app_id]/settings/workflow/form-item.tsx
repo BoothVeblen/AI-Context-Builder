@@ -1,4 +1,4 @@
-import { HTMLInputTypeAttribute } from 'react'
+import { HTMLInputTypeAttribute, ReactNode, useState } from 'react'
 import { Check, ChevronsUpDown, PlusIcon, TrashIcon } from 'lucide-react'
 import { FieldValues, Path, PathValue, useFormContext } from 'react-hook-form'
 
@@ -71,7 +71,7 @@ export function InputItem<T extends FieldValues>({
 
 interface ITextareaItem<T> {
   name: Path<T>
-  label?: string
+  label?: string | ReactNode
   placeholder?: string
 }
 
@@ -111,7 +111,7 @@ export function SelectItem<T extends FieldValues>({
   options,
 }: ISelectItem<T>) {
   const form = useFormContext<T>()
-
+  const [open, setOpen] = useState(false)
   return (
     <FormField
       control={form.control}
@@ -119,7 +119,7 @@ export function SelectItem<T extends FieldValues>({
       render={({ field }) => (
         <FormItem className="flex flex-col">
           {label && <FormLabel>{label}</FormLabel>}
-          <Popover>
+          <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
@@ -150,6 +150,7 @@ export function SelectItem<T extends FieldValues>({
                       key={item.value}
                       onSelect={(value) => {
                         form.setValue(name, value as PathValue<T, Path<T>>)
+                        setOpen(false)
                       }}
                     >
                       <Check
@@ -268,7 +269,10 @@ export function ListSelectItem<T extends FieldValues>({
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="p-0" align="end">
+            <PopoverContent
+              className="relative left-[195px] w-[332px] p-0"
+              align="end"
+            >
               <Command filter={labelFilterBuilder(options)}>
                 <CommandInput
                   placeholder={`Search ${label.toLowerCase()}...`}
