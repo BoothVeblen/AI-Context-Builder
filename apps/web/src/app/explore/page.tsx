@@ -1,35 +1,44 @@
+import { flags } from '@/lib/flags'
+import { getAppsBasedOnIds } from '@/db/apps/actions'
 import AppCard from '@/components/app-card'
 import RootWrapper from '@/components/root-wrapper'
 
-// const LIST = [
-//   {
-//     id: 'CQolMcS',
-//     name: 'Employee Handbook',
-//     creator: '@Context Builder',
-//     description:
-//       "This is an employee handbook AI Bot. You can consult Context on company's vacation, benefits, corporate cultures, etc.",
-//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/yvz6XUK.jpeg',
-//   },
-//   {
-//     id: 'wV8w8mV',
-//     name: 'Onboarding',
-//     creator: '@Context Builder',
-//     description:
-//       'This AI Bot can help new employees quickly understand the schedules and goals of their first day and first month.',
-//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/n8fgLWX.jpeg',
-//   },
-//   {
-//     id: 'VtTNc8h',
-//     name: 'TikTok User Guide',
-//     creator: '@Context Builder',
-//     description:
-//       'This user guide AI Bot can help you quickly learn how to use TikTok.',
-//     icon: 'https://storage.googleapis.com/context-builder/public-tmp/EVoNO2l.jpeg',
-//   },
-// ]
-const LIST: any[] = []
+// const LIST = flags.isProd
+//   ? [
+//       {
+//         id: 'R7cTLNuANTiD',
+//         name: 'Product Customer Service',
+//         creator: '@Context Builder',
+//         description:
+//           'Possess product knowledge and answer user questions like customer service.',
+//         icon: 'https://storage.googleapis.com/context-builder/public-tmp/qeoEap4JkTmB.jpeg',
+//       },
+//       {
+//         id: 'JS0VUKV07Jat',
+//         name: 'Multilingual Translation Assistant',
+//         creator: '@Context Builder',
+//         description:
+//           'Act as a translator and translate in different languages.',
+//         icon: 'https://storage.googleapis.com/context-builder/public-tmp/vKFQ7Ev8SbKp.jpeg',
+//       },
+//       {
+//         id: 'iBidZhqJSsBX',
+//         name: 'Roleplay - Interviewer',
+//         creator: '@Context Builder',
+//         description:
+//           'Serve as an interviewer and interview candidates for different positions.',
+//         icon: 'https://storage.googleapis.com/context-builder/public-tmp/CY5nRzSGNsE5.jpeg',
+//       },
+//     ]
+//   : []
 
 export default async function Page() {
+  const list = await getAppsBasedOnIds([
+    'R7cTLNuANTiD',
+    'JS0VUKV07Jat',
+    'iBidZhqJSsBX',
+  ])
+
   return (
     <RootWrapper pageTitle="Explore">
       <div className="flex flex-col">
@@ -39,14 +48,14 @@ export default async function Page() {
         <div className="p-6">
           <h2 className="text-sm font-medium">All Categories</h2>
           <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {LIST.map(({ id, name, description, icon, creator }) => (
+            {list.map(({ short_id, name, description, icon }) => (
               <AppCard
-                key={id}
-                id={id}
+                key={short_id}
+                id={short_id}
                 name={name}
                 description={description}
                 icon={icon}
-                creator={creator}
+                creator="@Context Builder"
               />
             ))}
           </ul>

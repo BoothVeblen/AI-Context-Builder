@@ -67,11 +67,11 @@ const AlertErrorIcon = ({ className }: { className: string }) => (
 
 const formatTime = (time: Date) => {
   if (isToday(time)) {
-    return format(time, 'KK:mm aa')
+    return format(time, 'hh:mm aa')
   }
   if (isYesterday(time)) {
-    return `Yesterday at ${format(time, 'KK:mm aa')}`
-  } else return format(time, 'dd/MM/yyyy KK:mm aa')
+    return `Yesterday at ${format(time, 'hh:mm aa')}`
+  } else return format(time, 'dd/MM/yyyy hh:mm aa')
 }
 
 const ChatCard = (props: IProps) => {

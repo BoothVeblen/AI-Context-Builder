@@ -1,5 +1,7 @@
+import { BASE_URL } from './utils'
+
 export const flags = {
-  isPro: process.env.NODE_ENV === 'production',
+  isProd: BASE_URL === 'https://build.withcontext.ai',
   isDev: process.env.NODE_ENV === 'development',
   enabledAuth:
     process.env.IS_DOCKER ||

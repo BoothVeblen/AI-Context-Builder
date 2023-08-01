@@ -56,7 +56,15 @@ const TextSplits = ({ form, sectionRef }: SessionProps) => {
           <FormItem className="my-6 w-[332px]">
             <FormLabel className="flex">Chunk size</FormLabel>
             <FormControl>
-              <Input placeholder="Input your chunk size" {...field} />
+              <Input
+                type="number"
+                placeholder="Input your chunk size"
+                {...field}
+                onChange={(e) => {
+                  const value = +e.target.value
+                  field.onChange(value as any)
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -69,7 +77,15 @@ const TextSplits = ({ form, sectionRef }: SessionProps) => {
           <FormItem className="w-[332px]">
             <FormLabel className="flex">Chunk overlap</FormLabel>
             <FormControl>
-              <Input placeholder="Input your chunk overlap" {...field} />
+              <Input
+                type="number"
+                placeholder="Input your chunk overlap"
+                {...field}
+                onChange={(e) => {
+                  const value = +e.target.value
+                  field.onChange(value as any)
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -401,3 +401,28 @@ export async function removeApp(appId: string) {
     }
   }
 }
+
+export async function getAppsBasedOnIds(ids: string[]) {
+  const tags = [`apps:${ids.join(',')}`]
+
+  return await unstable_cache(
+    async () => {
+      try {
+        const apps = await db
+          .select()
+          .from(AppsTable)
+          .where(inArray(AppsTable.short_id, ids))
+          .orderBy(desc(AppsTable.created_at))
+
+        return apps
+      } catch (error) {
+        redirect('/')
+      }
+    },
+    tags,
+    {
+      revalidate: 15 * 60, // revalidate in 15 minutes
+      tags,
+    }
+  )()
+}
