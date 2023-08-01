@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 
+import { MAX_MAX_TOKENS } from './const'
 import {
   InputItem,
   ListSelectItem,
@@ -49,7 +50,7 @@ const FormSchema = z.object({
       .optional()
       .or(z.literal('')),
     temperature: z.number().min(0).max(2).optional(),
-    max_tokens: z.number().min(0).max(2048).optional(),
+    max_tokens: z.number().min(0).max(MAX_MAX_TOKENS).optional(),
     top_p: z.number().min(0).max(1).optional(),
     frequency_penalty: z.number().min(0).max(2).optional(),
     presence_penalty: z.number().min(0).max(2).optional(),
@@ -164,7 +165,7 @@ function FormItemLLM() {
               name="llm.max_tokens"
               label="Max Tokens"
               min={0}
-              max={2048}
+              max={MAX_MAX_TOKENS}
               step={1}
             />
             <SlideItem<IFormSchema>

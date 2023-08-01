@@ -19,3 +19,6 @@ export const SUB_TYPE_MAP = {
     title: 'Conversational Retrieval QA',
   },
 }
+
+export const DEFAULT_MAX_TOKENS = 2048
+export const MAX_MAX_TOKENS = 4096

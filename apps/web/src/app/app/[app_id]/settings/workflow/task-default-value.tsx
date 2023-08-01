@@ -1,5 +1,6 @@
 import { TreeItem } from '@/components/dnd/types'
 
+import { DEFAULT_MAX_TOKENS } from './const'
 import { WorkflowItem } from './type'
 
 export const TaskDefaultValueMap = {
@@ -8,7 +9,7 @@ export const TaskDefaultValueMap = {
       name: 'gpt-3.5-turbo',
       api_key: '',
       temperature: 0.9,
-      max_tokens: 256,
+      max_tokens: DEFAULT_MAX_TOKENS,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
@@ -22,7 +23,7 @@ export const TaskDefaultValueMap = {
       name: 'gpt-3.5-turbo',
       api_key: '',
       temperature: 0.9,
-      max_tokens: 256,
+      max_tokens: DEFAULT_MAX_TOKENS,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
@@ -48,7 +49,6 @@ export const defaultWorkflowData: WorkflowItem[] = [
     id: 'default_conversation_chain_id',
     type: 'tool',
     subType: 'conversation_chain',
-    formValueStr:
-      '{"llm":{"name":"gpt-3.5-turbo","api_key":"","temperature":0.9,"max_tokens":256,"top_p":1,"frequency_penalty":0,"presence_penalty":0},"prompt":{"template":""}}',
+    formValueStr: `{"llm":{"name":"gpt-3.5-turbo","api_key":"","temperature":0.9,"max_tokens":${DEFAULT_MAX_TOKENS},"top_p":1,"frequency_penalty":0,"presence_penalty":0},"prompt":{"template":""}}`,
   },
 ]
