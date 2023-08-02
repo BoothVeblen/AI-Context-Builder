@@ -3,6 +3,7 @@ import { getApp } from '@/db/apps/actions'
 import { getDatasets } from '@/db/datasets/actions'
 
 import AddTaskButton from './add-task-button'
+import ChatDebug from './chat-debug'
 import FormActions from './form-actions'
 import { WorkflowProvider } from './store'
 import TaskDetail from './task-detail'
@@ -23,6 +24,8 @@ export default async function Page({ params }: IProps) {
     workflow_data_str,
     published_workflow_tree_str,
     published_workflow_data_str,
+    name,
+    icon,
   } = appDetail
 
   const defaultWorkflowTree = safeParse(workflow_tree_str, [])
@@ -60,8 +63,9 @@ export default async function Page({ params }: IProps) {
           <div className="mt-6">
             <TaskList />
           </div>
-          <div className="mt-4">
+          <div className="mt-4 flex items-center gap-2">
             <AddTaskButton />
+            <ChatDebug appName={name} appIcon={icon} />
           </div>
         </div>
 

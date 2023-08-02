@@ -426,3 +426,54 @@ export async function getAppsBasedOnIds(ids: string[]) {
     }
   )()
 }
+
+export async function addDebugSession(api_model_id: string) {
+  const { userId } = auth()
+  if (!userId || !flags.enabledAIService) return null
+
+  let { data: res } = await axios.post(
+    `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+    { model_id: api_model_id }
+  )
+
+  if (res.status !== 200) {
+    serverLog.capture({
+      distinctId: userId || '',
+      event: 'ai_service_error:debug_session',
+      properties: {
+        message: res.message,
+      },
+    })
+    throw new Error(`AI service error: ${res.message}`)
+  }
+
+  return res?.data?.session_id
+}
+
+export async function getDebugSessionId(tasks: WorkflowItem[]) {
+  const { userId } = auth()
+  if (!userId || !flags.enabledAIService) return null
+
+  const chains = tasks.map(taskToApiFormatter)
+  const { data: res } = await axios.post(
+    `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
+    {
+      chains,
+    }
+  )
+
+  if (res.status !== 200) {
+    serverLog.capture({
+      distinctId: userId,
+      event: 'ai_service_error:debug_app',
+      properties: {
+        message: res.message,
+        chains,
+      },
+    })
+    throw new Error(`AI service error: ${res.message}`)
+  }
+
+  const api_model_id = res?.data?.id
+  return await addDebugSession(api_model_id)
+}

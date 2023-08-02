@@ -8,9 +8,11 @@ import { createStore, useStore } from 'zustand'
 import { TreeItem } from '@/components/dnd/types'
 
 import { WorkflowItem } from '../settings/workflow/type'
+import { DatasetProps } from './page'
 
 interface Props {
   workflowTree: TreeItem[]
+  dataset: DatasetProps[]
   workflowData: WorkflowItem[]
   selectedTaskId: UniqueIdentifier | null
 }
@@ -24,6 +26,7 @@ type Store = ReturnType<typeof createLocalStore>
 const createLocalStore = (initProps?: Partial<Props>) => {
   const defaultProps: Props = {
     workflowTree: [],
+    dataset: [],
     workflowData: [],
     selectedTaskId: null,
   }

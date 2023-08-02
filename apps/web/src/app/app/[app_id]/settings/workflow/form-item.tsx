@@ -277,6 +277,11 @@ export function ListSelectItem<T extends FieldValues>({
                 <CommandInput
                   placeholder={`Search ${label.toLowerCase()}...`}
                 />
+                {!options?.length && (
+                  <div className="py-6 text-center text-sm">
+                    No Dataset found.
+                  </div>
+                )}
                 <CommandList>
                   <CommandEmpty>No {label.toLowerCase()} found.</CommandEmpty>
                   <CommandGroup>
