@@ -12,9 +12,9 @@ import { DatasetProps } from './page'
 
 interface Props {
   workflowTree: TreeItem[]
-  dataset: DatasetProps[]
   workflowData: WorkflowItem[]
   selectedTaskId: UniqueIdentifier | null
+  linkedDatasets: DatasetProps[]
 }
 
 interface State extends Props {
@@ -26,9 +26,9 @@ type Store = ReturnType<typeof createLocalStore>
 const createLocalStore = (initProps?: Partial<Props>) => {
   const defaultProps: Props = {
     workflowTree: [],
-    dataset: [],
     workflowData: [],
     selectedTaskId: null,
+    linkedDatasets: [],
   }
   return createStore<State>()((set) => ({
     ...defaultProps,

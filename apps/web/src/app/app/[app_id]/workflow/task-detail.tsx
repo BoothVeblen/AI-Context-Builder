@@ -23,7 +23,7 @@ function UpCaseStr(str: string) {
 }
 
 export default function TaskDetail({ value, onClose }: IProps) {
-  const dataset = useWorkflowContext((state) => state.dataset)
+  const linkedDatasets = useWorkflowContext((state) => state.linkedDatasets)
   if (!value) return null
 
   const { subType, formValueStr, key, type } = value
@@ -32,7 +32,6 @@ export default function TaskDetail({ value, onClose }: IProps) {
     subType === 'conversation_chain'
       ? 'Conversation Chain'
       : 'Conversational Retrieval QA'
-  const apiKey = formValue.llm?.api_key
   const modelName = formValue.llm?.name
   const temperature = formValue.llm?.temperature
   const topP = formValue.llm?.top_p
@@ -41,22 +40,28 @@ export default function TaskDetail({ value, onClose }: IProps) {
   const promptTemplate = formValue.prompt?.template
   const retriever = UpCaseStr(formValue?.retriever?.type)
   const keyLabel = `${type}-${key}`
-  const data = formValue?.data?.datasets
-  const curDataset = dataset?.filter((item) => data?.includes(item?.dataset_id))
+  const datasetIds = formValue?.data?.datasets
+  const datasets = linkedDatasets?.filter(
+    (item) => datasetIds?.includes(item?.dataset_id)
+  )
+
   return (
     <div className="space-y-8">
       <div className="-mr-2 -mt-2">
         <div className="-mr-2 -mt-2 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">View App task</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <h2 className="truncate text-lg font-semibold">{title}</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="shrink-0"
+          >
             <XIcon className="h-4 w-4" />
           </Button>
         </div>
         {keyLabel && <Badge variant="secondary">key: {keyLabel}</Badge>}
       </div>
 
-      <Item label="Title" value={title} />
-      <Item label="Key" value={apiKey} />
       <Item label="Model" value={modelName} />
       <Item label="Prompt" value={promptTemplate} />
       <Item label="Temperature" value={temperature} />
@@ -64,7 +69,7 @@ export default function TaskDetail({ value, onClose }: IProps) {
       <Item label="Presence Penalty" value={presencePenalty} />
       <Item label="Frequency Penalty" value={frequencyPenalty} />
       <Item label="Retrievers" value={retriever} />
-      <DatasetItem datasets={curDataset} />
+      <DatasetItem datasets={datasets} />
     </div>
   )
 }
@@ -82,6 +87,7 @@ function Item({ label, value }: { label: string; value: string }) {
 
 function DatasetItem({ datasets }: { datasets?: DatasetProps[] }) {
   if (!datasets?.length) return null
+
   return (
     <div className="space-y-2">
       <div className="text-base font-medium">Data</div>
@@ -91,7 +97,7 @@ function DatasetItem({ datasets }: { datasets?: DatasetProps[] }) {
             className="flex items-center rounded-md border p-3"
             key={item?.dataset_id}
           >
-            {item?.icon === 'pdf' && <PdfImage className="h-6" />}
+            {item?.icon === 'pdf' && <PdfImage className="mr-2 h-6" />}
             <div className="truncate text-sm">{item?.name}</div>
           </div>
         )
