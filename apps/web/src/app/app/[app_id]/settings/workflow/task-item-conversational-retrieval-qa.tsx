@@ -222,7 +222,7 @@ const PROMPT_TYPE_OPTIONS = [
 function FormItemPrompt() {
   return (
     <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">prompt</div>
+      <div className="text-sm font-medium text-slate-500">PROMPT</div>
       <div className="space-y-8">
         <TextareaItem<IFormSchema>
           name="prompt.template"
@@ -248,7 +248,7 @@ const RETRIEVER_TYPE_OPTIONS = [
 function FormItemRetriever() {
   return (
     <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">retriever</div>
+      <div className="text-sm font-medium text-slate-500">RETRIEVERS</div>
       <div className="space-y-8">
         <SelectItem<IFormSchema>
           name="retriever.type"
@@ -265,7 +265,7 @@ function FormItemData() {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">data</div>
+      <div className="text-sm font-medium text-slate-500">DATA</div>
       <div className="space-y-8">
         <ListSelectItem<IFormSchema>
           name="data.datasets"

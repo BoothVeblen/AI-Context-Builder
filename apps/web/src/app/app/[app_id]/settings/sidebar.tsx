@@ -87,7 +87,7 @@ export default function Sidebar({ appId, appName }: IProps) {
         )}
       </div>
 
-      <div className="my-2 shrink-0 px-3">
+      <div className="mb-2 shrink-0 px-3">
         <div className="h-px bg-slate-200" />
       </div>
 

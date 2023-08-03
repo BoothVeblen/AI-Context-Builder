@@ -80,7 +80,7 @@ function Item({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-2">
       <div className="text-base font-medium">{label}</div>
-      <div className="text-sm">{value}</div>
+      <div className="break-words text-sm">{value}</div>
     </div>
   )
 }

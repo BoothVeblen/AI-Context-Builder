@@ -206,7 +206,9 @@ export function SlideItem<T extends FieldValues>({
               min={min}
               max={max}
               step={step}
-              onValueChange={(val) => field.onChange(val[0] as any)}
+              onValueChange={(val) => {
+                field.onChange(val[0] as any)
+              }}
             />
             <FormMessage />
           </FormItem>
@@ -228,7 +230,9 @@ export function SlideItem<T extends FieldValues>({
                 value={field.value}
                 onChange={(e) => {
                   const value = +e.target.value
-                  field.onChange(value as any)
+                  const val =
+                    value > (max || 1) ? max : value < (min || 0) ? min : value
+                  field.onChange(val as any)
                 }}
                 className="h-10 w-18"
               />

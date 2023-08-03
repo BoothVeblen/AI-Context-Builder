@@ -72,7 +72,10 @@ const ChatDebug = ({ appId, appName, appIcon }: IProps) => {
         )}
         Enter Debug
       </Button>
-      <SheetContent className="bottom-6 right-6 top-auto h-4/5 w-11/12 border-none sm:max-w-xl md:max-w-xl">
+      <SheetContent
+        className="bottom-6 right-6 top-auto h-4/5 w-11/12 divide-x-0 rounded-lg border-none sm:max-w-xl
+md:max-w-xl"
+      >
         <Chat
           appName={appName}
           appIcon={appIcon}

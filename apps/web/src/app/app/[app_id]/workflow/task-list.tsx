@@ -51,7 +51,7 @@ export default function TaskList() {
         </div>
       </div>
       {selectedTaskId && (
-        <div className="hidden w-96 border-l border-slate-100 p-6 lg:block">
+        <div className="hidden w-96 border-l border-slate-200 p-6 lg:block">
           <TaskDetail value={selectedTask} onClose={closeTaskDetail} />
         </div>
       )}

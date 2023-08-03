@@ -68,8 +68,8 @@ const AddTemplateButton = () => {
                     className="p-3"
                     value={item?.prompt}
                     key={item.title}
-                    onSelect={(item) => {
-                      setValue('prompt.template', item)
+                    onSelect={() => {
+                      setValue('prompt.template', item?.prompt)
                       setOpen(false)
                     }}
                   >

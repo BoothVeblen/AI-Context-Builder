@@ -19,7 +19,7 @@ export default async function Sidebar({ appId }: { appId: string }) {
   const isOwner = userId === appDetail.created_by
 
   return (
-    <div className="flex h-full overflow-hidden lg:border-r lg:border-slate-100">
+    <div className="flex h-full overflow-hidden lg:border-r lg:border-slate-200">
       <WorkspaceSidebar appList={appList} />
       <div className="flex w-60 shrink-0 grow flex-col bg-gray-50">
         <div className="flex-1 overflow-y-auto scrollbar-none">

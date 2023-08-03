@@ -200,7 +200,7 @@ function FormItemLLM() {
 function FormItemPrompt() {
   return (
     <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">prompt</div>
+      <div className="text-sm font-medium text-slate-500">PROMPT</div>
       <div className="space-y-8">
         <TextareaItem<IFormSchema>
           name="prompt.template"

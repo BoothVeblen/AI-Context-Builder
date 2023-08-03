@@ -156,7 +156,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         isHidden && 'translate-y-24'
       )}
     >
-      <div className="flex h-18 w-[600px] max-w-md items-center space-x-2 rounded-lg border border-slate-100 bg-background px-4 shadow-md lg:max-w-lg xl:max-w-xl 2xl:max-w-full">
+      <div className="flex h-18 w-[600px] max-w-md items-center space-x-2 rounded-lg border border-slate-200 bg-background px-4 shadow-md lg:max-w-lg xl:max-w-xl 2xl:max-w-full">
         {children}
       </div>
     </div>

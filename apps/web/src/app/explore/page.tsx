@@ -42,7 +42,7 @@ export default async function Page() {
   return (
     <RootWrapper pageTitle="Explore">
       <div className="flex flex-col">
-        <h1 className="hidden border-b border-slate-100 px-6 py-3 font-medium lg:block">
+        <h1 className="hidden border-b border-slate-200 px-6 py-3 font-medium lg:block">
           Explore
         </h1>
         <div className="p-6">
