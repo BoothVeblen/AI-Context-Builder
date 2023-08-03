@@ -2,12 +2,14 @@ import { UniqueIdentifier } from '@dnd-kit/core'
 import { WrenchIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { TreeItem } from '@/components/dnd/types'
 
 import { useWorkflowContext } from './store'
 
 interface IProps {
   id: UniqueIdentifier
+  labelKey?: string
   childItems?: TreeItem[]
   onSelect: (taskId: UniqueIdentifier) => void
   selectedId: UniqueIdentifier | null
@@ -15,6 +17,7 @@ interface IProps {
 
 export default function TaskItem({
   id,
+  labelKey,
   childItems,
   onSelect,
   selectedId,
@@ -41,6 +44,11 @@ export default function TaskItem({
         <div className="flex items-center space-x-2 text-slate-500">
           <WrenchIcon />
           <div className="text-sm">Tools</div>
+          {labelKey && (
+            <Badge variant="secondary" className="h-5">
+              {labelKey}
+            </Badge>
+          )}
         </div>
         <div className="mt-4 text-sm text-slate-900">{title}</div>
       </button>

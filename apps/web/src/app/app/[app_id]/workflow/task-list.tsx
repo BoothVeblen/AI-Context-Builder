@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { UniqueIdentifier } from '@dnd-kit/core'
+import language from 'react-syntax-highlighter/dist/esm/languages/hljs/1c'
 import { useWindowSize } from 'usehooks-ts'
 
 import { Sheet, SheetContent } from '@/components/ui/sheet'
@@ -12,6 +13,7 @@ import TaskItem from './task-item'
 
 export default function TaskList() {
   const workflowTree = useWorkflowContext((state) => state.workflowTree)
+  const workflowData = useWorkflowContext((state) => state.workflowData)
   const selectedTaskId = useWorkflowContext((state) => state.selectedTaskId)
   const selectTask = useWorkflowContext((state) => state.selectTask)
   const selectedTask = useWorkflowContext((state) =>
@@ -28,20 +30,24 @@ export default function TaskList() {
 
   const { width } = useWindowSize()
   const isSmallScreen = width < 1024
-
   return (
     <div className="flex flex-1">
       <div className="flex-1">
         <div className="-ml-6 mt-2">
-          {workflowTree.map(({ id, children }) => (
-            <TaskItem
-              key={id}
-              id={id}
-              childItems={children}
-              onSelect={onSelectTask}
-              selectedId={selectedTaskId}
-            />
-          ))}
+          {workflowTree.map(({ id, children }) => {
+            const cur = workflowData?.find((item) => item?.id === id)
+            const labelKey = `${cur?.type}-${cur?.key}`
+            return (
+              <TaskItem
+                key={id}
+                id={id}
+                labelKey={labelKey}
+                childItems={children}
+                onSelect={onSelectTask}
+                selectedId={selectedTaskId}
+              />
+            )
+          })}
         </div>
       </div>
       {selectedTaskId && (

@@ -18,12 +18,10 @@ interface InputProps {
   stop: () => void
   showResend?: boolean
   isDebug?: boolean
-  disabled?: boolean
 }
 
 const ChatInput = ({
   input,
-  disabled,
   setInput,
   onSubmit,
   isLoading,
@@ -36,7 +34,7 @@ const ChatInput = ({
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
-  const isDisabled = !input || input.trim() === '' || isLoading || disabled
+  const isDisabled = !input || input.trim() === '' || isLoading
 
   return (
     <div

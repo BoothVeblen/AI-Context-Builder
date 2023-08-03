@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Message } from 'ai'
 import { useChat } from 'ai/react'
 
@@ -22,6 +22,8 @@ export interface ChatProps {
   isDebug?: boolean
   apiSessionId?: string | null
   initialMessages?: Message[]
+  setInitialMessages?: (messages: Message[]) => void
+  isConfigChanged?: boolean
 }
 
 const Chat = ({
@@ -33,9 +35,13 @@ const Chat = ({
   isDebug = false,
   apiSessionId,
   initialMessages = [],
+  setInitialMessages,
+  isConfigChanged,
 }: ChatProps) => {
   const [waiting, setWaiting] = useState<boolean>(false)
-  const [confirmReset, setConfirmReset] = useState(false)
+  const [confirmReset, setConfirmReset] = useState(
+    isConfigChanged && initialMessages?.length !== 0
+  )
   const { scrollRef, setAutoScroll } = useScrollToBottom()
 
   const {
@@ -78,16 +84,20 @@ const Chat = ({
   usePageTitle(sessionName)
 
   const onRestart = () => {
+    handelStop()
     setMessages([])
     setConfirmReset(false)
-    stop()
   }
 
   const onCancel = () => {
     setConfirmReset(false)
   }
 
-  const disabled = isDebug && !apiSessionId
+  useEffect(() => {
+    if (isDebug && setInitialMessages) setInitialMessages(messages)
+  }, [messages, isDebug, setInitialMessages])
+
+  const disabledRestart = !messages || messages.length === 0
   return (
     <div className="relative h-full w-full">
       {confirmReset && (
@@ -97,7 +107,11 @@ const Chat = ({
         <ChatHeader
           name={sessionName}
           isDebug={isDebug}
-          onRestart={() => setConfirmReset(true)}
+          onRestart={() => {
+            handelStop()
+            setMessages([])
+          }}
+          disabledRestart={disabledRestart}
         />
         <ChatList
           messages={messages}
@@ -111,7 +125,6 @@ const Chat = ({
           isDebug={isDebug}
         />
         <ChatInput
-          disabled={disabled}
           input={input}
           setInput={setInput}
           onSubmit={async (value) => {
