@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: withcontext-backend
+  namespace: withcontext-backend-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: withcontext-backend
+  template:
+    metadata:
+      labels:
+        app: withcontext-backend
+    spec:
+      imagePullSecrets:
+        - name: ecr-registry
+      containers:
+        - name: withcontext-backend
+          image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:test
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: DATABASE_URL
+            - name: PINECONE_ENVIRONMENT
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: PINECONE_ENVIRONMENT
+            - name: PINECONE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: PINECONE_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: OPENAI_API_KEY
+          resources:
+            limits:
+              memory: '500Mi'
+              cpu: '0.5'

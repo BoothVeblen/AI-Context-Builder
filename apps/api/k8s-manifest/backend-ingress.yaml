@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: withcontext-backend-ingress
+  namespace: withcontext-backend
+spec:
+  rules:
+    - host: api.withcontext.ai
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: withcontext-backend-service
+                port:
+                  number: 80

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: withcontext-backend-service
+  namespace: withcontext-backend
+spec:
+  selector:
+    app: withcontext-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
