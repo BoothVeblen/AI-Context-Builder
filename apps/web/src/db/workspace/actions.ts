@@ -3,20 +3,13 @@ import 'server-only'
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
 import { SessionsTable } from '../sessions/schema'
 import { WorkspaceTable } from './schema'
-
-interface WorkspaceItem {
-  app_id: string
-  app_name: string
-  app_icon: string
-  session_id: string
-}
 
 export async function addToWorkspace(appId: string) {
   const { userId } = auth()

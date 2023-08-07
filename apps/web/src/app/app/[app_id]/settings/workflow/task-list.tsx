@@ -8,9 +8,6 @@ export default function TaskList() {
   const setWorkflowTree = useWorkflowContext((state) => state.setWorkflowTree)
   const workflowData = useWorkflowContext((state) => state.workflowData)
 
-  console.log('workflowTree:', workflowTree)
-  console.log('workflowData:', workflowData)
-
   return (
     <WorkflowTree
       value={workflowTree}

@@ -6,7 +6,7 @@ import axios from 'axios'
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
@@ -211,37 +211,61 @@ export async function getLatestSessionId(appId: string) {
   }
 }
 
-export async function getSession(sessionId: string) {
+export async function getSession(sessionId: string, appId?: string) {
   try {
     const { userId } = auth()
     if (!userId) {
       throw new Error('Not authenticated')
     }
 
-    const items = await db
+    const [session] = await db
       .select()
       .from(SessionsTable)
       .where(
         and(
           eq(SessionsTable.short_id, sessionId),
-          eq(SessionsTable.created_by, userId)
+          eq(SessionsTable.created_by, userId),
+          eq(SessionsTable.archived, false)
         )
       )
       .leftJoin(AppsTable, eq(SessionsTable.app_id, AppsTable.short_id))
 
-    const sessionDetail = items[0]
-    if (!sessionDetail) {
+    if (!session) {
       throw new Error('Session not found')
     }
 
-    return sessionDetail
+    return session
   } catch (error: any) {
+    if (appId) {
+      redirect(`/app/${appId}`)
+    }
     redirect('/')
   }
 }
 
+function formatId(message: Message) {
+  if (!message.id) {
+    return {
+      ...message,
+      id: nanoid(),
+    }
+  }
+  return message
+}
+
+function formatTimestamp(message: Message) {
+  if (typeof message.createdAt !== 'number') {
+    return {
+      ...message,
+      createdAt: new Date(message.createdAt || Date.now()).getTime(),
+    }
+  }
+
+  return message
+}
+
 export async function updateMessagesToSession(
-  apiSessionId: string,
+  sessionId: string,
   messages: Message[]
 ) {
   try {
@@ -250,15 +274,7 @@ export async function updateMessagesToSession(
       throw new Error('Not authenticated')
     }
 
-    const formattedMessages = messages.map((message) => {
-      if (!message.id) {
-        return {
-          ...message,
-          id: nanoid(),
-        }
-      }
-      return message
-    })
+    const formattedMessages = messages.map(formatId).map(formatTimestamp)
 
     const response = await db
       .update(SessionsTable)
@@ -267,7 +283,7 @@ export async function updateMessagesToSession(
       })
       .where(
         and(
-          eq(SessionsTable.api_session_id, apiSessionId),
+          eq(SessionsTable.short_id, sessionId),
           eq(SessionsTable.created_by, userId)
         )
       )
@@ -276,7 +292,7 @@ export async function updateMessagesToSession(
       distinctId: userId,
       event: 'success:update_messages_to_session',
       properties: {
-        api_session_id: apiSessionId,
+        sessionId,
         messages,
       },
     })

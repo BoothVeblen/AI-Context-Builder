@@ -33,12 +33,10 @@ export const BASE_URL =
   process.env.VERCEL_URL || process.env.VERCEL_BRANCH_URL
     ? `https://${
         process.env.VERCEL_ENV === 'production'
-          ? process.env.VERCEL_URL
-          : process.env.VERCEL_BRANCH_URL
+          ? 'build.withcontext.ai'
+          : process.env.VERCEL_URL
       }`
     : 'http://localhost:3000'
-
-console.log('BASE_URL:', BASE_URL)
 
 export const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args)

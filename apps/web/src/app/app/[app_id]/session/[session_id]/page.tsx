@@ -11,7 +11,7 @@ interface IProps {
 
 export default async function SessionPage({ params }: IProps) {
   const { app_id, session_id } = params
-  const { sessions, apps } = await getSession(session_id)
+  const { sessions, apps } = await getSession(session_id, app_id)
 
   return (
     <>

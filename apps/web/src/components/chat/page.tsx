@@ -55,7 +55,6 @@ const Chat = ({
     error,
     setMessages,
   } = useChat({
-    api: apiSessionId ? `/api/chat/${apiSessionId}` : undefined,
     id: sessionId,
     initialMessages,
     onResponse: () => {
