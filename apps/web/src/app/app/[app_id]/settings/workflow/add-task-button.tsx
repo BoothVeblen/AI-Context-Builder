@@ -51,7 +51,7 @@ const CONFIG = [
           {
             subType: 'conversational_retrieval_qa_chain',
             title: 'Conversational Retrieval QA',
-            desc: 'Support uploading data source, from the data source find answers',
+            desc: 'Support uploading data sources and searching for answers from data sources',
           },
         ],
       },

@@ -4,13 +4,14 @@ import { getApps } from '@/db/apps/actions'
 import { Button } from '@/components/ui/button'
 import AppCard from '@/components/app-card'
 import CreateAppDialog from '@/components/create-app-dialog'
+import MineList from '@/components/mine-list'
 import RootWrapper from '@/components/root-wrapper'
 
 export default async function Page() {
   const appList = await getApps()
 
   return (
-    <RootWrapper pageTitle="My Apps">
+    <RootWrapper pageTitle="My Space" nav={<MineList />}>
       <div className="flex flex-col">
         {/* desktop version */}
         <div className="hidden h-12 items-center justify-between px-6 lg:flex">

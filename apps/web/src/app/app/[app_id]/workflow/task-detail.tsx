@@ -44,7 +44,6 @@ export default function TaskDetail({ value, onClose }: IProps) {
   const datasets = linkedDatasets?.filter(
     (item) => datasetIds?.includes(item?.dataset_id)
   )
-
   return (
     <div className="space-y-8">
       <div className="-mr-2 -mt-2">
@@ -64,6 +63,13 @@ export default function TaskDetail({ value, onClose }: IProps) {
 
       <Item label="Model" value={modelName} />
       <Item label="Prompt" value={promptTemplate} />
+      {/* <div className="text-base font-medium">Prompt</div>
+      <Textarea
+        className="break-words border-none text-sm disabled:text-black"
+        disabled
+      >
+        {promptTemplate}
+      </Textarea> */}
       <Item label="Temperature" value={temperature} />
       <Item label="Top P" value={topP} />
       <Item label="Presence Penalty" value={presencePenalty} />
@@ -80,7 +86,7 @@ function Item({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-2">
       <div className="text-base font-medium">{label}</div>
-      <div className="break-words text-sm">{value}</div>
+      <div className="whitespace-pre-line  break-words text-sm">{value}</div>
     </div>
   )
 }

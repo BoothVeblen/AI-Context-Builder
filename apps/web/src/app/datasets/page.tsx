@@ -1,5 +1,6 @@
 import { getDatasets } from '@/db/datasets/actions'
 import DatasetCard from '@/components/dataset-card'
+import MineList from '@/components/mine-list'
 import RootWrapper from '@/components/root-wrapper'
 
 import CreateDialog from './create-dataset'
@@ -7,7 +8,7 @@ import CreateDialog from './create-dataset'
 export default async function Page() {
   const datasets = await getDatasets()
   return (
-    <RootWrapper pageTitle="My Datasets">
+    <RootWrapper pageTitle="My Space" nav={<MineList />}>
       <div className="flex flex-col">
         {/* desktop version */}
         <div className="hidden h-12 items-center justify-between px-6 lg:flex">
@@ -15,10 +16,9 @@ export default async function Page() {
           <CreateDialog />
         </div>
         {/* mobile version */}
-        {/* <div className="fixed left-10 right-0 top-0 z-40 flex h-12 items-center justify-between bg-white px-6 lg:hidden">
+        <div className="fixed left-10 right-0 top-0 z-40 flex h-12 items-center justify-between bg-white px-6 lg:hidden">
           <h1 className="font-medium">My Datasets</h1>
-          <CreateDialog />
-        </div> */}
+        </div>
         <div className="m-full hidden h-px shrink-0 bg-slate-100 lg:block" />
         <div className="p-6">
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3  2xl:grid-cols-4 ">

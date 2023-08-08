@@ -32,7 +32,7 @@ export default function ConfirmDialog({
 }: IProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-md:max-w-[calc(100%-32px)]">
         <AlertDialogHeader className="min-w-0">
           <AlertDialogTitle className="break-words">{title}</AlertDialogTitle>
           <AlertDialogDescription className="break-words">

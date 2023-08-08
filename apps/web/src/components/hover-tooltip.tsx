@@ -17,7 +17,7 @@ export function HoverTooltip({ children, content }: IProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="right">
+      <TooltipContent side="right" className="max-md:hidden sm:hidden lg:block">
         <p className="font-normal">{content}</p>
       </TooltipContent>
     </Tooltip>

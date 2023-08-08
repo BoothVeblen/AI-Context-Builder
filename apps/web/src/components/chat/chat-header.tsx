@@ -31,7 +31,7 @@ const ChatHeader = ({ name, isDebug, onRestart, disabledRestart }: IProps) => {
   return (
     <div
       className={cn(
-        ' flex w-full flex-col border-slate-200',
+        'w-full flex-col border-slate-200 max-md:hidden sm:hidden lg:flex',
         isDebug ? 'border-0' : 'border-b'
       )}
     >
