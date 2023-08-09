@@ -6,30 +6,19 @@ import { Message } from 'ai'
 import { cn } from '@/lib/utils'
 
 import ChatCard from './chat-card'
+import { useChatContext } from './chat-context'
 
 interface IProps {
   messages: Message[]
   error?: string
-  waiting: boolean
   scrollRef: Ref<HTMLDivElement>
   setAutoScroll: (s: boolean) => void
-  appId: string
-  appName: string
-  appIcon: string
-  isDebug?: boolean
 }
 
-const ChatList = ({
-  messages,
-  waiting,
-  scrollRef,
-  setAutoScroll,
-  error,
-  appId,
-  appName,
-  appIcon,
-  isDebug = false,
-}: IProps) => {
+const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
+  const { mode, isLoading } = useChatContext()
+  const isDebug = mode === 'debug'
+
   return (
     <div
       className={cn(
@@ -46,20 +35,11 @@ const ChatList = ({
             key={message?.id}
             error={error}
             isEnd={index === messages.length - 1}
-            appName={appName}
-            appIcon={appIcon}
-            appId={appId}
-            isDebug={isDebug}
           />
         )
       })}
-      {waiting && (
-        <ChatCard
-          message={{ id: '', content: '', role: 'assistant' }}
-          appId={appId}
-          appName={appName}
-          appIcon={appIcon}
-        />
+      {isLoading && messages[messages.length - 1]?.role === 'user' && (
+        <ChatCard message={{ id: '', content: '', role: 'assistant' }} />
       )}
     </div>
   )

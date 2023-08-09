@@ -10,6 +10,7 @@ import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Text from '../ui/text'
+import { useChatContext } from './chat-context'
 import { Markdown } from './markdown/markdown'
 
 interface IProps {
@@ -18,10 +19,6 @@ interface IProps {
   model_avatar?: string
   user_avatar?: string
   isEnd?: boolean
-  appId: string
-  appName: string
-  appIcon: string
-  isDebug?: boolean
 }
 
 const AlertErrorIcon = ({ className }: { className: string }) => (
@@ -75,7 +72,9 @@ const formatTime = (time: Date) => {
 }
 
 const ChatCard = (props: IProps) => {
-  const { message, error = '', isEnd, appName, appIcon, appId, isDebug } = props
+  const { message, error = '', isEnd } = props
+  const { app, mode } = useChatContext()
+  const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
   const isUser = message?.role === 'user'
   const showError = isEnd && error && !isUser
 
@@ -121,7 +120,8 @@ const ChatCard = (props: IProps) => {
             <div
               className={cn(
                 'max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg	lg:max-w-3xl xl:max-w-3xl',
-                isDebug && 'max-w-[240px] md:max-w-md lg:max-w-md xl:max-w-md',
+                mode === 'debug' &&
+                  'max-w-[240px] md:max-w-md lg:max-w-md xl:max-w-md',
                 isUser ? 'bg-primary' : 'bg-gray-100',
                 showError ? 'rounded-lg border border-red-500	bg-red-50' : ''
               )}

@@ -65,7 +65,7 @@ export default async function Page({ params }: IProps) {
           </div>
           <div className="mt-4 flex items-center gap-2">
             <AddTaskButton />
-            <ChatDebug appId={app_id} appName={name} appIcon={icon} />
+            <ChatDebug app={appDetail} />
           </div>
         </div>
 

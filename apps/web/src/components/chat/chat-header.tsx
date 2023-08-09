@@ -1,8 +1,7 @@
-import { Info } from 'lucide-react'
-
 import { cn } from '@/lib/utils'
 
 import { Button } from '../ui/button'
+import { useChatContext } from './chat-context'
 
 interface IconBoxProps {
   children: React.ReactNode
@@ -21,21 +20,22 @@ export const IconBox = (props: IconBoxProps) => (
 )
 
 interface IProps {
-  name: string
-  isDebug?: boolean
   onRestart?: () => void
   disabledRestart?: boolean
 }
 
-const ChatHeader = ({ name, isDebug, onRestart, disabledRestart }: IProps) => {
+const ChatHeader = ({ onRestart, disabledRestart }: IProps) => {
+  const { session, mode } = useChatContext()
+
+  const { name } = session
   return (
     <div
       className={cn(
         'w-full flex-col border-slate-200 max-md:hidden sm:hidden lg:flex',
-        isDebug ? 'border-0' : 'border-b'
+        mode === 'debug' ? 'border-0' : 'border-b'
       )}
     >
-      {isDebug ? (
+      {mode === 'debug' ? (
         <div className="flex w-full items-center justify-between text-lg font-medium">
           Debug
           <Button

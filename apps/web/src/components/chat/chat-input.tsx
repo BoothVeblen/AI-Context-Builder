@@ -8,28 +8,27 @@ import { useEnterSubmit } from '@/hooks/use-enter-submit'
 
 import { Button } from '../ui/button'
 import { Textarea } from '../ui/textarea'
+import { useChatContext } from './chat-context'
 
 interface InputProps {
   input: string
-  setInput: (e: string) => void
-  onSubmit: (value: string) => void
-  isLoading: boolean
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   reload: () => void
   stop: () => void
   showResend?: boolean
-  isDebug?: boolean
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
 }
 
 const ChatInput = ({
   input,
-  setInput,
   onSubmit,
-  isLoading,
   reload,
   stop,
-  isDebug = false,
   showResend,
+  handleInputChange,
 }: InputProps) => {
+  const { isLoading, mode } = useChatContext()
+  const isDebug = mode === 'debug'
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const { formRef, onKeyDown } = useEnterSubmit()
@@ -58,13 +57,11 @@ const ChatInput = ({
         )}
       </div>
       <form
-        onSubmit={async (e) => {
-          e.preventDefault()
+        onSubmit={(e) => {
           if (isDisabled) {
             return
           }
-          setInput('')
-          await onSubmit(input)
+          onSubmit(e)
         }}
         ref={formRef}
       >
@@ -74,7 +71,7 @@ const ChatInput = ({
             className="min-h-[40px]"
             placeholder="Type a message"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={onKeyDown}
             minRows={1}
             maxRows={8}

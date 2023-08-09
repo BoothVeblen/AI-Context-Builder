@@ -1,80 +1,82 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Message } from 'ai'
 import { useChat } from 'ai/react'
 
-import { nanoid } from '@/lib/utils'
 import usePageTitle from '@/hooks/use-page-title'
 import { useScrollToBottom } from '@/hooks/useScrollToBottom'
 
+import { ChatContextProvider, ChatMode } from './chat-context'
 import ChatHeader from './chat-header'
 import ChatInput from './chat-input'
 import ChatList from './chat-list'
 import RestartConfirmPage from './restart-confirm'
+import { ChatApp, ChatSession } from './types'
 
-export interface ChatProps {
-  sessionId: string
-  sessionName: string
-  appId: string
-  appName: string
-  appIcon: string
-  isDebug?: boolean
-  apiSessionId?: string | null
+interface BaseChatProps {
+  session: ChatSession
+  app: ChatApp | null
+  mode: ChatMode
   initialMessages?: Message[]
-  setInitialMessages?: (messages: Message[]) => void
-  isConfigChanged?: boolean
 }
 
-const Chat = ({
-  sessionId,
-  sessionName,
-  appName,
-  appIcon,
-  appId,
-  isDebug = false,
-  apiSessionId,
-  initialMessages = [],
-  setInitialMessages,
-  isConfigChanged,
-}: ChatProps) => {
-  const [waiting, setWaiting] = useState<boolean>(false)
+interface DebugChatProps extends BaseChatProps {
+  mode: 'debug'
+  isConfigChanged?: boolean
+  setInitialMessages?: (messages: Message[]) => void
+}
+
+interface LiveChatProps extends BaseChatProps {
+  mode: 'live'
+}
+
+export type ChatProps = LiveChatProps | DebugChatProps
+
+const Chat = (props: ChatProps) => {
+  const { app, session, mode, initialMessages } = props
+  const {
+    short_id: sessionId,
+    name: sessionName,
+    api_session_id: apiSessionId,
+  } = session
+
   const [confirmReset, setConfirmReset] = useState(
-    isConfigChanged && initialMessages?.length !== 0
+    mode === 'debug' && props.isConfigChanged && initialMessages?.length !== 0
   )
   const { scrollRef, setAutoScroll } = useScrollToBottom()
 
   const {
     messages,
     input,
-    setInput,
     isLoading,
     reload,
     stop,
-    append,
     error,
     setMessages,
+    handleSubmit,
+    handleInputChange,
   } = useChat({
     id: sessionId,
     initialMessages,
-    onResponse: () => {
-      setWaiting(false)
-    },
     body: {
       sessionId,
       apiSessionId,
     },
     sendExtraMessageFields: true,
+    onFinish: (message) => {
+      if (mode === 'debug') {
+        props.setInitialMessages?.([...messages, message])
+      }
+    },
   })
 
   const handelReload = () => {
     setAutoScroll(true)
     reload()
-    setWaiting(true)
   }
 
   const handelStop = () => {
-    setWaiting(false)
     stop()
   }
 
@@ -92,58 +94,48 @@ const Chat = ({
     setConfirmReset(false)
   }
 
-  useEffect(() => {
-    if (isDebug && setInitialMessages) setInitialMessages(messages)
-  }, [messages, isDebug, setInitialMessages])
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    handleSubmit(e)
+    setAutoScroll(true)
+  }
 
   const disabledRestart = !messages || messages.length === 0
   return (
-    <div className="relative h-full w-full">
-      {confirmReset && (
-        <RestartConfirmPage onRestart={onRestart} onCancel={onCancel} />
-      )}
-      <div className="flex h-full w-full flex-col">
-        <ChatHeader
-          name={sessionName}
-          isDebug={isDebug}
-          onRestart={() => {
-            handelStop()
-            setMessages([])
-          }}
-          disabledRestart={disabledRestart}
-        />
-        <ChatList
-          messages={messages}
-          waiting={waiting}
-          scrollRef={scrollRef}
-          error={error?.message}
-          setAutoScroll={setAutoScroll}
-          appId={appId}
-          appName={appName}
-          appIcon={appIcon}
-          isDebug={isDebug}
-        />
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          onSubmit={async (value) => {
-            setAutoScroll(true)
-            setWaiting(true)
-            await append({
-              id: nanoid(),
-              content: value,
-              role: 'user',
-              createdAt: new Date(),
-            })
-          }}
-          isLoading={isLoading}
-          showResend={showResend}
-          reload={handelReload}
-          stop={handelStop}
-          isDebug={isDebug}
-        />
+    <ChatContextProvider
+      app={app}
+      session={session}
+      mode={mode}
+      isLoading={isLoading}
+    >
+      <div className="relative h-full w-full">
+        {confirmReset && (
+          <RestartConfirmPage onRestart={onRestart} onCancel={onCancel} />
+        )}
+        <div className="flex h-full w-full flex-col">
+          <ChatHeader
+            onRestart={() => {
+              handelStop()
+              setMessages([])
+            }}
+            disabledRestart={disabledRestart}
+          />
+          <ChatList
+            messages={messages}
+            scrollRef={scrollRef}
+            error={error?.message}
+            setAutoScroll={setAutoScroll}
+          />
+          <ChatInput
+            input={input}
+            onSubmit={onSubmit}
+            showResend={showResend}
+            reload={handelReload}
+            stop={handelStop}
+            handleInputChange={handleInputChange}
+          />
+        </div>
       </div>
-    </div>
+    </ChatContextProvider>
   )
 }
 

@@ -15,7 +15,7 @@ const ChatDebug = (values: ChatProps) => {
         </Button>
       </SheetTrigger>
       <SheetContent className="bottom-6 right-6 top-auto h-4/5 w-11/12 sm:max-w-xl md:max-w-xl">
-        <Chat {...values} isDebug />
+        <Chat {...values} mode="debug" />
       </SheetContent>
     </Sheet>
   )

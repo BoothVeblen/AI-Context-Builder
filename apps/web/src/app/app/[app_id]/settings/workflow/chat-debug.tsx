@@ -6,6 +6,7 @@ import { Loader2Icon, Play } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'
 
 import { fetcher } from '@/lib/utils'
+import { App } from '@/db/apps/schema'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import Chat from '@/components/chat/page'
@@ -21,14 +22,14 @@ function getApiSessionId(url: string, { arg }: { arg: WorkflowItem[] }) {
 }
 
 interface IProps {
-  appId: string
-  appName: string
-  appIcon: string
+  app: App
 }
 
-const ChatDebug = ({ appId, appName, appIcon }: IProps) => {
+const ChatDebug = ({ app }: IProps) => {
+  const { short_id: appId } = app
+
   const [open, setOpen] = React.useState(false)
-  const [apiSessionId, setApiSessionId] = React.useState()
+  const [apiSessionId, setApiSessionId] = React.useState(null)
   const [chatMessages, setChatMessages] = React.useState<Message[]>([])
   const sessionIdRef = React.useRef(`debug-${appId}`)
 
@@ -62,6 +63,15 @@ const ChatDebug = ({ appId, appName, appIcon }: IProps) => {
     }
   }
 
+  const session = React.useMemo(
+    () => ({
+      api_session_id: apiSessionId,
+      short_id: sessionIdRef.current,
+      name: '',
+    }),
+    [apiSessionId]
+  )
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <Button onClick={handleClick} disabled={isMutating}>
@@ -77,16 +87,12 @@ const ChatDebug = ({ appId, appName, appIcon }: IProps) => {
 md:max-w-xl"
       >
         <Chat
-          appName={appName}
-          appIcon={appIcon}
-          isDebug
-          apiSessionId={apiSessionId}
-          appId={appId}
-          sessionId={sessionIdRef.current}
-          sessionName=""
+          app={app}
+          mode="debug"
+          isConfigChanged={shouldResetApiSessionId}
+          session={session}
           initialMessages={chatMessages}
           setInitialMessages={setChatMessages}
-          isConfigChanged={shouldResetApiSessionId}
         />
       </SheetContent>
     </Sheet>

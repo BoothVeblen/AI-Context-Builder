@@ -11,22 +11,19 @@ interface IProps {
 
 export default async function SessionPage({ params }: IProps) {
   const { app_id, session_id } = params
-  const { sessions, apps } = await getSession(session_id, app_id)
+  const { session, app } = await getSession(session_id, app_id)
 
   return (
     <>
       <div className="h-full w-full overflow-hidden">
         <Chat
-          sessionId={session_id}
-          sessionName={sessions.name}
-          appId={apps?.short_id || ''}
-          appName={apps?.name || ''}
-          appIcon={apps?.icon || ''}
-          apiSessionId={sessions.api_session_id}
-          initialMessages={safeParse(sessions.messages_str, [])}
+          mode="live"
+          app={app}
+          session={session}
+          initialMessages={safeParse(session.messages_str, [])}
         />
       </div>
-      <AppNotFound archived={apps?.archived || false} />
+      <AppNotFound archived={app?.archived || false} />
       <AddAppToWorkspace appId={app_id} />
     </>
   )

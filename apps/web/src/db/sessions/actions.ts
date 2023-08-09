@@ -234,7 +234,10 @@ export async function getSession(sessionId: string, appId?: string) {
       throw new Error('Session not found')
     }
 
-    return session
+    return {
+      session: session.sessions,
+      app: session.apps,
+    }
   } catch (error: any) {
     if (appId) {
       redirect(`/app/${appId}`)
