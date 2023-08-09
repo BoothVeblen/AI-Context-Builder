@@ -5,6 +5,7 @@ from .chat import (
     Choices,
     CompletionsResponse,
     SessionRequest,
+    VideoCompletionsRequest,
 )
 
 from .dataset import Document, Dataset, dataset_manager

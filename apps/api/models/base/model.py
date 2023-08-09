@@ -3,7 +3,7 @@ import os
 import logging
 
 from pydantic import BaseModel, Field
-from sqlalchemy import JSON, Column, String
+from sqlalchemy import JSON, Column, String, Boolean
 
 from .base import Base, BaseManager
 from utils import OPENAI_API_KEY
@@ -36,6 +36,8 @@ class Chain(BaseModel):
 class Model(BaseModel):
     id: Optional[str]
     chains: list[Chain]
+    enable_video_interaction: Optional[bool] = Field(default=False)
+    opening_remarks: Optional[str] = Field(default="")
 
 
 class ModelTable(Base):
@@ -43,6 +45,8 @@ class ModelTable(Base):
 
     id = Column(String, primary_key=True)
     chains = Column(JSON)
+    enable_video_interaction = Column(Boolean)
+    opening_remarks = Column(String)
 
 
 class ModelManager(BaseManager):

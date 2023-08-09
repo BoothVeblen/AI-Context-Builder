@@ -181,6 +181,7 @@ class Workflow:
                 except Exception as e:
                     logger.error(f"Error while creating conversation_chain: {e}")
                     raise e
+
             case _:
                 logger.error(f"Chain type {_chain.chain_type} not supported")
                 raise Exception("Chain type not supported")

@@ -17,8 +17,11 @@ from models.base import (
     SessionRequest,
     model_manager,
     session_state_manager,
+    VideoCompletionsRequest,
+    Messages as MessagesContent,
 )
 from models.workflow import Workflow
+from models.faceto_ai import FaceToAiManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,9 +29,29 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/chat")
 
 
+def wrap_token(token: str, model_id: str, session_id: str, filt: bool = False) -> str:
+    if filt:
+        content = {"content": token}
+        return f"data: {content}\n\n"
+    return f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=model_id, choices=[Choices(index=0, delta={'content': ''})]).dict())}\n\n"
+
+
 async def send_message(
-    messages: List[BaseMessage], session_id: str
+    messages_contents: List[MessagesContent], session_id: str, filt=False
 ) -> AsyncIterable[str]:
+    messages = []
+    for message_content in messages_contents:
+        if message_content.role == "user":
+            messages.append(HumanMessage(content=message_content.content))
+        elif message_content.role == "system":
+            messages.append(SystemMessage(content=message_content.content))
+        elif message_content.role == "assistant":
+            messages.append(AIMessage(content=message_content.content))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid role: {message_content.role}"
+            )
+
     model_id = session_state_manager.get_model_id(session_id)
     models = model_manager.get_models(model_id)
     if not models:
@@ -57,18 +80,13 @@ async def send_message(
 
     task = asyncio.create_task(wrap_done(workflow.agenerate(messages), callback.done))
 
-    yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, delta={'content': ''})]).dict())}\n\n"
+    yield wrap_token("", model_id, session_id, filt=filt)
 
     async for token in callback.aiter():
-        resp = CompletionsResponse(
-            id=session_id,
-            object="chat.completion.chunk",
-            model=workflow.model.id,
-            choices=[Choices(index=0, finish_reason=None, delta={"content": token})],
-        )
-        yield f"data: {json.dumps(resp.dict())}\n\n"
+        yield wrap_token(token, model_id, session_id, filt=filt)
 
-    yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, finish_reason='stop', delta={})]).dict())}\n\n"
+    if not filt:
+        yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, finish_reason='stop', delta={})]).dict())}\n\n"
     yield "data: [DONE]\n\n"
 
     await task
@@ -77,20 +95,23 @@ async def send_message(
 @router.post("/completions")
 async def stream_completions(body: CompletionsRequest):
     logger.info(f"completions payload: {body.dict()}")
-    # TODO check role
-    messages = []
-    for message in body.messages:
-        if message.role == "user":
-            messages.append(HumanMessage(content=message.content))
-        elif message.role == "system":
-            messages.append(SystemMessage(content=message.content))
-        elif message.role == "assistant":
-            messages.append(AIMessage(content=message.content))
-        else:
-            raise HTTPException(status_code=400, detail=f"Invalid role: {message.role}")
+    model_id = session_state_manager.get_model_id(body.session_id)
+    model = model_manager.get_models(model_id)[0]
+    if model.enable_video_interaction:
+        link = FaceToAiManager.get_room_link(model.opening_remarks, body.session_id)
+        return {"data": {"link": link}, "message": "success", "status": 200}
+    else:
+        return StreamingResponse(
+            send_message(body.messages, body.session_id), media_type="text/event-stream"
+        )
 
+
+@router.post("/completions/vedio/{session_id}")
+async def video_stream_completions(session_id: str, body: VideoCompletionsRequest):
     return StreamingResponse(
-        send_message(messages, body.session_id), media_type="text/event-stream"
+        send_message(body.messages, session_id),
+        media_type="text/event-stream",
+        filt=True,
     )
 
 

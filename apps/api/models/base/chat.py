@@ -13,6 +13,10 @@ class CompletionsRequest(BaseModel):
     messages: List[Messages]
 
 
+class VideoCompletionsRequest(BaseModel):
+    messages: List[Messages]
+
+
 class Choices(BaseModel):
     index: int
     finish_reason: Optional[str]

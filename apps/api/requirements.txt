@@ -1,5 +1,5 @@
 fastapi==0.100.0
-langchain==0.0.232
+langchain==0.0.254
 uvicorn==0.22.0
 python-dotenv==1.0.0
 sqlalchemy==2.0.18

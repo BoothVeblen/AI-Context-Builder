@@ -41,6 +41,21 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: OPENAI_API_KEY
+            - name: FACE_TO_AI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: FACE_TO_AI_ENDPOINT
+            - name: FACE_TO_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: FACE_TO_CLIENT_ID
+            - name: FACE_TO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: FACE_TO_CLIENT_SECRET
           resources:
             limits:
               memory: '500Mi'
