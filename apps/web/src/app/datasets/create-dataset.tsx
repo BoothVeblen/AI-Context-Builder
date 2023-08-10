@@ -9,14 +9,14 @@ import useSWRMutation from 'swr/mutation'
 import { z } from 'zod'
 
 import { fetcher } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -79,24 +79,25 @@ const CreateDialog = () => {
     }
   }
 
-  const handleCancel = (open = false) => {
+  const handleCancel = () => {
     if (!isMutating) {
-      setOpen(open)
+      setOpen(false)
       form.reset()
     }
   }
+
   return (
-    <Dialog open={open} onOpenChange={(open) => handleCancel(open)}>
-      <DialogTrigger asChild>
+    <AlertDialog open={open} onOpenChange={(open) => open && setOpen(true)}>
+      <AlertDialogTrigger asChild>
         <Button size="sm">
           <PlusIcon className="mr-2 h-4 w-4" />
           Add Dataset
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[488px]">
-        <DialogHeader>
-          <DialogTitle> Create Dataset</DialogTitle>
-        </DialogHeader>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="sm:max-w-[488px]">
+        <AlertDialogHeader>
+          <AlertDialogTitle> Create Dataset</AlertDialogTitle>
+        </AlertDialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -122,7 +123,7 @@ const CreateDialog = () => {
                 type="reset"
                 variant="outline"
                 disabled={isMutating}
-                onClick={() => handleCancel(false)}
+                onClick={handleCancel}
               >
                 Cancel
               </Button>
@@ -132,8 +133,8 @@ const CreateDialog = () => {
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
