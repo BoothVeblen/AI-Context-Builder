@@ -56,6 +56,11 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: FACE_TO_CLIENT_SECRET
+            - name: WEBHOOK_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: WEBHOOK_KEY
           resources:
             limits:
               memory: '500Mi'

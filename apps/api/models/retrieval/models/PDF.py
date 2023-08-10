@@ -2,6 +2,7 @@ import io
 import logging
 import uuid
 from typing import List
+import io
 
 import pinecone
 from langchain.callbacks.manager import AsyncCallbackManagerForRetrieverRun
@@ -11,8 +12,9 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.schema import Document
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Pinecone
+from models.data_loader import PDFLoader
+from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfdocument import PDFDocument
@@ -21,6 +23,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pydantic import BaseModel, Field
 from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,19 +57,7 @@ def extract_text_from_pdf(contents: io.BytesIO) -> list:
     return text
 
 
-class PDFSplitterOption(BaseModel):
-    type: str = Field(default="character")
-    chunk_size: int = Field(default=1000)
-    chunk_overlap: int = Field(default=0)
-
-
-class PDFEmbeddingOption(BaseModel):
-    model: str = Field(default="gpt-3.5-turbo")
-
-
-class PDFRetrivalOption(BaseModel):
-    splitter: PDFSplitterOption = Field(default_factory=PDFSplitterOption)
-    embedding: PDFEmbeddingOption = Field(default_factory=PDFEmbeddingOption)
+logger = logging.getLogger(__name__)
 
 
 class PatchedSelfQueryRetriever(SelfQueryRetriever):
@@ -90,50 +81,13 @@ class PatchedSelfQueryRetriever(SelfQueryRetriever):
             )
         else:
             raise ValueError(f"search_type of {self.search_type} not allowed.")
+
         return docs
 
 
 class PDFRetrieverMixin:
-    def load_and_split_documents(self):
-        doc = []
-        for dataset in self.datasets:
-            logger.info(f"Loading dataset {dataset.id}")
-            _doc = []
-            options = PDFRetrivalOption(**dataset.retrieval)
-
-            text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                separator=" ",
-                chunk_size=options.splitter.chunk_size,
-                chunk_overlap=options.splitter.chunk_overlap,
-            )
-
-            for document in dataset.documents:
-                if document.type == "pdf":
-                    pdf_content = self.storage_client.load(document.url)
-                    text = extract_text_from_pdf(pdf_content)
-                    pages = text.split("\f")
-                    for page_number, page in enumerate(pages):
-                        _doc.append(
-                            Document(
-                                page_content=page,
-                                metadata={
-                                    "source": document.url,
-                                    "page_number": page_number,
-                                },
-                            )
-                        )
-                else:
-                    logger.error(f"Document type {document.type} not supported")
-                    raise Exception("Document type not supported")
-            _doc = text_splitter.split_documents(_doc)
-            logger.info(
-                f"got documents: {len(_doc)} while loading dataset {dataset.id}"
-            )
-            doc += _doc
-        return doc
-
     def create_retriever(self):
-        doc = self.load_and_split_documents()
+        doc = PDFLoader.load_and_split_documents(self.dataset_ids)
 
         embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
@@ -158,6 +112,12 @@ class PDFRetrieverMixin:
             ],
         )
         self.retriever.search_type = "mmr"
+
+    def get_retriever(self):
+        if hasattr(self, "retriever"):
+            return self.retriever
+        self.create_retriever()
+        return self.retriever
 
     def get_retriever(self):
         if hasattr(self, "retriever"):

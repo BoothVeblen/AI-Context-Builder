@@ -9,3 +9,4 @@ CONVERSIONAL_RETRIEVAL_QA_CHAIN = "conversational_retrieval_qa_chain"
 FACE_TO_AI_ENDPOINT = os.environ.get("FACE_TO_AI_ENDPOINT")
 FACE_TO_CLIENT_ID = os.environ.get("FACE_TO_CLIENT_ID")
 FACE_TO_CLIENT_SECRET = os.environ.get("FACE_TO_CLIENT_SECRET")
+WEBHOOK_KEY = os.environ.get("WEBHOOK_KEY")

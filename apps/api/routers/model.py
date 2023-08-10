@@ -31,10 +31,9 @@ def create_model(model: Model):
 
 
 @router.patch("/{id}", tags=["models"])
-def update_model(id: str, model: Model):
+def update_model(id: str, model: dict):
     logger.info(f"model: {model}")
-    model.id = id
-    model_manager.upsert_model(model)
+    model_manager.upsert_model(id, model)
     return {"message": "success", "status": 200}
 
 

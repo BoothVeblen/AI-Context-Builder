@@ -52,10 +52,13 @@ def test_create_model():
     response = client.post(
         "/v1/models/",
         json={
-            "chains": [],
-            "llm": {"name": "test2"},
-            "prompt": {"template": "test2"},
-            "chain_type": "conversational_retrieval_qa_chain",
+            "chains": [
+                {
+                    "chain_type": "conversational_retrieval_qa_chain",
+                    "llm": {"name": "test2"},
+                    "prompt": {"template": "test2"},
+                }
+            ],
         },
     )
 
@@ -71,7 +74,16 @@ def test_update_model():
     """
     # Update the model created in the test_create_model test
     response = client.patch(
-        "/v1/models/test1", json={"chains": [], "chain_type": "conversation_chain"}
+        "/v1/models/test1",
+        json={
+            "chains": [
+                {
+                    "chain_type": "conversation_chain",
+                    "llm": {"name": "test2"},
+                    "prompt": {"template": "test2"},
+                }
+            ]
+        },
     )
 
     # The endpoint should return with a 200 OK status

@@ -48,11 +48,10 @@ def create_dataset(dataset: Dataset):
 
 
 @router.patch("/{id}", tags=["datasets"])
-def update_dataset(id: str, dataset: Dataset):
+def update_dataset(id: str, dataset: dict):
     logger.info(f"dataset: {dataset}")
     try:
-        dataset.id = id
-        dataset_manager.upsert_dataset(dataset)
+        dataset_manager.upsert_dataset(id, dataset)
         return {"message": "success", "status": 200}
     except Exception as e:
         logger.error(e)

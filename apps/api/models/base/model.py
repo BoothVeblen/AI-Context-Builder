@@ -34,8 +34,8 @@ class Chain(BaseModel):
 
 
 class Model(BaseModel):
-    id: Optional[str]
-    chains: list[Chain]
+    id: Optional[str] = Field(default="")
+    chains: Optional[list[Chain]] = Field(default=[])
     enable_video_interaction: Optional[bool] = Field(default=False)
     opening_remarks: Optional[str] = Field(default="")
 
@@ -60,10 +60,14 @@ class ModelManager(BaseManager):
         return self.table.insert().values(model.dict())
 
     @BaseManager.db_session
-    def update_model(self, model: Model):
-        logger.info(f"Updating model {model.id}")
+    def update_model(
+        self,
+        model_id: str,
+        update_data: dict,
+    ):
+        logger.info(f"Updating model {model_id}")
         return (
-            self.table.update().where(self.table.c.id == model.id).values(model.dict())
+            self.table.update().where(self.table.c.id == model_id).values(**update_data)
         )
 
     @BaseManager.db_session
@@ -96,12 +100,19 @@ class ModelManager(BaseManager):
                 logger.error(f"Error when parsing model {model._mapping['id']}: {e}")
         return models
 
-    def upsert_model(self, model: Model):
-        model_info = self.get_models(model.id)
+    def upsert_model(self, model_id: str, model: dict):
+        model_info = self.get_models(model_id)
         if model_info is None:
-            return self.save_model(model)
+            try:
+                _model = Model(**model)
+                return self.save_model(_model)
+            except Exception as e:
+                logger.error(
+                    f"Error when parsing model {model_id} with properties{model}: {e}"
+                )
+                return None
         else:
-            return self.update_model(model)
+            return self.update_model(model_id, model)
 
 
 model_manager = ModelManager()

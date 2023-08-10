@@ -6,6 +6,7 @@ from .chat import (
     CompletionsResponse,
     SessionRequest,
     VideoCompletionsRequest,
+    FaceToAiWebhookRequest,
 )
 
 from .dataset import Document, Dataset, dataset_manager

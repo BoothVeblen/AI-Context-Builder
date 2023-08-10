@@ -40,12 +40,12 @@ class DatasetManager(BaseManager):
         return self.table.insert().values(dataset.dict())
 
     @BaseManager.db_session
-    def update_dataset(self, dataset: Dataset):
-        logger.info(f"Updating dataset {dataset.id}")
+    def update_dataset(self, dataset_id: str, update_data: dict):
+        logger.info(f"Updating dataset {dataset_id}")
         return (
             self.table.update()
-            .where(self.table.c.id == dataset.id)
-            .values(dataset.dict())
+            .where(self.table.c.id == dataset_id)
+            .values(**update_data)
         )
 
     @BaseManager.db_session
@@ -80,12 +80,18 @@ class DatasetManager(BaseManager):
                 )
         return datasets
 
-    def upsert_dataset(self, dataset: Dataset):
-        dataset_info = self.get_datasets(dataset.id)
+    def upsert_dataset(self, dataset_id: str, dataset: dict):
+        dataset_info = self.get_datasets(dataset_id)
         if dataset_info is None:
-            return self.save_dataset(dataset)
+            try:
+                dataset["id"] = dataset_id
+                _dataset = Dataset(dataset)
+                return self.save_dataset(_dataset)
+            except Exception as e:
+                logger.error(f"Error when saving dataset {dataset_id}: {e}")
+                raise e
         else:
-            return self.update_dataset(dataset)
+            return self.update_dataset(dataset_id, dataset)
 
 
 dataset_manager = DatasetManager()

@@ -4,11 +4,7 @@ import re
 from typing import Any, Dict, List, Optional, cast
 
 from langchain.callbacks import AsyncIteratorCallbackHandler
-from langchain.chains import (
-    ConversationalRetrievalChain,
-    LLMChain,
-    SequentialChain,
-)
+from langchain.chains import ConversationalRetrievalChain, LLMChain, SequentialChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseMessage
@@ -54,6 +50,25 @@ class ChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_chain_end(self, response: LLMResult, **kwargs: Any):
         await super().on_llm_end(response, **kwargs)
+
+    async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+        return await super().on_llm_new_token(token, **kwargs)
+
+
+class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ):
+        await super().on_llm_start(serialized, prompts, **kwargs)
+
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any):
+        await super().on_llm_end(response, **kwargs)
+
+    async def on_llm_new_token(self, token: str, **kwargs: Any):
+        return await super().on_llm_new_token(token, **kwargs)
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         return await super().on_llm_new_token(token, **kwargs)

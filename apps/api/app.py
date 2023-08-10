@@ -6,6 +6,8 @@ from fastapi import FastAPI, HTTPException, Request
 from routers import chat, dataset, model
 from starlette.responses import JSONResponse
 import logging
+import traceback
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,10 @@ app = FastAPI()
 @app.exception_handler(Exception)
 async def validation_exception_handler(request: Request, exc: Exception):
     logger.error(f"unexcepted error: {exc} \nwith request: {request}")
+    stack_trace = "".join(
+        traceback.TracebackException.from_exception(exc).format()
+    )  # <-- get the actual error stack trace
+    logger.error(stack_trace)
     return JSONResponse(
         status_code=500,
         content={"message": f"unexcepted error: {exc}"},

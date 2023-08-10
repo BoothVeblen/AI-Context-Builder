@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Messages(BaseModel):
@@ -15,6 +15,12 @@ class CompletionsRequest(BaseModel):
 
 class VideoCompletionsRequest(BaseModel):
     messages: List[Messages]
+
+
+class FaceToAiWebhookRequest(BaseModel):
+    object: str
+    type: str
+    data: dict = Field(default={})
 
 
 class Choices(BaseModel):

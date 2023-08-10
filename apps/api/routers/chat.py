@@ -6,7 +6,7 @@ import secrets
 import uuid
 from typing import AsyncIterable, Awaitable, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import StreamingResponse
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
@@ -19,9 +19,11 @@ from models.base import (
     session_state_manager,
     VideoCompletionsRequest,
     Messages as MessagesContent,
+    FaceToAiWebhookRequest,
 )
 from models.workflow import Workflow
-from models.faceto_ai import FaceToAiManager
+from models.faceto_ai import FaceToAiManager, WebhookHandler
+from utils import WEBHOOK_KEY
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,11 +31,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/chat")
 
 
+def get_token_header(request: Request):
+    token = request.headers.get("Authorization")
+    if not token:
+        raise HTTPException(status_code=400, detail="Token header not found")
+    if token != "Bearer " + WEBHOOK_KEY:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return token
+
+
 def wrap_token(token: str, model_id: str, session_id: str, filt: bool = False) -> str:
     if filt:
         content = {"content": token}
         return f"data: {content}\n\n"
-    return f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=model_id, choices=[Choices(index=0, delta={'content': ''})]).dict())}\n\n"
+    return f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=model_id, choices=[Choices(index=0, delta={'content': token})]).dict())}\n\n"
 
 
 async def send_message(
@@ -99,7 +110,9 @@ async def stream_completions(body: CompletionsRequest):
     model = model_manager.get_models(model_id)[0]
     if model.enable_video_interaction:
         link = FaceToAiManager.get_room_link(model.opening_remarks, body.session_id)
-        return {"data": {"link": link}, "message": "success", "status": 200}
+        webhook_handler = WebhookHandler()
+        webhook_handler.create_video_room_link(body.session_id, link)
+        return {}
     else:
         return StreamingResponse(
             send_message(body.messages, body.session_id), media_type="text/event-stream"
@@ -107,12 +120,33 @@ async def stream_completions(body: CompletionsRequest):
 
 
 @router.post("/completions/vedio/{session_id}")
-async def video_stream_completions(session_id: str, body: VideoCompletionsRequest):
+async def video_stream_completions(
+    session_id: str,
+    body: VideoCompletionsRequest,
+    token: str = Depends(get_token_header),
+):
     return StreamingResponse(
         send_message(body.messages, session_id),
         media_type="text/event-stream",
         filt=True,
     )
+
+
+@router.post("/completions/vedio/{session_id}/webhook")
+async def video_stream_completions_webhook(
+    session_id: str,
+    body: FaceToAiWebhookRequest,
+    token: str = Depends(get_token_header),
+):
+    if body.data.get("duration", None) is None:
+        raise HTTPException(status_code=400, detail="duration not found")
+    webhook_handler = WebhookHandler()
+    try:
+        webhook_handler.forward_data(body, session_id)
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"message": "success", "status": 200}
 
 
 @router.post("/session")
