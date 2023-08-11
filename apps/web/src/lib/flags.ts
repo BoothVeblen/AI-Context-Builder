@@ -13,4 +13,5 @@ export const flags = {
   enabledWorkflow: true,
   enabledAIService: process.env.AI_SERVICE_API_BASE_URL != null,
   enabledPusher: process.env.NEXT_PUBLIC_PUSHER_APP_KEY != null,
+  enabledVideoInteraction: false,
 }

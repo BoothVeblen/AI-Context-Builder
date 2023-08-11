@@ -10,6 +10,7 @@ import useSWRMutation from 'swr/mutation'
 import { useDebounce } from 'usehooks-ts'
 import { z } from 'zod'
 
+import { flags } from '@/lib/flags'
 import { fetcher, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import {
   Form,
@@ -178,71 +179,76 @@ export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
               }}
             />
           </div>
-          <FormField
-            control={form.control}
-            name="opening_remarks"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center space-x-2">
-                  <FormLabel>Opening Remarks</FormLabel>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <InfoIcon className="h-4 w-4 text-slate-400" />
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p className="max-w-xs">
-                        Set the opening remarks, and the app will actively send
-                        the content you set to improve communication with users.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <FormControl>
-                  <Textarea
-                    minRows={3}
-                    placeholder="Type your message here"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <div className="h-px bg-slate-200" />
-
-          <h3 className="text-xl font-semibold">Video</h3>
-
-          <FormField
-            control={form.control}
-            name="enable_video_interaction"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex space-x-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Video Interaction</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
+          {flags.enabledVideoInteraction && (
+            <>
+              <FormField
+                control={form.control}
+                name="opening_remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center space-x-2">
+                      <FormLabel>Opening Remarks</FormLabel>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <InfoIcon className="h-4 w-4 text-slate-400" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p className="max-w-xs">
+                            Set the opening remarks, and the app will actively
+                            send the content you set to improve communication
+                            with users.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                    <FormDescription>
-                      Once activated, the App will communicate with users
-                      through video and voice.
-                    </FormDescription>
-                  </div>
-                  <img
-                    alt=""
-                    src="https://storage.googleapis.com/context-builder/public-tmp/rpzyVShaSqc8.jpeg"
-                    className="h-[170px] w-[250px] shrink-0 rounded-md"
-                  />
-                </div>
-              </FormItem>
-            )}
-          />
+                    <FormControl>
+                      <Textarea
+                        minRows={3}
+                        placeholder="Type your message here"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="h-px bg-slate-200" />
+
+              <h3 className="text-xl font-semibold">Video</h3>
+
+              <FormField
+                control={form.control}
+                name="enable_video_interaction"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex space-x-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Video Interaction</FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </div>
+                        <FormDescription>
+                          Once activated, the App will communicate with users
+                          through video and voice.
+                        </FormDescription>
+                      </div>
+                      <img
+                        alt=""
+                        src="https://storage.googleapis.com/context-builder/public-tmp/rpzyVShaSqc8.jpeg"
+                        className="h-[170px] w-[250px] shrink-0 rounded-md"
+                      />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
         </form>
       </Form>
     </div>

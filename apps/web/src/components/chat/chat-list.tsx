@@ -38,7 +38,7 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
           />
         )
       })}
-      {isLoading && messages[messages.length - 1]?.role === 'user' && (
+      {isLoading && messages[messages.length - 1]?.data?.role === 'user' && (
         <ChatCard message={{ id: '', content: '', role: 'assistant' }} />
       )}
     </div>
