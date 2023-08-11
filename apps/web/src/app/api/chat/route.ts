@@ -39,13 +39,17 @@ export async function POST(req: NextRequest) {
     async onCompletion(completion) {
       const payload = [
         ...messages,
-        {
-          role: 'assistant',
-          content: completion,
-          createdAt: new Date(),
-        },
+        ...(completion
+          ? [
+              {
+                role: 'assistant',
+                content: completion,
+                createdAt: new Date(),
+              },
+            ]
+          : []),
       ] as Message[]
-      updateMessagesToSession(sessionId, payload)
+      await updateMessagesToSession(sessionId, payload)
     },
   })
 

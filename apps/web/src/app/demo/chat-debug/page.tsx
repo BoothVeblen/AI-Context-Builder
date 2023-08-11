@@ -11,6 +11,8 @@ const ChatDebugPage = () => {
       name: '222',
       icon: 'https://backend.withcontext.ai/backend/upload/2023/04/65947928-68d6-4f64-99d9-0b98578fe4c6.jpeg',
       short_id: '11',
+      opening_remarks: '',
+      enable_video_interaction: false,
     },
   }
   return (

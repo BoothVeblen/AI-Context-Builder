@@ -21,6 +21,8 @@ export const AppsTable = pgTable(
     name: text('name').notNull(),
     description: text('description').notNull(),
     icon: text('icon').notNull(),
+    opening_remarks: text('opening_remarks'),
+    enable_video_interaction: boolean('enable_video_interaction'),
     workflow_tree_str: text('workflow_tree_str'),
     workflow_data_str: text('workflow_data_str'),
     published_workflow_tree_str: text('published_workflow_tree_str'),

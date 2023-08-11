@@ -9,7 +9,7 @@ import ChatCard from './chat-card'
 import { useChatContext } from './chat-context'
 
 interface IProps {
-  messages: Message[]
+  messages: any[]
   error?: string
   scrollRef: Ref<HTMLDivElement>
   setAutoScroll: (s: boolean) => void
@@ -28,11 +28,11 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
       ref={scrollRef}
       onWheel={() => setAutoScroll(false)}
     >
-      {messages?.map((message: Message, index: number) => {
+      {messages?.map((message: any, index: number) => {
         return (
           <ChatCard
             message={message}
-            key={message?.id}
+            key={message?.data?.id}
             error={error}
             isEnd={index === messages.length - 1}
           />

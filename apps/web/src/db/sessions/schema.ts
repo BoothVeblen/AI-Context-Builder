@@ -22,6 +22,7 @@ export const SessionsTable = pgTable(
       .notNull(),
     api_session_id: text('api_session_id').unique(),
     messages_str: text('messages_str'),
+    events_str: text('events_str'),
     created_by: text('created_by')
       .references(() => UsersTable.short_id)
       .notNull(),

@@ -30,7 +30,7 @@ export async function OpenAIStream(
         if (event.type === 'event') {
           const data = event.data
           if (data === '[DONE]') {
-            if (completion && callback?.onCompletion) {
+            if (callback?.onCompletion) {
               callback.onCompletion(completion)
             }
             controller.close()

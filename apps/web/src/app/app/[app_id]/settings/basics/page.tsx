@@ -17,11 +17,15 @@ export default async function Page({ params }: IProps) {
     name: appDetail?.name,
     description: appDetail?.description,
     icon: appDetail?.icon,
+    opening_remarks: appDetail?.opening_remarks || '',
+    enable_video_interaction: appDetail?.enable_video_interaction || false,
   }
 
   return (
-    <div className="mx-14 mt-18 w-[530px]">
-      <BasicsSettingForm appId={app_id} defaultValues={defaultValues} />
+    <div className="h-full overflow-auto">
+      <div className="mx-10 mb-10 mt-18 w-[530px] px-4">
+        <BasicsSettingForm appId={app_id} defaultValues={defaultValues} />
+      </div>
     </div>
   )
 }

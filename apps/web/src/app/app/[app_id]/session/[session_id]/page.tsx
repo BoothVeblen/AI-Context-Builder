@@ -21,6 +21,7 @@ export default async function SessionPage({ params }: IProps) {
           app={app}
           session={session}
           initialMessages={safeParse(session.messages_str, [])}
+          initialEvents={safeParse(session.events_str, [])}
         />
       </div>
       <AppNotFound archived={app?.archived || false} />

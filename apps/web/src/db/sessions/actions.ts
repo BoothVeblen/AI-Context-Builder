@@ -271,8 +271,8 @@ export async function updateMessagesToSession(
   sessionId: string,
   messages: Message[]
 ) {
+  const { userId } = auth()
   try {
-    const { userId } = auth()
     if (!userId) {
       throw new Error('Not authenticated')
     }
@@ -302,6 +302,18 @@ export async function updateMessagesToSession(
 
     return response
   } catch (error: any) {
+    if (userId) {
+      serverLog.capture({
+        distinctId: userId,
+        event: 'error:update_messages_to_session',
+        properties: {
+          sessionId,
+          messages,
+          error: error.message,
+        },
+      })
+    }
+
     return {
       error: error.message,
     }
