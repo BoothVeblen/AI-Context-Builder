@@ -69,7 +69,7 @@ export function InputItem<T extends FieldValues>({
   )
 }
 
-interface ITextareaItem<T> {
+export interface ITextareaItem<T> {
   name: Path<T>
   label?: string | ReactNode
   placeholder?: string

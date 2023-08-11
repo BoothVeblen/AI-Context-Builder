@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronRightIcon, Plus } from 'lucide-react'
+import { ChevronRightIcon, Info, Plus } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -10,10 +10,16 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import AddTemplateButton from './add-template-button'
 import { MAX_MAX_TOKENS } from './const'
 import { InputItem, SelectItem, SlideItem, TextareaItem } from './form-item'
+import PromptMentions from './prompt-mentions'
 import { useWorkflowContext } from './store'
 import { TaskDefaultValueMap } from './task-default-value'
 import useAutoSave from './use-auto-save'
@@ -24,6 +30,20 @@ interface IProps {
   keyLabel?: string
   formValue: any
 }
+
+export const TemplateInfo = () => (
+  <div className="flex items-center gap-1">
+    Template
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Info size={18} color="#94A3B8" />
+      </TooltipTrigger>
+      <TooltipContent className="relative left-[88px] w-[332px]">
+        <p className="break-words text-sm font-normal">{`If you want to quote the output results of another chain, please enter {key.output}.`}</p>
+      </TooltipContent>
+    </Tooltip>
+  </div>
+)
 
 export default function TaskItemConversationChain({
   taskId,
@@ -202,11 +222,11 @@ function FormItemPrompt() {
     <div className="space-y-4">
       <div className="text-sm font-medium text-slate-500">PROMPT</div>
       <div className="space-y-8">
-        <TextareaItem<IFormSchema>
+        <PromptMentions<IFormSchema>
           name="prompt.template"
           label={
             <div className="flex items-center justify-between ">
-              Template
+              <TemplateInfo />
               <AddTemplateButton />
             </div>
           }
