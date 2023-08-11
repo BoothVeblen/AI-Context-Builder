@@ -3,12 +3,11 @@ import AppCard from '@/components/app-card'
 import ExploreList from '@/components/explore-list'
 import RootWrapper from '@/components/root-wrapper'
 
+import { getFeaturedAppIds } from './utils'
+
 export default async function Page() {
-  const list = await getAppsBasedOnIds([
-    'R7cTLNuANTiD', // 'Product Customer Service',
-    'JS0VUKV07Jat', // 'Multilingual Translation Assistant',
-    'iBidZhqJSsBX', // 'Roleplay - Interviewer',
-  ])
+  const ids = getFeaturedAppIds('all')
+  const list = await getAppsBasedOnIds(ids)
 
   return (
     <RootWrapper pageTitle="Explore" nav={<ExploreList />}>

@@ -5,22 +5,30 @@ const DEFAULT_VALUE = [
     href: '/explore',
     title: 'All Categories',
   },
-  // {
-  //   href: '/explore/hr',
-  //   title: 'Human Resources',
-  // },
-  // {
-  //   href: '/explore/tr',
-  //   title: 'Translation',
-  // },
-  // {
-  //   href: '/explore/kb',
-  //   title: 'Knowledge Base',
-  // },
-  // {
-  //   href: '/explore/st',
-  //   title: 'Self Training',
-  // },
+  {
+    href: '/explore/la',
+    title: 'Language Assistant',
+  },
+  {
+    href: '/explore/fc',
+    title: 'Famous Character',
+  },
+  {
+    href: '/explore/wr',
+    title: 'Writing',
+  },
+  {
+    href: '/explore/ua',
+    title: 'Useful Assistant',
+  },
+  {
+    href: '/explore/pr',
+    title: 'Professional',
+  },
+  {
+    href: '/explore/sd',
+    title: 'Search Document',
+  },
 ]
 
 export default function ExploreList() {
