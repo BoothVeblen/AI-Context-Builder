@@ -27,7 +27,7 @@ const UA = [
   'cEHybwkO6lDR', // Text Similarity Comparison
   '220Pf5KV5oXx', // Prompt Improvement
   'ax4kQ4S3eblG', // Master of Color Matching
-  'fk1q6BYGP47A', // Little Red Book Hot Item Copy Generator
+  'JBeHx3lqQxVI', // Little Red Book Hot Item Copy Generator
 ]
 
 // Professional
