@@ -103,16 +103,20 @@ function EventMessage({ data }: { data: any }) {
       break
     }
     default: {
-      message = 'Unknown event'
+      message = data.content ? data.content : 'Unknown event'
     }
   }
 
-  return (
-    <div className="flex items-center text-sm">
-      {icon}
-      {message}
-    </div>
-  )
+  if (icon) {
+    return (
+      <div className="flex items-center text-sm">
+        {icon}
+        {message}
+      </div>
+    )
+  }
+
+  return <Markdown className="text-black">{message}</Markdown>
 }
 
 const ChatCard = (props: IProps) => {

@@ -80,12 +80,13 @@ async function createCall(type: string, data: any) {
 
   const channelId = formatChannelId(session.short_id)
   const pusher = initPusher()
-  pusher?.trigger(channelId, 'user-chat', {
+  await pusher?.trigger(channelId, 'user-chat', {
     type: 'event',
     data: newEvent,
   })
 
-  await updateEvents(session, newEvent)
+  // DO NOT SAVE THIS TO DB
+  // await updateEvents(session, newEvent)
 }
 
 async function endCall(type: string, data: any) {
@@ -102,7 +103,7 @@ async function endCall(type: string, data: any) {
 
   const channelId = formatChannelId(session.short_id)
   const pusher = initPusher()
-  pusher?.trigger(channelId, 'user-chat', {
+  await pusher?.trigger(channelId, 'user-chat', {
     type: 'event',
     data: newEvent,
   })

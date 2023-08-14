@@ -6,6 +6,7 @@ import { useChat } from 'ai/react'
 import useSWRMutation from 'swr/mutation'
 
 import { fetcher, nanoid } from '@/lib/utils'
+import { useChatEvent } from '@/hooks/use-chat-event'
 import usePageTitle from '@/hooks/use-page-title'
 import useSubscribe from '@/hooks/use-subscribe'
 import { useScrollToBottom } from '@/hooks/useScrollToBottom'
@@ -108,17 +109,20 @@ const Chat = (props: ChatProps) => {
     },
   })
 
-  const [eventMessages, setEventMessages] =
-    useState<EventMessage[]>(initialEvents)
+  const { eventMessages, setEventMessages } = useChatEvent({
+    id: sessionId,
+    initialEvents,
+  })
   const [isOpenCallConfirm, setIsOpenCallConfirm] = useState(false)
   const callLinkRef = useRef()
   const onAdd = useCallback(
     (newEventMessage: any) => {
-      setEventMessages((prev) => [...prev, newEventMessage])
       if (newEventMessage?.data?.type === 'call.created') {
         callLinkRef.current = newEventMessage?.data?.link
         setIsOpenCallConfirm(true)
+        return
       }
+      setEventMessages((prev) => [...prev, newEventMessage])
     },
     [setEventMessages]
   )
@@ -130,35 +134,17 @@ const Chat = (props: ChatProps) => {
       mode === 'live' && !!apiSessionId && !!app?.enable_video_interaction,
   })
 
-  const openingRemarksMessages = useMemo(() => {
-    if (!app?.opening_remarks) return []
-    return [
-      {
-        type: 'chat',
-        data: {
-          id: nanoid(),
-          role: 'assistant',
-          content: app?.opening_remarks,
-        },
-      },
-    ]
-  }, [app?.opening_remarks])
-
   const chatMessages = useMemo(() => {
     const formattedMessages = messages?.map((message) => ({
       type: 'chat',
       data: message,
     }))
-    return [
-      ...openingRemarksMessages,
-      ...formattedMessages,
-      ...eventMessages,
-    ].sort(
+    return [...formattedMessages, ...eventMessages].sort(
       (a, b) =>
         formatToTimestamp(a.data?.createdAt) -
         formatToTimestamp(b.data?.createdAt)
     )
-  }, [messages, eventMessages, openingRemarksMessages])
+  }, [messages, eventMessages])
 
   const handelReload = () => {
     setAutoScroll(true)
@@ -205,14 +191,14 @@ const Chat = (props: ChatProps) => {
     setEventMessages((prev) => [...prev, message])
     setIsOpenCallConfirm(false)
     addEventTrigger({ session_id: sessionId, event: message })
-  }, [sessionId, addEventTrigger])
+  }, [sessionId, addEventTrigger, setEventMessages])
 
   const handleCancel = useCallback(() => {
     const message = eventMessageBuilder('call.canceled')
     setEventMessages((prev) => [...prev, message])
     setIsOpenCallConfirm(false)
     addEventTrigger({ session_id: sessionId, event: message })
-  }, [sessionId, addEventTrigger])
+  }, [sessionId, addEventTrigger, setEventMessages])
 
   return (
     <ChatContextProvider

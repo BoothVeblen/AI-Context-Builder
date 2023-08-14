@@ -63,9 +63,9 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       api_model_id,
       created_by: userId,
     }
-    const newApp = await db.insert(AppsTable).values(appVal).returning()
+    const [newApp] = await db.insert(AppsTable).values(appVal).returning()
 
-    const appId = newApp[0]?.short_id
+    const appId = newApp?.short_id
 
     serverLog.capture({
       distinctId: userId,
@@ -96,12 +96,33 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       api_session_id = res?.data?.session_id
     }
 
+    let eventMessageContent = null
+    if (newApp.opening_remarks) {
+      eventMessageContent = newApp.opening_remarks
+    }
+    if (newApp.enable_video_interaction) {
+      eventMessageContent = null
+    }
+
     const sessionVal = {
       short_id: nanoid(),
       name: 'Chat 1',
       app_id: appId,
       created_by: userId,
       api_session_id,
+      events_str: eventMessageContent
+        ? JSON.stringify([
+            {
+              type: 'event',
+              data: {
+                id: nanoid(),
+                role: 'assistant',
+                content: eventMessageContent,
+                createdAt: Date.now(),
+              },
+            },
+          ])
+        : null,
     }
     const newSession = await db
       .insert(SessionsTable)
