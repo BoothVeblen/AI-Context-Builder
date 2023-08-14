@@ -123,7 +123,7 @@ const SlideBar = ({
           ))}
         </div>
       </div>
-      <div className="m-full h-px bg-slate-100" />
+      <div className="m-full h-px bg-slate-200" />
       <div className="px-2 py-3">
         <Button
           variant="ghost"

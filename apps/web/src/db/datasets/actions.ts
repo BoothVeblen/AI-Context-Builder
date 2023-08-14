@@ -146,7 +146,7 @@ export async function editDataset(
         },
         []
       )
-      const editParams = { name, documents }
+      const editParams = { documents }
       let { data: res } = await axios.patch(
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`,
         editParams
