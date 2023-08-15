@@ -9,6 +9,9 @@ interface IProps {
 const DatasetEdit = async ({ params }: IProps) => {
   const dataset_id = params?.dataset_id
   const data = await getDataset(dataset_id)
+
+  if (!data) return null
+
   return (
     <>
       {/* Desktop version, can edit */}

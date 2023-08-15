@@ -1,12 +1,11 @@
 import 'server-only'
 
-import { revalidateTag, unstable_cache } from 'next/cache'
 import axios from 'axios'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { isEqual, omit } from 'lodash'
 
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
@@ -62,62 +61,51 @@ export async function addDataset(
     },
   })
 
-  await revalidateTag(`user:${userId}:datasets`)
   const datasetId = newDataset[0]?.short_id
   return { datasetId, name: newDataset[0].name }
 }
 
 export async function getDatasets() {
   const { userId } = auth()
+  if (!userId) return Promise.resolve([])
 
-  return await unstable_cache(
-    async () => {
-      if (!userId) return Promise.resolve([])
-      return db
-        .select({
-          short_id: DatasetsTable.short_id,
-          name: DatasetsTable.name,
-          config: DatasetsTable.config,
-          api_dataset_id: DatasetsTable.api_dataset_id,
-          linked_app_count: sql`count(${AppsDatasetsTable.app_id})`,
-        })
-        .from(DatasetsTable)
-        .orderBy(desc(DatasetsTable.created_at))
-        .where(
-          and(
-            eq(DatasetsTable.created_by, userId),
-            eq(DatasetsTable.archived, false)
-          )
-        )
-        .leftJoin(
-          AppsDatasetsTable,
-          eq(AppsDatasetsTable.dataset_id, DatasetsTable.short_id)
-        )
-        .groupBy(DatasetsTable.id)
-    },
-    [`user:${userId}:datasets`],
-    {
-      revalidate: 15 * 60,
-      tags: [`user:${userId}:datasets`],
-    }
-  )()
+  return db
+    .select({
+      short_id: DatasetsTable.short_id,
+      name: DatasetsTable.name,
+      config: DatasetsTable.config,
+      api_dataset_id: DatasetsTable.api_dataset_id,
+      linked_app_count: sql`count(${AppsDatasetsTable.app_id})`,
+    })
+    .from(DatasetsTable)
+    .orderBy(desc(DatasetsTable.created_at))
+    .where(
+      and(
+        eq(DatasetsTable.created_by, userId),
+        eq(DatasetsTable.archived, false)
+      )
+    )
+    .leftJoin(
+      AppsDatasetsTable,
+      eq(AppsDatasetsTable.dataset_id, DatasetsTable.short_id)
+    )
+    .groupBy(DatasetsTable.id)
 }
 
 export async function getDataset(datasetId: string) {
-  return await unstable_cache(
-    async () => {
-      const items = await db
-        .select()
-        .from(DatasetsTable)
-        .where(eq(DatasetsTable.short_id, datasetId))
-      return Promise.resolve(items[0])
-    },
-    [`dataset:${datasetId}`],
-    {
-      revalidate: 15 * 60,
-      tags: [`dataset:${datasetId}`],
-    }
-  )()
+  const { userId } = auth()
+  if (!userId) return null
+
+  const [item] = await db
+    .select()
+    .from(DatasetsTable)
+    .where(
+      and(
+        eq(DatasetsTable.short_id, datasetId),
+        eq(DatasetsTable.created_by, userId)
+      )
+    )
+  return item
 }
 
 export async function editDataset(
@@ -186,8 +174,6 @@ export async function editDataset(
     },
   })
 
-  await revalidateTag(`dataset:${datasetId}`)
-  await revalidateTag(`user:${userId}:datasets`)
   return response
 }
 
@@ -198,7 +184,7 @@ export async function removeDataset(datasetId: string) {
   let api_dataset_id = null
   if (flags.enabledAIService) {
     const dataset = await getDataset(datasetId)
-    api_dataset_id = dataset.api_dataset_id
+    api_dataset_id = dataset?.api_dataset_id
     if (!api_dataset_id) return Promise.resolve([])
 
     const { data: res } = await axios.delete(
@@ -235,6 +221,6 @@ export async function removeDataset(datasetId: string) {
       api_dataset_id,
     },
   })
-  await revalidateTag(`user:${userId}:datasets`)
+
   return response
 }
