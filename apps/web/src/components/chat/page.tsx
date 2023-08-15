@@ -73,6 +73,7 @@ export type ChatProps = LiveChatProps | DebugChatProps
 
 const Chat = (props: ChatProps) => {
   const { app, session, mode, initialMessages = [], initialEvents = [] } = props
+  const appId = app?.short_id
   const {
     short_id: sessionId,
     name: sessionName,
@@ -98,6 +99,7 @@ const Chat = (props: ChatProps) => {
     id: sessionId,
     initialMessages,
     body: {
+      appId,
       sessionId,
       apiSessionId,
     },

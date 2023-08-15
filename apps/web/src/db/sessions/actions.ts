@@ -290,7 +290,8 @@ function formatTimestamp(message: Message) {
 
 export async function updateMessagesToSession(
   sessionId: string,
-  messages: Message[]
+  messages: Message[],
+  appId?: string
 ) {
   const { userId } = auth()
   try {
@@ -317,8 +318,7 @@ export async function updateMessagesToSession(
         )
       )
     console.log('END updateMessagesToSession db update')
-
-    serverLog.capture({
+    await serverLog.capture({
       distinctId: userId,
       event: 'success:update_messages_to_session',
       properties: {
@@ -330,7 +330,7 @@ export async function updateMessagesToSession(
     console.error('updateMessagesToSession error:', error.message)
 
     if (userId) {
-      serverLog.capture({
+      await serverLog.capture({
         distinctId: userId,
         event: 'error:update_messages_to_session',
         properties: {

@@ -7,13 +7,17 @@ import {
 export async function OpenAIStream(
   baseUrl: string,
   payload: any,
-  callback?: { onCompletion?: (completion: string) => void }
+  callback?: {
+    onStart?: () => Promise<void> | void
+    onCompletion?: (completion: string) => Promise<void> | void
+  }
 ) {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
 
   let counter = 0
   let completion = ''
+  let initialed = false
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
     headers: {
@@ -30,7 +34,6 @@ export async function OpenAIStream(
         if (event.type === 'event') {
           const data = event.data
           if (data === '[DONE]') {
-            console.log('[DONE]:', data)
             if (callback?.onCompletion) {
               await callback.onCompletion(completion)
             }
@@ -47,6 +50,13 @@ export async function OpenAIStream(
             const queue = encoder.encode(text)
             controller.enqueue(queue)
             counter++
+
+            if (!initialed) {
+              initialed = true
+              if (callback?.onStart) {
+                await callback.onStart()
+              }
+            }
           } catch (e) {
             controller.error(e)
           }

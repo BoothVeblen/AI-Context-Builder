@@ -23,7 +23,8 @@
     "PUSHER_APP_ID",
     "PUSHER_APP_SECRET",
     "NEXT_PUBLIC_PUSHER_APP_KEY",
-    "NEXT_PUBLIC_PUSHER_APP_CLUSTER"
+    "NEXT_PUBLIC_PUSHER_APP_CLUSTER",
+    "LOGSNAG_TOKEN"
   ],
   "pipeline": {
     "build": {

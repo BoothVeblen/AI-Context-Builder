@@ -18,3 +18,12 @@ export function currentUser() {
   if (flags.enabledAuth) return clerkCurrentUser()
   return Promise.resolve(null)
 }
+
+export async function currentUserEmail() {
+  if (flags.enabledAuth) {
+    const { emailAddresses } = (await clerkCurrentUser()) ?? {}
+    const email = emailAddresses?.[0].emailAddress
+    if (email) return email
+  }
+  return Promise.resolve(null)
+}
