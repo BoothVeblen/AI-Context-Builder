@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useMemo, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { isEqual } from 'lodash'
@@ -78,15 +78,19 @@ const DatasetForm = ({
     values,
   })
 
-  const { handleSubmit } = form
+  const { handleSubmit, watch } = form
   const { trigger } = useSWRMutation(`/api/datasets/${datasetId}`, editDataset)
   const router = useRouter()
-  const current = useDebounce(form.getValues(), 1000)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const formValue = useMemo(() => watch(), [JSON.stringify(watch())])
+  const debouncedFormValue = useDebounce(formValue, 1000)
+  const latestFormValueRef = useRef(defaultValues)
   const onSubmit = async (data: SchemaProps) => {
     try {
       const { name, ...rest } = data
       const json = await trigger({ name, config: rest })
       setValues({ name: json.body?.name, ...json?.body?.config })
+      latestFormValueRef.current = data
       router.refresh()
       console.log(`edit Dataset onSubmit json:`, json)
     } catch (error) {
@@ -95,13 +99,11 @@ const DatasetForm = ({
   }
 
   useEffect(() => {
-    if (!isEqual(current, values)) {
+    if (!isEqual(debouncedFormValue, latestFormValueRef.current)) {
       handleSubmit(onSubmit)()
-    } else {
-      return
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current])
+  }, [JSON.stringify(debouncedFormValue)])
 
   return (
     <div
