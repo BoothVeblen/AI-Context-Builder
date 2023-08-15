@@ -17,6 +17,7 @@ import ChatInput from './chat-input'
 import ChatList from './chat-list'
 import RestartConfirmPage from './restart-confirm'
 import { ChatApp, ChatSession, EventMessage } from './types'
+import useConfigBase64 from './use-config-base64'
 import VideoCallConfirmDialog from './video-call-confirm-dialog'
 
 function formatToTimestamp(date?: Date | number | null) {
@@ -74,6 +75,7 @@ export type ChatProps = LiveChatProps | DebugChatProps
 const Chat = (props: ChatProps) => {
   const { app, session, mode, initialMessages = [], initialEvents = [] } = props
   const appId = app?.short_id
+  const appName = app?.name || ''
   const {
     short_id: sessionId,
     name: sessionName,
@@ -116,17 +118,20 @@ const Chat = (props: ChatProps) => {
     initialEvents,
   })
   const [isOpenCallConfirm, setIsOpenCallConfirm] = useState(false)
-  const callLinkRef = useRef()
+  const callLinkRef = useRef('')
+  const configStr = useConfigBase64({ appName })
   const onAdd = useCallback(
     (newEventMessage: any) => {
       if (newEventMessage?.data?.type === 'call.created') {
-        callLinkRef.current = newEventMessage?.data?.link
+        callLinkRef.current = `${newEventMessage?.data?.link || ''}${
+          configStr ? `?c=${configStr}` : ''
+        }`
         setIsOpenCallConfirm(true)
         return
       }
       setEventMessages((prev) => [...prev, newEventMessage])
     },
-    [setEventMessages]
+    [setEventMessages, configStr]
   )
   useSubscribe({
     channelId: `session-${sessionId}`,
