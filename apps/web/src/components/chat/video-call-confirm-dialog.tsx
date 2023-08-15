@@ -60,7 +60,11 @@ function Content({
                 appIcon ? 'bg-white' : `bg-${color}-600`
               )}
             >
-              <AvatarImage src={appIcon} alt={appName} />
+              <AvatarImage
+                src={appIcon}
+                alt={appName}
+                className="object-cover"
+              />
               {appName && (
                 <AvatarFallback className="bg-transparent text-white">
                   {getFirstLetter(appName)}

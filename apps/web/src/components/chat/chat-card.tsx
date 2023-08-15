@@ -148,7 +148,7 @@ const ChatCard = (props: IProps) => {
               icon ? 'bg-white' : `bg-${color}-600`
             )}
           >
-            <AvatarImage src={icon} alt={name} />
+            <AvatarImage src={icon} alt={name} className="object-cover" />
             <AvatarFallback className="bg-transparent text-white">
               {getFirstLetter(name)}
             </AvatarFallback>

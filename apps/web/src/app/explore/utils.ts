@@ -8,6 +8,7 @@ const LA = [
 
 // Famous Character
 const FC = [
+  'wxIBFg1PjSMl', // Play Elon Musk
   'J7Mtwdm74SxL', // Play Spider-Man
   'SWWCi3VYv5Qu', // Play Harry potter
   '0O2nJnSpQURk', // Sun Wukong
