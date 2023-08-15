@@ -34,6 +34,12 @@ export async function OpenAIStream(
         if (event.type === 'event') {
           const data = event.data
           if (data === '[DONE]') {
+            if (!initialed) {
+              initialed = true
+              if (callback?.onStart) {
+                await callback.onStart()
+              }
+            }
             if (callback?.onCompletion) {
               await callback.onCompletion(completion)
             }
