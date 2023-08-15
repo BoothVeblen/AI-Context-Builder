@@ -1,12 +1,12 @@
-import { getDatasets } from '@/db/datasets/actions'
-import DatasetCard from '@/components/dataset-card'
+import { Suspense } from 'react'
+
 import MineList from '@/components/mine-list'
 import RootWrapper from '@/components/root-wrapper'
 
+import CardList, { CardListFallback } from './card-list'
 import CreateDialog from './create-dataset'
 
-export default async function Page() {
-  const datasets = await getDatasets()
+export default function Page() {
   return (
     <RootWrapper pageTitle="My Space" nav={<MineList />}>
       <div className="flex flex-col">
@@ -21,22 +21,9 @@ export default async function Page() {
         </div>
         <div className="m-full hidden h-px shrink-0 bg-slate-200 lg:block" />
         <div className="p-6">
-          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3  2xl:grid-cols-4 ">
-            {datasets?.map(({ short_id, name, config, linked_app_count }) => {
-              const { files = [], loaderType } = config as any
-              return (
-                <DatasetCard
-                  key={short_id}
-                  id={short_id}
-                  title={name}
-                  iconType={loaderType}
-                  fileNum={files.length}
-                  // totalWords={0}
-                  linkedAppCount={linked_app_count as number}
-                />
-              )
-            })}
-          </ul>
+          <Suspense fallback={<CardListFallback />}>
+            <CardList />
+          </Suspense>
         </div>
       </div>
     </RootWrapper>

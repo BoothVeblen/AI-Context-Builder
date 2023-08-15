@@ -1,11 +1,11 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 
-import { getAppsBasedOnIds } from '@/db/apps/actions'
-import AppCard from '@/components/app-card'
 import ExploreList from '@/components/explore-list'
 import RootWrapper from '@/components/root-wrapper'
 
-import { CATEGORY_IDS, getCategoryTitle, getFeaturedAppIds } from '../utils'
+import CardList, { CardListFallback } from '../card-list'
+import { CATEGORY_IDS, getCategoryTitle } from '../utils'
 
 interface IProps {
   params: {
@@ -13,15 +13,12 @@ interface IProps {
   }
 }
 
-export default async function Page({ params }: IProps) {
+export default function Page({ params }: IProps) {
   const { category_id } = params
 
   if (!CATEGORY_IDS.includes(category_id.toUpperCase())) {
     redirect(`/explore`)
   }
-
-  const ids = getFeaturedAppIds(category_id)
-  const list = await getAppsBasedOnIds(ids)
 
   return (
     <RootWrapper pageTitle="Explore" nav={<ExploreList />}>
@@ -33,18 +30,9 @@ export default async function Page({ params }: IProps) {
           <h2 className="text-sm font-medium">
             {getCategoryTitle(category_id)}
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {list.map(({ short_id, name, description, icon }) => (
-              <AppCard
-                key={short_id}
-                id={short_id}
-                name={name}
-                description={description}
-                icon={icon}
-                creator="@Context Builder"
-              />
-            ))}
-          </ul>
+          <Suspense fallback={<CardListFallback />}>
+            <CardList categoryName={category_id} />
+          </Suspense>
         </div>
       </div>
     </RootWrapper>
