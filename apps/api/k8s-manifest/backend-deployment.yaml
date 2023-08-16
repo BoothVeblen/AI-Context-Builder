@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: withcontext-backend
-  namespace: withcontext-backend-test
+  namespace: withcontext-backend
 spec:
   replicas: 1
   selector:
@@ -17,7 +17,7 @@ spec:
         - name: ecr-registry
       containers:
         - name: withcontext-backend
-          image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:test
+          image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:latest
           ports:
             - containerPort: 8000
           env:
@@ -61,7 +61,11 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: WEBHOOK_KEY
+            - name: WEBHOOK_ENDPOINT
+              value: https://build.withcontext.ai/api/webhook/chat
+            - name: BACKEND_URL
+              value: http://api.withcontext.ai
           resources:
             limits:
-              memory: '500Mi'
-              cpu: '0.5'
+              memory: '2000Mi'
+              cpu: '2'

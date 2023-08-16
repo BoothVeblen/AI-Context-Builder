@@ -1,7 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from app import app  # Assuming your FastAPI application is named app
-from models.base import Model, model_manager, Chain, LLM, Prompt
+from models.base import Model, Chain, LLM, Prompt
+from models.controller import model_manager
 
 client = TestClient(app)
 

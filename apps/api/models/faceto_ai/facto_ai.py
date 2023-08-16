@@ -5,6 +5,7 @@ from utils import (
     FACE_TO_CLIENT_ID,
     FACE_TO_CLIENT_SECRET,
     WEBHOOK_KEY,
+    BACKEND_URL,
 )
 import json
 
@@ -34,7 +35,9 @@ class FaceToAiManager:
         return response.json()["access_token"]
 
     @classmethod
-    def get_room_link(cls, opening_remarks: str, session_id: str):
+    def get_room_link(
+        cls, opening_remarks: str, session_id: str, is_mock: bool = False
+    ):
         token = cls.get_token()
         url = FACE_TO_AI_ENDPOINT + "/v1/room/link"
         payload = {
@@ -42,14 +45,17 @@ class FaceToAiManager:
                 "greeting": opening_remarks,
             },
             "chatapi": {
-                "api": f"http://api-test.withcontext.ai/v1/chat/completions/vedio/{session_id}",
+                "api": f"{BACKEND_URL}/v1/chat/completions/video/{session_id}",
                 "key": WEBHOOK_KEY,
             },
             "webhook": {
-                "api": f"http://api-test.withcontext.ai/v1/chat/completions/vedio/{session_id}/webhook",
+                "api": f"{BACKEND_URL}/v1/chat/completions/video/{session_id}/webhook",
                 "key": WEBHOOK_KEY,
             },
         }
+        if is_mock:
+            payload["config"]["voice_id"] = "8QAi78THegBm75BpJ4f5"
+        logger.info(f"payload: {payload}")
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {token}",

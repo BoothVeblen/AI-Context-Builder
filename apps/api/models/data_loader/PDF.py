@@ -3,7 +3,6 @@ import logging
 
 from langchain.schema import Document
 from langchain.text_splitter import CharacterTextSplitter
-from models.base import dataset_manager
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfdocument import PDFDocument
@@ -12,6 +11,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pydantic import BaseModel, Field
 from utils.StorageClient import GoogleCloudStorageClient
+from models.base.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -35,23 +35,8 @@ class PDFRetrivalOption(BaseModel):
 class PDFLoader:
     @staticmethod
     def load_and_split_documents(
-        dataset_ids: str, storage_client=GoogleCloudStorageClient()
+        datasets: list[Dataset], storage_client=GoogleCloudStorageClient()
     ):
-        datasets = []
-        for dataset_id in dataset_ids:
-            try:
-                dataset = dataset_manager.get_datasets(dataset_id)
-                if dataset is None:
-                    logger.error(f"Dataset {dataset_id} not found")
-                    raise Exception(f"Dataset {dataset_id} not found")
-                if len(dataset) > 1:
-                    logger.error(f"Dataset {dataset_id} not unique")
-                    raise Exception(f"Dataset {dataset_id} not unique")
-                dataset = dataset[0]
-                datasets.append(dataset)
-            except Exception as e:
-                logger.error(f"Failed to load dataset {dataset_id}: {e}")
-                raise e
         doc = []
         for dataset in datasets:
             logger.info(f"Loading dataset {dataset.id}")
@@ -75,9 +60,12 @@ class PDFLoader:
                                 metadata={
                                     "source": document.url,
                                     "page_number": page_number,
+                                    "urn": f"{dataset.id}-{document.url}-{page_number}",
                                 },
                             )
                         )
+                    # warning!!! it is a bad idea to change the page size here!!!
+                    document.page_size = page_number
                 else:
                     logger.error(f"Document type {document.type} not supported")
                     raise Exception("Document type not supported")

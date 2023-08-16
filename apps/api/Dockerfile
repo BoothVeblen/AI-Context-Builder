@@ -1,10 +1,7 @@
-FROM python:3.11-slim
+FROM 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:base 
 
-COPY . /app
 WORKDIR /app
-
-COPY requirements.txt /app
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
 
 EXPOSE 8000
 

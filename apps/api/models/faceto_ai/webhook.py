@@ -4,15 +4,19 @@ import json
 import time
 from tenacity import retry, stop_after_attempt, wait_fixed, after_log
 from models.base import FaceToAiWebhookRequest
+from utils.config import WEBHOOK_ENDPOINT
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
 class WebhookHandler:
-    target_url = (
-        "https://builder-git-fork-lzl-websocket-withcontext.vercel.app/api/webhook/chat"
-    )
+    def __init__(self) -> None:
+        self.target_url = (
+            WEBHOOK_ENDPOINT
+            if WEBHOOK_ENDPOINT is not None
+            else "https://build.withcontext.ai/api/webhook/chat"
+        )
 
     @retry(
         stop=stop_after_attempt(3),
@@ -20,10 +24,22 @@ class WebhookHandler:
         reraise=True,
         after=after_log(logger, logging.WARNING),
     )
-    def forward_data(self, data: FaceToAiWebhookRequest, session_id: str) -> None:
+    def forward_data(self, data: dict, session_id: str) -> None:
+        # forward while ended
         logger.info(f"Forwarding data to {self.target_url}")
-        data.data["session_id"] = session_id
-        response = requests.post(self.target_url, json=json.dumps(data.dict()))
+        logger.info(f"Data: {data}")
+        _data = FaceToAiWebhookRequest(
+            object="event",
+            type="call.ended",
+            data={
+                "session_id": session_id,
+                "duration": data["data"]["vod"]["duration"],
+            },
+        )
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(
+            self.target_url, data=json.dumps(_data.dict()), headers=headers
+        )
         response.raise_for_status()
 
     @retry(
@@ -36,7 +52,12 @@ class WebhookHandler:
         data = FaceToAiWebhookRequest(
             object="event",
             type="call.created",
-            data={"session_id": session_id, "room_link": room_link},
+            data={"session_id": session_id, "link": room_link},
         )
-        response = requests.post(self.target_url, json=json.dumps(data.dict()))
+        logger.info(f"Forwarding data to {self.target_url}")
+        logger.info(f"Data: {data}")
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(
+            self.target_url, data=json.dumps(data.dict()), headers=headers
+        )
         response.raise_for_status()

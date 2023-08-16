@@ -2,7 +2,8 @@ import logging
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
-from models.base import Dataset, dataset_manager
+from models.base.dataset import Dataset
+from models.controller import dataset_manager
 from models.retrieval import Retriever
 from pydantic import BaseModel
 

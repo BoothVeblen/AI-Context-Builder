@@ -15,7 +15,6 @@ from models.base import (
     CompletionsRequest,
     CompletionsResponse,
     SessionRequest,
-    model_manager,
     session_state_manager,
     VideoCompletionsRequest,
     Messages as MessagesContent,
@@ -23,6 +22,7 @@ from models.base import (
 )
 from models.workflow import Workflow
 from models.faceto_ai import FaceToAiManager, WebhookHandler
+from models.controller import model_manager
 from utils import WEBHOOK_KEY
 
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +43,7 @@ def get_token_header(request: Request):
 def wrap_token(token: str, model_id: str, session_id: str, filt: bool = False) -> str:
     if filt:
         content = {"content": token}
-        return f"data: {content}\n\n"
+        return f"data: {json.dumps(content)}\n\n"
     return f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=model_id, choices=[Choices(index=0, delta={'content': token})]).dict())}\n\n"
 
 
@@ -64,6 +64,7 @@ async def send_message(
             )
 
     model_id = session_state_manager.get_model_id(session_id)
+
     models = model_manager.get_models(model_id)
     if not models:
         raise HTTPException(
@@ -91,8 +92,6 @@ async def send_message(
 
     task = asyncio.create_task(wrap_done(workflow.agenerate(messages), callback.done))
 
-    yield wrap_token("", model_id, session_id, filt=filt)
-
     async for token in callback.aiter():
         yield wrap_token(token, model_id, session_id, filt=filt)
 
@@ -103,46 +102,71 @@ async def send_message(
     await task
 
 
+async def send_done_message():
+    yield "data: [DONE]\n\n"
+
+
 @router.post("/completions")
 async def stream_completions(body: CompletionsRequest):
     logger.info(f"completions payload: {body.dict()}")
     model_id = session_state_manager.get_model_id(body.session_id)
     model = model_manager.get_models(model_id)[0]
     if model.enable_video_interaction:
-        link = FaceToAiManager.get_room_link(model.opening_remarks, body.session_id)
+        link = FaceToAiManager.get_room_link(
+            model.opening_remarks,
+            body.session_id,
+            model_id == "24a683074e7c4c6f881b747296aabbae",
+        )
         webhook_handler = WebhookHandler()
         webhook_handler.create_video_room_link(body.session_id, link)
-        return {}
+        return StreamingResponse(send_done_message(), media_type="text/event-stream")
     else:
         return StreamingResponse(
             send_message(body.messages, body.session_id), media_type="text/event-stream"
         )
 
 
-@router.post("/completions/vedio/{session_id}")
+@router.post("/completions/video/{session_id}")
 async def video_stream_completions(
     session_id: str,
     body: VideoCompletionsRequest,
     token: str = Depends(get_token_header),
 ):
+    logger.info(f"completions payload: {body.dict()}")
     return StreamingResponse(
-        send_message(body.messages, session_id),
+        send_message(body.messages, session_id, filt=True),
         media_type="text/event-stream",
-        filt=True,
     )
 
 
-@router.post("/completions/vedio/{session_id}/webhook")
+@router.post("/completions/video/{session_id}/webhook")
 async def video_stream_completions_webhook(
     session_id: str,
-    body: FaceToAiWebhookRequest,
+    body: dict,
     token: str = Depends(get_token_header),
 ):
-    if body.data.get("duration", None) is None:
-        raise HTTPException(status_code=400, detail="duration not found")
+    logger.info(f"wbhook payload: {body}")
+
+    if body.get("object", None) != "Event":
+        raise HTTPException(status_code=500, detail="object not allowed")
+    if body.get("type", None) not in [
+        "Event.RoomStarted",
+        "Event.ParticipantJoined",
+        "Event.ParticipantLeft",
+        "Event.RoomEgressEnd",
+        "Event.RoomFinished",
+    ]:
+        raise HTTPException(status_code=500, detail="event not allowed")
     webhook_handler = WebhookHandler()
     try:
-        webhook_handler.forward_data(body, session_id)
+        if body.get("type") == "Event.ParticipantLeft":
+            if body.get("data", {}).get("vod", {}).get("duration", None) is None:
+                raise HTTPException(
+                    status_code=500, detail="data.vod.duration not found"
+                )
+            webhook_handler.forward_data(body, session_id)
+        else:
+            return {"message": "success", "status": 200}
     except Exception as e:
         logger.exception(e)
         raise HTTPException(status_code=500, detail=str(e))

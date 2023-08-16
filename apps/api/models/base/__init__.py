@@ -9,6 +9,6 @@ from .chat import (
     FaceToAiWebhookRequest,
 )
 
-from .dataset import Document, Dataset, dataset_manager
-from .model import LLM, Prompt, Chain, Model, model_manager
+from .dataset import Document, Dataset
+from .model import LLM, Prompt, Chain, Model
 from .session_state import session_state_manager

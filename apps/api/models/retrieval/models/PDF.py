@@ -1,8 +1,7 @@
 import io
 import logging
 import uuid
-from typing import List
-import io
+from typing import List, cast
 
 import pinecone
 from langchain.callbacks.manager import AsyncCallbackManagerForRetrieverRun
@@ -14,7 +13,6 @@ from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.schema import Document
 from langchain.vectorstores import Pinecone
 from models.data_loader import PDFLoader
-from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfdocument import PDFDocument
@@ -23,7 +21,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pydantic import BaseModel, Field
 from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
-
+from models.base import Dataset, Model
 
 logger = logging.getLogger(__name__)
 
@@ -86,18 +84,111 @@ class PatchedSelfQueryRetriever(SelfQueryRetriever):
 
 
 class PDFRetrieverMixin:
-    def create_retriever(self):
-        doc = PDFLoader.load_and_split_documents(self.dataset_ids)
+    @classmethod
+    def create_index(self, datasets: List[Dataset]):
+        docs = PDFLoader.load_and_split_documents(datasets)
 
-        embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+        embedding = OpenAIEmbeddings()
+
+        ids = [doc.metadata["urn"] for doc in docs]
+        texts = [doc.page_content for doc in docs]
+        metadatas = [doc.metadata for doc in docs]
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
-        namespace = uuid.uuid4().hex
-        vector_store = Pinecone.from_documents(
-            doc, embeddings, index_name="context-prod", namespace=namespace
+        vector_store = Pinecone.from_texts(
+            texts=texts,
+            embedding=embedding,
+            namespace="withcontext",
+            metadatas=metadatas,
+            ids=ids,
+            index_name="context-prod",
         )
-        vector_store.as_retriever()
+        return vector_store
 
-        self.retriever = PatchedSelfQueryRetriever.from_llm(
+    @classmethod
+    def delete_index(self, dataset: Dataset):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = pinecone.Index("context-prod")
+        ids = []
+        for doc in dataset.documents:
+            for i in range(doc.page_size):
+                ids.append(f"{dataset.id}-{doc.url}-{i}")
+        if ids == []:
+            logger.warning(
+                f"Dataset {dataset.id} has no documents when deleting, or page_size bug"
+            )
+            return
+        index.delete(ids=ids, namespace="withcontext")
+
+    @classmethod
+    def get_relative_chains(self, dataset: Dataset):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = pinecone.Index("context-prod")
+        if len(dataset.documents) == 0:
+            logger.warning(f"Dataset {dataset.id} has no documents when getting chains")
+            return []
+        id = f"{dataset.id}-{dataset.documents[0].url}-0"
+        logger.info(f"Getting vector for id{id}")
+        vector = (
+            index.fetch(namespace="withcontext", ids=[id])
+            .to_dict()
+            .get("vectors", {})
+            .get(id, {})
+        )
+        if vector == {}:
+            logger.warning(f"vector {id} not found when getting chains")
+            return []
+        return vector.get("metadata", {}).get("relative_chains", [])
+
+    @classmethod
+    def add_relative_chain_to_dataset(
+        self, dataset: Dataset, model_id: str, chain_key: str
+    ):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = pinecone.Index("context-prod")
+        known_chains = self.get_relative_chains(dataset)
+        chain_urn = f"{model_id}-{chain_key}"
+        known_chains.append(chain_urn)
+        for doc in dataset.documents:
+            for i in range(doc.page_size):
+                id = f"{dataset.id}-{doc.url}-{i}"
+                index.update(
+                    id=id,
+                    set_metadata={"relative_chains": known_chains},
+                    namespace="withcontext",
+                )
+
+    @classmethod
+    def delete_relative_chain_from_dataset(
+        self, dataset: Dataset, model_id: str, chain_key: str
+    ):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = pinecone.Index("context-prod")
+        known_chains = self.get_relative_chains(dataset)
+        chain_urn = f"{model_id}-{chain_key}"
+        try:
+            known_chains.remove(chain_urn)
+        except ValueError:
+            logger.warning(f"Chain {chain_urn} not found when deleting")
+            return
+        for doc in dataset.documents:
+            for i in range(doc.page_size):
+                id = f"{dataset.id}-{doc.url}-{i}"
+
+                index.update(
+                    id=id,
+                    set_metadata={"relative_chains": known_chains},
+                    namespace="withcontext",
+                )
+
+    @classmethod
+    def get_retriever(cls, filter: dict = {}) -> Pinecone:
+        vector_store = Pinecone.from_existing_index(
+            index_name="context-prod",
+            namespace="withcontext",
+            embedding=OpenAIEmbeddings(),
+        )
+        retriever = PatchedSelfQueryRetriever.from_llm(
+            filter=filter,
             llm=OpenAI(),
             vectorstore=vector_store,
             verbose=True,
@@ -111,19 +202,6 @@ class PDFRetrieverMixin:
                 ),
             ],
         )
-        self.retriever.search_type = "mmr"
-
-    def get_retriever(self):
-        if hasattr(self, "retriever"):
-            return self.retriever
-        self.create_retriever()
-        return self.retriever
-
-    def get_retriever(self):
-        if hasattr(self, "retriever"):
-            return self.retriever
-        self.create_retriever()
-        return self.retriever
-
-    def query_from_pdf(self, query: str):
-        return self.get_retriever().get_relevant_documents(query)
+        retriever.search_kwargs = {"filter": filter}
+        retriever.search_type = "mmr"
+        return retriever
