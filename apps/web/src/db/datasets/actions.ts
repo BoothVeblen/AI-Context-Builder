@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { redirect } from 'next/navigation'
 import axios from 'axios'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { isEqual, omit } from 'lodash'
@@ -93,19 +94,21 @@ export async function getDatasets() {
 }
 
 export async function getDataset(datasetId: string) {
-  const { userId } = auth()
-  if (!userId) return null
+  try {
+    const [item] = await db
+      .select()
+      .from(DatasetsTable)
+      .where(eq(DatasetsTable.short_id, datasetId))
+      .limit(1)
 
-  const [item] = await db
-    .select()
-    .from(DatasetsTable)
-    .where(
-      and(
-        eq(DatasetsTable.short_id, datasetId),
-        eq(DatasetsTable.created_by, userId)
-      )
-    )
-  return item
+    if (!item) {
+      throw new Error('Dataset not found')
+    }
+
+    return item
+  } catch (error) {
+    redirect('/')
+  }
 }
 
 export async function editDataset(

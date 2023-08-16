@@ -1,3 +1,6 @@
+import { redirect } from 'next/navigation'
+
+import { auth } from '@/lib/auth'
 import { getApp } from '@/db/apps/actions'
 
 import Sidebar from './sidebar'
@@ -9,8 +12,13 @@ interface IProps {
 
 export default async function SettingsLayout({ children, params }: IProps) {
   const { app_id } = params
+  const { userId } = auth()
 
   const appDetail = await getApp(app_id)
+
+  if (appDetail.created_by !== userId) {
+    redirect('/')
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex h-full w-full bg-white">

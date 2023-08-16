@@ -57,6 +57,7 @@
     "eslint-config-next": "13.4.12",
     "eventsource-parser": "^1.0.0",
     "immer": "^10.0.2",
+    "js-base64": "^3.7.5",
     "lodash": "^4.17.21",
     "logsnag": "^0.1.8",
     "lucide-react": "^0.263.1",

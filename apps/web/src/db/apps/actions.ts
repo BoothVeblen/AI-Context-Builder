@@ -169,17 +169,17 @@ export async function getApps() {
 
 export async function getApp(appId: string) {
   try {
-    const items = await db
+    const [item] = await db
       .select()
       .from(AppsTable)
       .where(eq(AppsTable.short_id, appId))
+      .limit(1)
 
-    const appDetail = items[0]
-    if (!appDetail) {
+    if (!item) {
       throw new Error('App not found')
     }
 
-    return appDetail
+    return item
   } catch (error) {
     redirect('/')
   }
