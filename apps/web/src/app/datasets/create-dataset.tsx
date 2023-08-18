@@ -96,7 +96,7 @@ const CreateDialog = () => {
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-[488px]">
         <AlertDialogHeader>
-          <AlertDialogTitle> Create Dataset</AlertDialogTitle>
+          <AlertDialogTitle>Create Dataset</AlertDialogTitle>
         </AlertDialogHeader>
         <Form {...form}>
           <form

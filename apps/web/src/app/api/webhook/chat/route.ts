@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import { db } from '@/lib/drizzle-edge'
 import { initPusher } from '@/lib/pusher-server'
 import { safeParse } from '@/lib/utils'
+import { DatasetsTable } from '@/db/datasets/schema'
 import { Session, SessionsTable } from '@/db/sessions/schema'
 
 async function getSession(api_session_id: string) {
@@ -52,6 +53,10 @@ export async function POST(req: NextRequest) {
         await endCall(event.type, event.data)
         break
       }
+      case 'dataset.updated': {
+        await updateDataset(event.data)
+        break
+      }
       default: {
         console.log('webhook chat error:', event)
       }
@@ -59,6 +64,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: event.type })
   } catch (error: any) {
+    console.log('webhook chat error:', error.message)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -109,4 +115,13 @@ async function endCall(type: string, data: any) {
   })
 
   await updateEvents(session, newEvent)
+}
+
+async function updateDataset(data: any) {
+  const { api_dataset_id, status } = data
+  console.log('updateDataset data:', data)
+  await db
+    .update(DatasetsTable)
+    .set({ status })
+    .where(eq(DatasetsTable.api_dataset_id, api_dataset_id))
 }

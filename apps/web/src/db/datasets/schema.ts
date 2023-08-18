@@ -2,6 +2,7 @@ import { InferModel, relations } from 'drizzle-orm'
 import {
   boolean,
   index,
+  integer,
   json,
   pgTable,
   serial,
@@ -21,6 +22,7 @@ export const DatasetsTable = pgTable(
     name: text('name').notNull(),
     config: json('config'),
     api_dataset_id: text('api_dataset_id').unique().notNull(),
+    status: integer('status').default(0).notNull(),
     created_by: text('created_by')
       .references(() => UsersTable.short_id)
       .notNull(),

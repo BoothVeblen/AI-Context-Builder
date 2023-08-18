@@ -1,5 +1,12 @@
 import { HTMLInputTypeAttribute, ReactNode, useState } from 'react'
-import { Check, ChevronsUpDown, PlusIcon, TrashIcon } from 'lucide-react'
+import {
+  AlertCircleIcon,
+  Check,
+  ChevronsUpDown,
+  Loader2Icon,
+  PlusIcon,
+  TrashIcon,
+} from 'lucide-react'
 import { FieldValues, Path, PathValue, useFormContext } from 'react-hook-form'
 
 import { cn } from '@/lib/utils'
@@ -248,7 +255,12 @@ export function SlideItem<T extends FieldValues>({
 interface IListSelectItem<T> {
   name: Path<T>
   label: string
-  options: { label: string; value: PathValue<T, Path<T>>; icon?: string }[]
+  options: {
+    label: string
+    value: PathValue<T, Path<T>>
+    icon?: string
+    status?: number
+  }[]
 }
 
 export function ListSelectItem<T extends FieldValues>({
@@ -303,11 +315,20 @@ export function ListSelectItem<T extends FieldValues>({
                         data-disabled={
                           field.value?.includes(item.value) || undefined
                         }
+                        className="flex items-center justify-between space-x-2"
                       >
-                        {item.icon === 'pdf' && (
-                          <PdfImage className="mr-3 shrink-0" />
+                        <div className="flex items-center justify-between">
+                          {item.icon === 'pdf' && (
+                            <PdfImage className="mr-3 shrink-0" />
+                          )}
+                          <div className="truncate">{item.label}</div>
+                        </div>
+                        {item.status != null && item.status === 1 && (
+                          <Loader2Icon className="h-4 w-4 animate-spin" />
                         )}
-                        <div className="truncate">{item.label}</div>
+                        {item.status != null && item.status === 2 && (
+                          <AlertCircleIcon className="h-4 w-4 text-red-500" />
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>

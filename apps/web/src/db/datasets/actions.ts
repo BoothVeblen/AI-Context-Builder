@@ -76,6 +76,7 @@ export async function getDatasets() {
       name: DatasetsTable.name,
       config: DatasetsTable.config,
       api_dataset_id: DatasetsTable.api_dataset_id,
+      status: DatasetsTable.status,
       linked_app_count: sql`count(${AppsDatasetsTable.app_id})`,
     })
     .from(DatasetsTable)
