@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { AppsTable } from '@/db/apps/schema'
 import { SessionsTable } from '@/db/sessions/schema'
 

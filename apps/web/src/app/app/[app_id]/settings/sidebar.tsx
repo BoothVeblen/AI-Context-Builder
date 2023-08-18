@@ -62,7 +62,10 @@ export default function Sidebar({ appId, appName }: IProps) {
             commonStyle,
             url?.includes('basics') ? 'bg-slate-200' : ''
           )}
-          href={`/app/${appId}/settings/basics`}
+          href={{
+            pathname: `/app/${appId}/settings/basics`,
+            search: searchParams.toString(),
+          }}
           replace
         >
           <div className="text-sm font-medium">Basics</div>
@@ -76,7 +79,10 @@ export default function Sidebar({ appId, appName }: IProps) {
               commonStyle,
               url?.includes('workflow') ? 'bg-slate-200' : ''
             )}
-            href={`/app/${appId}/settings/workflow`}
+            href={{
+              pathname: `/app/${appId}/settings/workflow`,
+              search: searchParams.toString(),
+            }}
             replace
           >
             <div className="text-sm font-medium">Workflow</div>

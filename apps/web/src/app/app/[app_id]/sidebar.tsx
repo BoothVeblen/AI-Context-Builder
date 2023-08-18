@@ -35,7 +35,6 @@ export default async function Sidebar({ appId }: { appId: string }) {
           <div className="m-full h-px bg-slate-200" />
           <SessionListHeader appId={appId} />
           <SessionList appId={appId} sessionList={sessionList} />
-          {/* <div className="m-full h-px bg-slate-200" /> */}
         </div>
         <AuthButton />
       </div>

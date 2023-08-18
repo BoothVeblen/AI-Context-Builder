@@ -36,7 +36,14 @@ export async function OpenAIStream({
 
   const stream = new ReadableStream({
     async start(controller) {
+      // prevent the stream from closing when the initial response is too long
+      const waitingId = setInterval(() => {
+        const queue = encoder.encode('waiting...\n')
+        controller.enqueue(queue)
+      }, 20 * 1000)
+
       controller.enqueue(encoder.encode(`[DATA]${JSON.stringify(data)}`))
+
       async function onParse(event: ParsedEvent | ReconnectInterval) {
         if (event.type === 'event') {
           const data = event.data
@@ -66,6 +73,9 @@ export async function OpenAIStream({
 
             if (!initialed) {
               initialed = true
+
+              if (waitingId) clearInterval(waitingId)
+
               if (callback?.onStart) {
                 await callback.onStart()
               }

@@ -2,6 +2,8 @@ import { getApp } from '@/db/apps/actions'
 
 import BasicsSettingForm from './form'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: {
     app_id: string

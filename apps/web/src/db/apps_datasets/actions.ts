@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 
 import { DatasetsTable } from '../datasets/schema'
 import { AppsDatasetsTable } from './schema'

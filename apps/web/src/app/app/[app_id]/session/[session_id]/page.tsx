@@ -5,6 +5,8 @@ import Chat from '@/components/chat/page'
 import AddAppToWorkspace from './add-app-to-workspace'
 import AppNotFound from './app-not-found'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: { app_id: string; session_id: string }
 }

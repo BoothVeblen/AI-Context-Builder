@@ -5,6 +5,8 @@ import RootWrapper from '@/components/root-wrapper'
 
 import CardList, { CardListFallback } from './card-list'
 
+export const runtime = 'edge'
+
 export default function Page() {
   return (
     <RootWrapper pageTitle="Explore" nav={<ExploreList />}>

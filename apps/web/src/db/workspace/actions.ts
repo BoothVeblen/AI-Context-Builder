@@ -48,7 +48,7 @@ export async function addToWorkspace(appId: string) {
 
 export async function getWorkspace() {
   const { userId } = auth()
-  if (!userId) return Promise.resolve([])
+  if (!userId) return []
 
   const result = await db
     .selectDistinctOn([AppsTable.short_id], {

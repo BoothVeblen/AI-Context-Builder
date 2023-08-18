@@ -2,7 +2,7 @@ import 'server-only'
 
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { serverLog } from '@/lib/posthog'
 
 import { NewUser, UsersTable } from './schema'

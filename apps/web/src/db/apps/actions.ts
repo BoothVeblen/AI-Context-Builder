@@ -113,17 +113,15 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
         ? JSON.stringify([
             {
               type: 'event',
-              data: {
-                id: nanoid(),
-                role: 'assistant',
-                content: eventMessageContent,
-                createdAt: Date.now(),
-              },
+              id: nanoid(),
+              role: 'assistant',
+              content: eventMessageContent,
+              createdAt: Date.now(),
             },
           ])
         : null,
     }
-    const newSession = await db
+    const [newSession] = await db
       .insert(SessionsTable)
       .values(sessionVal)
       .returning()
@@ -133,14 +131,14 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       event: 'success:add_session',
       properties: {
         app_id: appId,
-        session_id: newSession[0]?.short_id,
+        session_id: newSession?.short_id,
         api_session_id,
       },
     })
 
     await addToWorkspace(appId)
 
-    return { appId, sessionId: newSession[0]?.short_id }
+    return { appId, sessionId: newSession?.short_id }
   } catch (error: any) {
     return {
       error: error.message,

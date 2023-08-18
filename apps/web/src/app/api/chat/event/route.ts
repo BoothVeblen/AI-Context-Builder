@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/drizzle'
+import { db } from '@/lib/drizzle-edge'
 import { updateEvents } from '@/db/sessions/actions'
 import { SessionsTable } from '@/db/sessions/schema'
 import { EventMessage } from '@/components/chat/types'

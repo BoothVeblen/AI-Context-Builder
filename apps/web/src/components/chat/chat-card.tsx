@@ -125,7 +125,6 @@ function EventMessage({ data }: { data: any }) {
 
 const ChatCard = (props: IProps) => {
   const { message, error = '', isEnd } = props
-  console.log('message', message)
   const { app, mode, isLoading } = useChatContext()
   const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
   const isUser = message?.role === 'user'

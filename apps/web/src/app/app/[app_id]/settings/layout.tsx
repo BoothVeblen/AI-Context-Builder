@@ -5,6 +5,8 @@ import { getApp } from '@/db/apps/actions'
 
 import Sidebar from './sidebar'
 
+export const runtime = 'edge'
+
 interface IProps {
   children: React.ReactNode
   params: { app_id: string }

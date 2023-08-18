@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Text from '@/components/ui/text'
 
-import { FacingIcon, InsIcon, NotionIcon, VersionIcon, WebIcon } from './icons'
+export const runtime = 'edge'
 
 const ShareApp = () => {
   const { app_id } = useParams()

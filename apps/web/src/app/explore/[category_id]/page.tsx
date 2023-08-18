@@ -7,6 +7,8 @@ import RootWrapper from '@/components/root-wrapper'
 import CardList, { CardListFallback } from '../card-list'
 import { CATEGORY_IDS, getCategoryTitle } from '../utils'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: {
     category_id: string
