@@ -19,7 +19,7 @@ import styles from './mention-input.module.css'
 import { useWorkflowContext } from './store'
 import { WorkflowItem } from './type'
 
-const getToolKeys = (workflowData: WorkflowItem[]) => {
+export const getToolKeys = (workflowData: WorkflowItem[]) => {
   return workflowData?.reduce(
     (m: { id: string; display: string }[], item: WorkflowItem) => {
       const key = `${item?.type}-${item?.key}.output`
@@ -70,8 +70,8 @@ function PromptMentions<T extends FieldValues>({
               <Mention
                 className={styles.mentions__mention}
                 data={data}
-                markup="{__display__}"
-                trigger={/(?:^|.)({([^.{]*))$/}
+                markup="[{__display__}]"
+                trigger={/({([^.{]*))$/}
                 appendSpaceOnAdd
                 displayTransform={(_, display) => {
                   return `{${display}}`

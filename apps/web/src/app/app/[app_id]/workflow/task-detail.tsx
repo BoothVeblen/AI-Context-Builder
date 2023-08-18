@@ -1,11 +1,15 @@
+import { useMemo } from 'react'
 import { XIcon } from 'lucide-react'
+import { Mention, MentionsInput } from 'react-mentions'
 
 import { safeParse } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PdfImage } from '@/components/upload/component'
 
+import { getToolKeys } from '../settings/workflow/prompt-mentions'
 import { WorkflowItem } from '../settings/workflow/type'
+import styles from './mention-input.module.css'
 import { DatasetProps } from './page'
 import { useWorkflowContext } from './store'
 
@@ -44,6 +48,7 @@ export default function TaskDetail({ value, onClose }: IProps) {
   const datasets = linkedDatasets?.filter(
     (item) => datasetIds?.includes(item?.dataset_id)
   )
+
   return (
     <div className="space-y-8">
       <div className="-mr-2 -mt-2">
@@ -62,20 +67,33 @@ export default function TaskDetail({ value, onClose }: IProps) {
       </div>
 
       <Item label="Model" value={modelName} />
-      <Item label="Prompt" value={promptTemplate} />
-      {/* <div className="text-base font-medium">Prompt</div>
-      <Textarea
-        className="break-words border-none text-sm disabled:text-black"
-        disabled
-      >
-        {promptTemplate}
-      </Textarea> */}
+      <PromptItem promptTemplate={promptTemplate || ''} />
+
       <Item label="Temperature" value={temperature} />
       <Item label="Top P" value={topP} />
       <Item label="Presence Penalty" value={presencePenalty} />
       <Item label="Frequency Penalty" value={frequencyPenalty} />
       <Item label="Retrievers" value={retriever} />
       <DatasetItem datasets={datasets} />
+    </div>
+  )
+}
+
+const PromptItem = ({ promptTemplate }: { promptTemplate: string }) => {
+  const workflowData = useWorkflowContext((state) => state.workflowData)
+  const data = useMemo(() => getToolKeys(workflowData), [workflowData])
+
+  return (
+    <div className="space-y-2">
+      <div className="text-base font-medium">Prompt</div>
+      <MentionsInput value={promptTemplate} disabled classNames={styles}>
+        <Mention
+          data={data}
+          markup="[__display__]"
+          className={styles.mentions__mention}
+          trigger="{"
+        />
+      </MentionsInput>
     </div>
   )
 }

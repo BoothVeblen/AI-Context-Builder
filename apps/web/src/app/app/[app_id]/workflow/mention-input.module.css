@@ -1,0 +1,27 @@
+.mentions {
+  margin: 1em 0;
+}
+
+.mentions--multiLine .mentions__control {
+  font-size: 14px;
+  font-weight: inherit;
+  overflow-wrap: break-word;
+}
+
+.mentions--multiLine .mentions__input {
+  padding:0;
+  border-radius: 8px;
+  outline: 0;
+}
+
+.mentions__mention {
+  position: relative;
+  font-weight: 500;
+  z-index: 1;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-radius: 4px;
+  line-height: 20px;
+  padding: 2px 0px;
+  overflow-wrap: break-word;
+}
