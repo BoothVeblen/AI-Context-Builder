@@ -1,8 +1,6 @@
 'use client'
 
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Message } from 'ai'
-import { useChat } from 'ai/react'
 import useSWRMutation from 'swr/mutation'
 
 import { fetcher, nanoid } from '@/lib/utils'
@@ -16,8 +14,9 @@ import ChatHeader from './chat-header'
 import ChatInput from './chat-input'
 import ChatList from './chat-list'
 import RestartConfirmPage from './restart-confirm'
-import { ChatApp, ChatSession, EventMessage } from './types'
+import { ChatApp, ChatMessage, ChatSession, EventMessage } from './types'
 import useConfigBase64 from './use-config-base64'
+import { useChat } from './useChat'
 import VideoCallConfirmDialog from './video-call-confirm-dialog'
 
 function formatToTimestamp(date?: Date | number | null) {
@@ -34,11 +33,10 @@ function formatToTimestamp(date?: Date | number | null) {
 function eventMessageBuilder(type: string): EventMessage {
   return {
     type: 'event',
-    data: {
-      id: nanoid(),
-      type,
-      createdAt: Date.now(),
-    },
+    id: nanoid(),
+    createdAt: new Date(),
+    eventType: type,
+    role: 'assistant',
   }
 }
 
@@ -56,14 +54,14 @@ interface BaseChatProps {
   session: ChatSession
   app: ChatApp | null
   mode: ChatMode
-  initialMessages?: Message[]
+  initialMessages?: ChatMessage[]
   initialEvents?: EventMessage[]
 }
 
 interface DebugChatProps extends BaseChatProps {
   mode: 'debug'
   isConfigChanged?: boolean
-  setInitialMessages?: (messages: Message[]) => void
+  setInitialMessages?: (messages: ChatMessage[]) => void
 }
 
 interface LiveChatProps extends BaseChatProps {
@@ -85,6 +83,7 @@ const Chat = (props: ChatProps) => {
   const [confirmReset, setConfirmReset] = useState(
     mode === 'debug' && props.isConfigChanged && initialMessages?.length !== 0
   )
+
   const { scrollRef, setAutoScroll } = useScrollToBottom()
 
   const {
@@ -142,16 +141,11 @@ const Chat = (props: ChatProps) => {
   })
 
   const chatMessages = useMemo(() => {
-    const formattedMessages = messages?.map((message) => ({
-      type: 'chat',
-      data: message,
-    }))
-    return [...formattedMessages, ...eventMessages].sort(
-      (a, b) =>
-        formatToTimestamp(a.data?.createdAt) -
-        formatToTimestamp(b.data?.createdAt)
+    return [...messages, ...eventMessages].sort(
+      (a, b) => formatToTimestamp(a.createdAt) - formatToTimestamp(b.createdAt)
     )
   }, [messages, eventMessages])
+  const disabled = !input || input.trim() === '' || isLoading
 
   const handelReload = () => {
     setAutoScroll(true)
@@ -177,6 +171,9 @@ const Chat = (props: ChatProps) => {
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (disabled) {
+      return
+    }
     handleSubmit(e)
     setAutoScroll(true)
   }
@@ -239,6 +236,7 @@ const Chat = (props: ChatProps) => {
             reload={handelReload}
             stop={handelStop}
             handleInputChange={handleInputChange}
+            disabled={disabled}
           />
         </div>
       </div>

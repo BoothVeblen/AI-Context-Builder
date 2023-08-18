@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/drizzle'
-import { safeParse } from '@/lib/utils'
-import { Session, SessionsTable } from '@/db/sessions/schema'
+import { updateEvents } from '@/db/sessions/actions'
+import { SessionsTable } from '@/db/sessions/schema'
 import { EventMessage } from '@/components/chat/types'
 
 async function getSession(session_id: string) {
@@ -14,18 +14,6 @@ async function getSession(session_id: string) {
     .limit(1)
 
   return session
-}
-
-async function updateEvents(session: Session, newEvent: EventMessage) {
-  const oldEvents = safeParse(session.events_str, [])
-  const newEvents = [...oldEvents, newEvent]
-
-  await db
-    .update(SessionsTable)
-    .set({
-      events_str: JSON.stringify(newEvents),
-    })
-    .where(eq(SessionsTable.short_id, session.short_id))
 }
 
 export async function POST(req: NextRequest) {

@@ -10,6 +10,8 @@ import { updateMessagesToSession } from '@/db/sessions/actions'
 
 export const runtime = 'edge'
 
+const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
+
 export async function POST(req: NextRequest) {
   const { userId } = auth()
   if (!userId) {
@@ -47,43 +49,51 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
+  const messageId = nanoid()
 
   const requestTimestamp = Date.now()
 
-  const stream = await OpenAIStream(baseUrl, payload, {
-    async onStart() {
-      const responseTimestamp = Date.now()
-      const latencyMs = responseTimestamp - requestTimestamp
-      await logsnag?.publish({
-        channel: 'chat',
-        event: 'Chat Response',
-        icon: '⬅️',
-        description: `${email} get a response within ${latencyMs}ms`,
-        tags: {
-          'request-id': requestId,
-          'user-id': userId,
-          'app-id': appId || 'unknown',
-          'session-id': sessionId,
-          'latency-ms': latencyMs,
-          'is-prod': flags.isProd,
-        },
-      })
+  const stream = await OpenAIStream({
+    baseUrl,
+    payload,
+    callback: {
+      async onStart() {
+        const responseTimestamp = Date.now()
+        const latencyMs = responseTimestamp - requestTimestamp
+        await logsnag?.publish({
+          channel: 'chat',
+          event: 'Chat Response',
+          icon: '⬅️',
+          description: `${email} get a response within ${latencyMs}ms`,
+          tags: {
+            'request-id': requestId,
+            'user-id': userId,
+            'app-id': appId || 'unknown',
+            'session-id': sessionId,
+            'latency-ms': latencyMs,
+            'is-prod': flags.isProd,
+          },
+        })
+      },
+      async onCompletion(completion) {
+        const payload = [
+          ...messages,
+          ...(completion
+            ? [
+                {
+                  role: 'assistant',
+                  content: completion,
+                  createdAt: new Date(),
+                  id: messageId,
+                },
+              ]
+            : []),
+        ] as Message[]
+        await updateMessagesToSession(sessionId, payload)
+      },
     },
-    async onCompletion(completion) {
-      const payload = [
-        ...messages,
-        ...(completion
-          ? [
-              {
-                role: 'assistant',
-                content: completion,
-                createdAt: new Date(),
-              },
-            ]
-          : []),
-      ] as Message[]
-      await updateMessagesToSession(sessionId, payload)
+    data: {
+      id: messageId,
     },
   })
 

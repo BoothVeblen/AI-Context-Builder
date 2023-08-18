@@ -1,15 +1,17 @@
 'use client'
 
 import { Ref } from 'react'
-import { Message } from 'ai'
 
 import { cn } from '@/lib/utils'
 
 import ChatCard from './chat-card'
 import { useChatContext } from './chat-context'
+import { ChatFeedbackContextProvider } from './feedback/chat-feedback-context'
+import ChatFeedbackDialog from './feedback/chat-feedback-dialog'
+import { Message } from './types'
 
 interface IProps {
-  messages: any[]
+  messages: Message[]
   error?: string
   scrollRef: Ref<HTMLDivElement>
   setAutoScroll: (s: boolean) => void
@@ -28,18 +30,23 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
       ref={scrollRef}
       onWheel={() => setAutoScroll(false)}
     >
-      {messages?.map((message: any, index: number) => {
-        return (
-          <ChatCard
-            message={message}
-            key={message?.data?.id}
-            error={error}
-            isEnd={index === messages.length - 1}
-          />
-        )
-      })}
-      {isLoading && messages[messages.length - 1]?.data?.role === 'user' && (
-        <ChatCard message={{ id: '', content: '', role: 'assistant' }} />
+      <ChatFeedbackContextProvider>
+        {messages?.map((message: any, index: number) => {
+          return (
+            <ChatCard
+              message={message}
+              key={message?.id}
+              error={error}
+              isEnd={index === messages.length - 1}
+            />
+          )
+        })}
+        <ChatFeedbackDialog />
+      </ChatFeedbackContextProvider>
+      {isLoading && messages[messages.length - 1]?.role === 'user' && (
+        <ChatCard
+          message={{ id: '', content: '', role: 'assistant', type: 'chat' }}
+        />
       )}
     </div>
   )

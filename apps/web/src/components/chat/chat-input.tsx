@@ -17,6 +17,7 @@ interface InputProps {
   stop: () => void
   showResend?: boolean
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  disabled?: boolean
 }
 
 const ChatInput = ({
@@ -26,14 +27,13 @@ const ChatInput = ({
   stop,
   showResend,
   handleInputChange,
+  disabled,
 }: InputProps) => {
   const { isLoading, mode } = useChatContext()
   const isDebug = mode === 'debug'
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const { formRef, onKeyDown } = useEnterSubmit()
-
-  const isDisabled = !input || input.trim() === '' || isLoading
 
   return (
     <div
@@ -56,15 +56,7 @@ const ChatInput = ({
           </Button>
         )}
       </div>
-      <form
-        onSubmit={(e) => {
-          if (isDisabled) {
-            return
-          }
-          onSubmit(e)
-        }}
-        ref={formRef}
-      >
+      <form onSubmit={onSubmit} ref={formRef}>
         <div className="flex justify-between space-x-2">
           <Textarea
             ref={inputRef}
@@ -76,7 +68,7 @@ const ChatInput = ({
             minRows={1}
             maxRows={8}
           />
-          <Button type="submit" disabled={isDisabled}>
+          <Button type="submit" disabled={disabled}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Send
           </Button>

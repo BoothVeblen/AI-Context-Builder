@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { Message } from 'ai'
 import { Loader2Icon, Play } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'
 
@@ -10,6 +9,7 @@ import { App } from '@/db/apps/schema'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import Chat from '@/components/chat/page'
+import { ChatMessage } from '@/components/chat/types'
 
 import { useWorkflowContext } from './store'
 import { WorkflowItem } from './type'
@@ -30,7 +30,7 @@ const ChatDebug = ({ app }: IProps) => {
 
   const [open, setOpen] = React.useState(false)
   const [apiSessionId, setApiSessionId] = React.useState(null)
-  const [chatMessages, setChatMessages] = React.useState<Message[]>([])
+  const [chatMessages, setChatMessages] = React.useState<ChatMessage[]>([])
   const sessionIdRef = React.useRef(`debug-${appId}`)
 
   const workflowData = useWorkflowContext((state) => state.workflowData)

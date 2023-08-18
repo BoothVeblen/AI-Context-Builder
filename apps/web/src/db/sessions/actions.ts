@@ -9,10 +9,11 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { serverLog } from '@/lib/posthog'
-import { nanoid } from '@/lib/utils'
+import { nanoid, safeParse } from '@/lib/utils'
+import { ChatMessage, EventMessage } from '@/components/chat/types'
 
 import { AppsTable } from '../apps/schema'
-import { SessionsTable } from './schema'
+import { Session, SessionsTable } from './schema'
 
 export async function addSession(appId: string) {
   const { userId } = auth()
@@ -341,6 +342,61 @@ export async function updateMessagesToSession(
       })
     }
 
+    return {
+      error: error.message,
+    }
+  }
+}
+
+export async function updateEvents(session: Session, newEvent: EventMessage) {
+  const oldEvents = safeParse(session.events_str, [])
+  const newEvents = [...oldEvents, newEvent].map(formatId).map(formatTimestamp)
+
+  await db
+    .update(SessionsTable)
+    .set({
+      events_str: JSON.stringify(newEvents),
+    })
+    .where(eq(SessionsTable.short_id, session.short_id))
+}
+
+export async function addFeedback({
+  sessionId,
+  messageId,
+  feedback,
+  content,
+}: {
+  sessionId: string
+  messageId: string
+  feedback: 'good' | 'bad'
+  content?: string
+}) {
+  try {
+    const [{ messages_str }] = await db
+      .select()
+      .from(SessionsTable)
+      .where(eq(SessionsTable.short_id, sessionId))
+    if (!messages_str) {
+      return
+    }
+
+    const updatedMessage = JSON.parse(messages_str).map(
+      (message: ChatMessage) => {
+        if (message.id === messageId) {
+          message.feedback = feedback
+          message.feedback_content = content
+        }
+        return message
+      }
+    )
+
+    await db
+      .update(SessionsTable)
+      .set({
+        messages_str: JSON.stringify(updatedMessage),
+      })
+      .where(eq(SessionsTable.short_id, sessionId))
+  } catch (error: any) {
     return {
       error: error.message,
     }

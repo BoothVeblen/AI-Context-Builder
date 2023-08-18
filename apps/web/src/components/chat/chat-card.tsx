@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { format, isToday, isYesterday } from 'date-fns'
 import { Loader2, PhoneCallIcon, PhoneIcon } from 'lucide-react'
@@ -9,11 +10,14 @@ import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Text from '../ui/text'
+import ChatActions from './chat-actions'
 import { useChatContext } from './chat-context'
+import ChatFeedbackButtons from './feedback/chat-feedback-buttons'
 import { Markdown } from './markdown/markdown'
+import { Message } from './types'
 
 interface IProps {
-  message?: any
+  message?: Message
   error?: string
   model_avatar?: string
   user_avatar?: string
@@ -81,7 +85,7 @@ function EventMessage({ data }: { data: any }) {
   let icon
   let message
 
-  switch (data.type) {
+  switch (data.eventType) {
     case 'call.created': {
       icon = <PhoneCallIcon className="mr-4" />
       message = 'Call Requested'
@@ -120,13 +124,11 @@ function EventMessage({ data }: { data: any }) {
 }
 
 const ChatCard = (props: IProps) => {
-  const { message: rawMessage, error = '', isEnd } = props
-  const type = rawMessage?.type
-  const message = rawMessage?.data
-  const { app, mode } = useChatContext()
+  const { message, error = '', isEnd } = props
+  console.log('message', message)
+  const { app, mode, isLoading } = useChatContext()
   const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
   const isUser = message?.role === 'user'
-  const isEvent = type === 'event'
   const showError = isEnd && error && !isUser
 
   const { user } = useUser()
@@ -137,6 +139,25 @@ const ChatCard = (props: IProps) => {
   const name = (isUser ? username : appName) || ''
 
   const isClient = useIsClient()
+
+  const renderContent = useMemo(() => {
+    if (!message) {
+      return null
+    }
+    const { type } = message
+    if (type === 'event') {
+      return <EventMessage data={message} />
+    }
+    const { content } = message
+    if (!content) {
+      return <Loader2 className="h-3 w-3 animate-spin" />
+    }
+    return (
+      <Markdown className={cn(isUser ? 'text-white' : 'text-black	')}>
+        {content}
+      </Markdown>
+    )
+  }, [isUser, message])
 
   return (
     <div className="flex flex-col ">
@@ -170,22 +191,25 @@ const ChatCard = (props: IProps) => {
           <div className="flex items-end">
             <div
               className={cn(
-                'max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg	lg:max-w-3xl xl:max-w-3xl',
+                'relative max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg	lg:max-w-3xl xl:max-w-3xl',
                 mode === 'debug' &&
                   'max-w-[240px] md:max-w-md lg:max-w-md xl:max-w-md',
                 isUser ? 'bg-primary' : 'bg-gray-100',
                 showError ? 'rounded-lg border border-red-500	bg-red-50' : ''
               )}
             >
-              {isEvent ? (
-                <EventMessage data={message} />
-              ) : message?.content ? (
-                <Markdown className={cn(isUser ? 'text-white' : 'text-black	')}>
-                  {message?.content}
-                </Markdown>
-              ) : (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              )}
+              {renderContent}
+              {mode !== 'debug' &&
+                !isUser &&
+                message &&
+                message.type !== 'event' &&
+                // last message finished loading
+                // or any other messages
+                ((isEnd && !isLoading) || !isEnd) && (
+                  <ChatActions>
+                    <ChatFeedbackButtons messageId={message?.id} />
+                  </ChatActions>
+                )}
             </div>
           </div>
         </div>
