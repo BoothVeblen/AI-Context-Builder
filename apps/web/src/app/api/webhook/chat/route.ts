@@ -24,13 +24,7 @@ function formatChannelId(session_id: string) {
 
 async function updateEvents(session: Session, newEvent: any) {
   const oldEvents = safeParse(session.events_str, [])
-  const newEvents = [
-    ...oldEvents,
-    {
-      type: 'event',
-      data: newEvent,
-    },
-  ]
+  const newEvents = [...oldEvents, newEvent]
 
   await db
     .update(SessionsTable)
@@ -72,54 +66,49 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function createCall(type: string, data: any) {
+async function createCall(eventType: string, data: any) {
   const { session_id: api_session_id, link } = data
   const session = await getSession(api_session_id)
   if (!session) return
 
   const newEvent = {
     id: nanoid(),
-    type,
+    type: 'event',
+    eventType,
     link,
     createdAt: Date.now(),
   }
 
   const channelId = formatChannelId(session.short_id)
   const pusher = initPusher()
-  await pusher?.trigger(channelId, 'user-chat', {
-    type: 'event',
-    data: newEvent,
-  })
+  await pusher?.trigger(channelId, 'user-chat', newEvent)
 
   // DO NOT SAVE THIS TO DB
   // await updateEvents(session, newEvent)
 }
 
-async function endCall(type: string, data: any) {
+async function endCall(eventType: string, data: any) {
   const { session_id: api_session_id, duration } = data
   const session = await getSession(api_session_id)
   if (!session) return
 
   const newEvent = {
     id: nanoid(),
-    type,
+    type: 'event',
+    eventType,
     duration,
     createdAt: Date.now(),
   }
 
   const channelId = formatChannelId(session.short_id)
   const pusher = initPusher()
-  await pusher?.trigger(channelId, 'user-chat', {
-    type: 'event',
-    data: newEvent,
-  })
+  await pusher?.trigger(channelId, 'user-chat', newEvent)
 
   await updateEvents(session, newEvent)
 }
 
 async function updateDataset(data: any) {
   const { api_dataset_id, status } = data
-  console.log('updateDataset data:', data)
   await db
     .update(DatasetsTable)
     .set({ status })

@@ -121,8 +121,8 @@ const Chat = (props: ChatProps) => {
   const configStr = useConfigBase64({ appName })
   const onAdd = useCallback(
     (newEventMessage: any) => {
-      if (newEventMessage?.data?.type === 'call.created') {
-        callLinkRef.current = `${newEventMessage?.data?.link || ''}${
+      if (newEventMessage?.eventType === 'call.created') {
+        callLinkRef.current = `${newEventMessage?.link || ''}${
           configStr ? `?c=${configStr}` : ''
         }`
         setIsOpenCallConfirm(true)
