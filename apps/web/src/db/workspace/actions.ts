@@ -2,9 +2,9 @@ import 'server-only'
 
 import { and, desc, eq, sql } from 'drizzle-orm'
 
-import { auth } from '@/lib/auth'
+import { auth, currentUserEmail } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
-import { serverLog } from '@/lib/posthog'
+import { logsnag } from '@/lib/logsnag'
 import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
@@ -12,6 +12,7 @@ import { SessionsTable } from '../sessions/schema'
 import { WorkspaceTable } from './schema'
 
 export async function addToWorkspace(appId: string) {
+  const requestId = nanoid()
   const { userId } = auth()
   if (!userId) return Promise.resolve(null)
 
@@ -31,15 +32,39 @@ export async function addToWorkspace(appId: string) {
     return Promise.resolve({ appId, foundApp: true })
   }
 
+  const email = await currentUserEmail()
+
+  const [foundApp] = await db
+    .select({ name: AppsTable.name })
+    .from(AppsTable)
+    .where(eq(AppsTable.short_id, appId))
+    .limit(1)
+
+  await logsnag?.publish({
+    channel: 'user',
+    event: 'Add App to Workspace Request',
+    icon: '➡️',
+    description: `${email} request to add app ${foundApp.name} to workspace`,
+    tags: {
+      'request-id': requestId,
+      'user-id': userId,
+      'app-id': appId,
+    },
+  })
+
   const val = { short_id: nanoid(), app_id: appId, user_id: userId }
   const [newWorkspace] = await db.insert(WorkspaceTable).values(val).returning()
 
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:add_app_to_workspace',
-    properties: {
-      app_id: appId,
-      workspace_id: newWorkspace?.short_id,
+  await logsnag?.publish({
+    channel: 'user',
+    event: 'Add App to Workspace Request',
+    icon: '✅',
+    description: `${email} added app ${foundApp.name} to workspace successfully`,
+    tags: {
+      'request-id': requestId,
+      'user-id': userId,
+      'app-id': appId,
+      'workspace-id': newWorkspace.short_id,
     },
   })
 
@@ -115,8 +140,29 @@ export async function getWorkspace() {
 }
 
 export async function removeFromWorkspace(appId: string) {
+  const requestId = nanoid()
   const { userId } = auth()
   if (!userId) return Promise.resolve(null)
+
+  const email = await currentUserEmail()
+
+  const [foundApp] = await db
+    .select({ name: AppsTable.name })
+    .from(AppsTable)
+    .where(eq(AppsTable.short_id, appId))
+    .limit(1)
+
+  await logsnag?.publish({
+    channel: 'creator',
+    event: 'Remove App from Workspace Request',
+    icon: '➡️',
+    description: `${email} request to remove app ${foundApp.name} from workspace`,
+    tags: {
+      'request-id': requestId,
+      'user-id': userId,
+      'app-id': appId,
+    },
+  })
 
   const [removedWorkspace] = await db
     .update(WorkspaceTable)
@@ -126,12 +172,16 @@ export async function removeFromWorkspace(appId: string) {
     )
     .returning()
 
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:remove_app_from_workspace',
-    properties: {
-      app_id: appId,
-      workspace_id: removedWorkspace?.short_id,
+  await logsnag?.publish({
+    channel: 'creator',
+    event: 'Remove App from Workspace Request',
+    icon: '✅',
+    description: `${email} removed app ${foundApp.name} from workspace successfully`,
+    tags: {
+      'request-id': requestId,
+      'user-id': userId,
+      'app-id': appId,
+      'workspace-id': removedWorkspace.short_id,
     },
   })
 

@@ -56,6 +56,24 @@ export async function GET() {
     }
 
     if (flags.isProd) {
+      const queue = []
+      const pub = logsnag?.publish({
+        channel: 'insight',
+        event: 'Web Insight',
+        icon: '➡️',
+        description: `- Total Apps: ${totalAppsCount}\n- Total Chats: ${totalSessionsCount}\n- Total Messages: ${totalMessagesCount}\n- Average Messages Per Chat: ${avgMessagesPerSession}\n- Total Users: ${totalUsersCount}\n- Active Users: ${activeUsersCount}\n- Active Users Percentage (%): ${activeUsersPercentage}`,
+        tags: {
+          'total-apps-count': totalAppsCount,
+          'total-sessions-count': totalSessionsCount,
+          'total-messages-count': totalMessagesCount,
+          'avg-messages-per-session': avgMessagesPerSession,
+          'total-users-count': totalUsersCount,
+          'active-users-count': activeUsersCount,
+          'active-users-percentage': activeUsersPercentage,
+        },
+        parser: 'markdown',
+      })
+      queue.push(pub)
       const insights = [
         {
           title: 'Total Apps',
@@ -90,7 +108,6 @@ export async function GET() {
           value: activeUsersPercentage,
         },
       ]
-      const queue = []
       for (const insight of insights) {
         const task = logsnag?.insight(insight)
         queue.push(task)
