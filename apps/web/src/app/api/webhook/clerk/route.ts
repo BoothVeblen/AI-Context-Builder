@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { UserJSON, WebhookEvent } from '@clerk/nextjs/dist/types/server'
 
 import { addUser, editUser } from '@/db/users/actions'
+import { formatUserJSON } from '@/db/users/utils'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,14 +26,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function createUser(data: UserJSON) {
-  const newUser = {
-    short_id: data.id,
-    last_name: data.last_name,
-    first_name: data.first_name,
-    image_url: data.image_url,
-    username: data.username,
-    created_at: new Date(data.created_at),
-  }
+  const newUser = formatUserJSON(data)
   const result = await addUser(newUser)
   if (result.error) {
     throw new Error(result.error)

@@ -428,7 +428,9 @@ export async function getAppsBasedOnIds(ids: string[]) {
     const apps = await db
       .select()
       .from(AppsTable)
-      .where(inArray(AppsTable.short_id, ids))
+      .where(
+        and(inArray(AppsTable.short_id, ids), eq(AppsTable.archived, false))
+      )
       .orderBy(desc(AppsTable.created_at))
 
     return apps

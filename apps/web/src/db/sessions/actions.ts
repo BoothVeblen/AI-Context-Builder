@@ -13,6 +13,7 @@ import { nanoid, safeParse } from '@/lib/utils'
 import { ChatMessage, EventMessage } from '@/components/chat/types'
 
 import { AppsTable } from '../apps/schema'
+import { checkUserId } from '../users/actions'
 import { Session, SessionsTable } from './schema'
 
 export async function addSession(appId: string) {
@@ -200,6 +201,11 @@ export async function getLatestSessionId(appId: string) {
       .orderBy(desc(SessionsTable.created_at))
       .limit(1)
     if (!foundSession) {
+      const foundUser = await checkUserId(userId)
+      if (!foundUser) {
+        throw new Error('User not found')
+      }
+
       let api_session_id = null
       if (flags.enabledAIService) {
         let { data: res } = await axios.post(
