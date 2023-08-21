@@ -1,13 +1,13 @@
-import logging
+import sys
 from functools import wraps
 
+from loguru import logger
 from sqlalchemy import MetaData, Table, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 from utils.config import DATABASE_URL
 
-logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -16,9 +16,8 @@ class BaseManager:
     engine = create_engine(
         DATABASE_URL,
         poolclass=QueuePool,
-        pool_size=100,
-        max_overflow=50,
-        pool_recycle=100,
+        max_overflow=10,
+        pool_recycle=50,
         pool_pre_ping=True,
     )
     metadata = MetaData()

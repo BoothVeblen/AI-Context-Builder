@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 from sqlalchemy import JSON, Column, String
+
 from .base import Base
 
 
@@ -30,3 +31,8 @@ class DatasetChainAssociation(Base):
     __tablename__ = "dataset_chain_associations"
     dataset_id = Column(String, primary_key=True)
     chain_urn = Column(String, primary_key=True)
+
+
+class DatasetStatusWebhookRequest(BaseModel):
+    type: str = Field(default="dataset.updated")
+    data: dict = Field(default_factory=dict)

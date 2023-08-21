@@ -1,13 +1,10 @@
-import requests
-import logging
 import json
-import time
-from tenacity import retry, stop_after_attempt, wait_fixed, after_log
-from models.base import FaceToAiWebhookRequest
-from utils.config import WEBHOOK_ENDPOINT
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+import requests
+from loguru import logger
+from models.base import FaceToAiWebhookRequest
+from tenacity import after_log, retry, stop_after_attempt, wait_fixed
+from utils.config import WEBHOOK_ENDPOINT
 
 
 class WebhookHandler:
@@ -22,7 +19,7 @@ class WebhookHandler:
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
         reraise=True,
-        after=after_log(logger, logging.WARNING),
+        after=after_log(logger, 10),
     )
     def forward_data(self, data: dict, session_id: str) -> None:
         # forward while ended
@@ -46,7 +43,7 @@ class WebhookHandler:
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
         reraise=True,
-        after=after_log(logger, logging.WARNING),
+        after=after_log(logger, 10),
     )
     def create_video_room_link(self, session_id: str, room_link: str):
         data = FaceToAiWebhookRequest(

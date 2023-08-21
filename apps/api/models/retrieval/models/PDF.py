@@ -1,29 +1,24 @@
 import io
-import logging
-import uuid
-from typing import List, cast
+import sys
+from typing import List
 
 import pinecone
 from langchain.callbacks.manager import AsyncCallbackManagerForRetrieverRun
 from langchain.chains.query_constructor.base import AttributeInfo
-from langchain.document_loaders import OnlinePDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.schema import Document
 from langchain.vectorstores import Pinecone
+from loguru import logger
+from models.base import Dataset
 from models.data_loader import PDFLoader
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
-from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
-from pydantic import BaseModel, Field
+from pydantic import Field
 from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
-from models.base import Dataset, Model
-
-logger = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf(contents: io.BytesIO) -> list:
@@ -53,9 +48,6 @@ def extract_text_from_pdf(contents: io.BytesIO) -> list:
     fake_file_handle.close()
 
     return text
-
-
-logger = logging.getLogger(__name__)
 
 
 class PatchedSelfQueryRetriever(SelfQueryRetriever):
@@ -191,7 +183,6 @@ class PDFRetrieverMixin:
             filter=filter,
             llm=OpenAI(),
             vectorstore=vector_store,
-            verbose=True,
             document_contents="knowledge",
             metadata_field_info=[
                 AttributeInfo(

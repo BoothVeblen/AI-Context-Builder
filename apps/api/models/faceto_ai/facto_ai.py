@@ -1,16 +1,15 @@
+import json
+import sys
+
 import requests
-import logging
+from loguru import logger
 from utils import (
+    BACKEND_URL,
     FACE_TO_AI_ENDPOINT,
     FACE_TO_CLIENT_ID,
     FACE_TO_CLIENT_SECRET,
     WEBHOOK_KEY,
-    BACKEND_URL,
 )
-import json
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class FaceToAiManager:

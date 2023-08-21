@@ -1,14 +1,13 @@
-from typing import Optional, Union
 import os
-import logging
+import sys
+from typing import Optional
 
+from loguru import logger
 from pydantic import BaseModel, Field
-from sqlalchemy import JSON, Column, String, Boolean
-
-from .base import Base, BaseManager
+from sqlalchemy import JSON, Boolean, Column, String
 from utils import OPENAI_API_KEY
 
-logger = logging.getLogger(__name__)
+from .base import Base
 
 
 class LLM(BaseModel):

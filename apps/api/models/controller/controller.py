@@ -1,12 +1,11 @@
-from models.base import BaseManager
-from models.base import Dataset
-from models.base import Model
-import logging
-from typing import Optional, Union
+import asyncio
+from typing import Union
+
+from loguru import logger
+from models.base import BaseManager, Dataset, Model
 from models.retrieval import Retriever
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from .webhook import WebhookHandler
 
 
 class RelativeManager(BaseManager):
@@ -76,7 +75,6 @@ class RelativeManager(BaseManager):
         return [chain.chain_urn for chain in relative_chains]
 
 
-# TODO delete datasets properties in chains
 relative_manager = RelativeManager()
 
 
@@ -89,16 +87,21 @@ class DatasetManager(BaseManager):
     def save_dataset(self, dataset: Dataset):
         logger.info(f"Saving dataset {dataset.id}")
         # check if dataset is pdf
+        handler = WebhookHandler()
+        handler.update_status(dataset.id, 1)
         if len(dataset.documents) != 0:
             if dataset.documents[0].type != "pdf":
                 raise ValueError(f"Dataset {dataset.id} is not a pdf dataset")
             Retriever.create_index([dataset])
+        handler.update_status(dataset.id, 0)
         return self.table.insert().values(dataset.dict())
 
     @BaseManager.db_session
     def update_dataset(self, dataset_id: str, update_data: dict):
         logger.info(f"Updating dataset {dataset_id}")
         if update_data.get("documents"):
+            handler = WebhookHandler()
+            handler.update_status(dataset_id, 1)
             dataset = self.get_datasets(dataset_id)[0]
             if update_data.get("retrieval"):
                 retrieval_dict = update_data["retrieval"]
@@ -122,6 +125,7 @@ class DatasetManager(BaseManager):
                 for chain in chains:
                     parts = chain.split("-", 1)
                     Retriever.add_relative_chain_to_dataset(dataset, parts[0], parts[1])
+                handler.update_status(dataset_id, 0)
                 return (
                     self.table.update()
                     .where(self.table.c.id == dataset.id)
@@ -171,13 +175,13 @@ class DatasetManager(BaseManager):
         if dataset_info is None:
             try:
                 dataset["id"] = dataset_id
-                _dataset = Dataset(dataset)
-                return self.save_dataset(_dataset)
+                _dataset = Dataset(**dataset)
+                self.save_dataset(_dataset)
             except Exception as e:
                 logger.error(f"Error when saving dataset {dataset_id}: {e}")
                 raise e
         else:
-            return self.update_dataset(dataset_id, dataset)
+            self.update_dataset(dataset_id, dataset)
 
 
 dataset_manager = DatasetManager()
@@ -191,11 +195,14 @@ class ModelManager(BaseManager):
     @BaseManager.db_session
     def save_model(self, model: Model):
         logger.info(f"Saving model {model.id}")
+        handler = WebhookHandler()
         for chain in model.chains:
             for dataset_id in chain.datasets:
+                handler.update_status(dataset_id, 1)
                 dataset = dataset_manager.get_datasets(dataset_id)[0]
                 relative_manager.save_relative(dataset.id, model.id, chain.key)
                 Retriever.add_relative_chain_to_dataset(dataset, model.id, chain.key)
+                handler.update_status(dataset_id, 0)
         return self.table.insert().values(model.dict())
 
     @BaseManager.db_session
@@ -205,18 +212,22 @@ class ModelManager(BaseManager):
         update_data: dict,
     ):
         logger.info(f"Updating model {model_id}")
+        handler = WebhookHandler()
         if update_data.get("chains"):
             model = self.get_models(model_id)[0]
             # Let's start all over again first
             for chain in model.chains:
                 for dataset_id in chain.datasets:
+                    handler.update_status(dataset_id, 1)
                     relative_manager.delete_relative(dataset_id, model_id, chain.key)
                     Retriever.delete_relative_chain_from_dataset(
                         dataset_manager.get_datasets(dataset_id)[0], model_id, chain.key
                     )
+                    handler.update_status(dataset_id, 0)
             for chain in update_data["chains"]:
                 if "datasets" in chain:
                     for dataset_id in chain["datasets"]:
+                        handler.update_status(dataset_id, 1)
                         dataset = dataset_manager.get_datasets(dataset_id)[0]
                         relative_manager.save_relative(
                             dataset.id, model_id, chain["key"]
@@ -224,6 +235,7 @@ class ModelManager(BaseManager):
                         Retriever.add_relative_chain_to_dataset(
                             dataset, model_id, chain["key"]
                         )
+                        handler.update_status(dataset_id, 0)
         return (
             self.table.update().where(self.table.c.id == model_id).values(**update_data)
         )
@@ -263,14 +275,14 @@ class ModelManager(BaseManager):
         if model_info is None:
             try:
                 _model = Model(**model)
-                return self.save_model(_model)
+                self.save_model(_model)
             except Exception as e:
                 logger.error(
                     f"Error when parsing model {model_id} with properties{model}: {e}"
                 )
                 return None
         else:
-            return self.update_model(model_id, model)
+            self.update_model(model_id, model)
 
 
 model_manager = ModelManager()

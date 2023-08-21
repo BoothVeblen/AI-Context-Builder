@@ -1,20 +1,16 @@
 import io
-import logging
+import sys
 
 from langchain.schema import Document
 from langchain.text_splitter import CharacterTextSplitter
+from loguru import logger
+from models.base.dataset import Dataset
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
-from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
 from pydantic import BaseModel, Field
 from utils.StorageClient import GoogleCloudStorageClient
-from models.base.dataset import Dataset
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 class PDFSplitterOption(BaseModel):

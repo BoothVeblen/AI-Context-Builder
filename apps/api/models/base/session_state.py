@@ -1,12 +1,11 @@
-import logging
+import sys
 from typing import Union
 
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import Column, String
 
 from .base import Base, BaseManager
-
-logger = logging.getLogger(__name__)
 
 
 class SessionState(BaseModel):

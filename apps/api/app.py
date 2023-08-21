@@ -5,15 +5,20 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from routers import chat, dataset, model
 from starlette.responses import JSONResponse
-import logging
 import traceback
+import graphsignal
+from loguru import logger
+import sys
 
+logger.add(sys.stdout, format="{time} {level} {message}", level="INFO", enqueue=True)
 
-logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 app = FastAPI()
+graphsignal.configure(
+    api_key="9b243ea3f6775da54a7a5ae0127dfe79", deployment="my-app-prod"
+)
 
 
 @app.exception_handler(Exception)
