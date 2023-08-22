@@ -1,4 +1,5 @@
 import { ClassValue, clsx } from 'clsx'
+import { format, isToday, isYesterday } from 'date-fns'
 import ms from 'ms'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
@@ -83,4 +84,20 @@ export function safeParse(str?: string | null, defaultReturn = {}) {
   } catch (error) {
     return defaultReturn
   }
+}
+
+export function formatTime(time: Date) {
+  if (isToday(time)) {
+    return format(time, 'hh:mm aa')
+  }
+  if (isYesterday(time)) {
+    return `Yesterday at ${format(time, 'hh:mm aa')}`
+  } else return format(time, 'MM/dd/yyyy hh:mm aa')
+}
+
+export function formatSeconds(seconds: number) {
+  if (seconds < 3600) {
+    return new Date(seconds * 1000).toISOString().substring(14, 19)
+  }
+  return new Date(seconds * 1000).toISOString().slice(11, 19)
 }

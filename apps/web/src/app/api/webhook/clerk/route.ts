@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UserJSON, WebhookEvent } from '@clerk/nextjs/dist/types/server'
+import {
+  DeletedObjectJSON,
+  UserJSON,
+  WebhookEvent,
+} from '@clerk/nextjs/dist/types/server'
 
-import { addUser, editUser } from '@/db/users/actions'
+import { logsnag } from '@/lib/logsnag'
+import { addUser, editUser, removeUser } from '@/db/users/actions'
 import { formatUserJSON } from '@/db/users/utils'
 
 export async function POST(req: NextRequest) {
@@ -9,10 +14,21 @@ export async function POST(req: NextRequest) {
     const event = (await req.json()) as WebhookEvent
 
     switch (event.type) {
-      case 'user.created':
+      case 'user.created': {
         await createUser(event.data)
-      case 'user.updated':
+        break
+      }
+      case 'user.updated': {
         await updateUser(event.data)
+        break
+      }
+      case 'user.deleted': {
+        await deleteUser(event.data)
+        break
+      }
+      default: {
+        break
+      }
     }
 
     return NextResponse.json({ success: true, data: event.type })
@@ -30,21 +46,54 @@ async function createUser(data: UserJSON) {
   const result = await addUser(newUser)
   if (result.error) {
     throw new Error(result.error)
+  } else {
+    await logsnag?.publish({
+      channel: 'user',
+      event: 'User Created',
+      icon: '😀',
+      description: `${newUser.email} created an account`,
+      tags: {
+        'user-id': newUser.short_id,
+      },
+    })
   }
 }
 
 async function updateUser(data: UserJSON) {
   const userId = data.id
-  const updatedUser = {
-    short_id: data.id,
-    last_name: data.last_name,
-    first_name: data.first_name,
-    image_url: data.image_url,
-    username: data.username,
-    updated_at: new Date(data.updated_at),
-  }
+  const updatedUser = formatUserJSON(data)
   const result = await editUser(userId, updatedUser)
   if (result.error) {
     throw new Error(result.error)
+  } else {
+    await logsnag?.publish({
+      channel: 'user',
+      event: 'User Updated',
+      icon: '😀',
+      description: `${updatedUser.email} updated his/her account`,
+      tags: {
+        'user-id': updatedUser.short_id,
+      },
+    })
+  }
+}
+
+async function deleteUser(data: DeletedObjectJSON) {
+  const { id, deleted } = data
+  if (deleted && id) {
+    const result = await removeUser(id)
+    if (result.error) {
+      throw new Error(result.error)
+    } else {
+      await logsnag?.publish({
+        channel: 'user',
+        event: 'User Removed',
+        icon: '😀',
+        description: `${result.user?.email} account has been removed`,
+        tags: {
+          'user-id': id,
+        },
+      })
+    }
   }
 }

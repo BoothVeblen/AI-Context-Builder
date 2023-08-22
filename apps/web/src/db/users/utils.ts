@@ -12,6 +12,7 @@ export function formatUserJSON(user: UserJSON) {
     first_name: user.first_name,
     image_url: user.image_url,
     username: user.username,
-    created_at: new Date(user.created_at),
+    ...(user.created_at ? { created_at: new Date(user.created_at) } : {}),
+    ...(user.updated_at ? { updated_at: new Date(user.updated_at) } : {}),
   }
 }

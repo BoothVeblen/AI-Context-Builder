@@ -3,10 +3,12 @@ import { eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 
 import { db } from '@/lib/drizzle-edge'
+import { logsnag } from '@/lib/logsnag'
 import { initPusher } from '@/lib/pusher-server'
-import { safeParse } from '@/lib/utils'
+import { formatSeconds, safeParse } from '@/lib/utils'
 import { DatasetsTable } from '@/db/datasets/schema'
 import { Session, SessionsTable } from '@/db/sessions/schema'
+import { UsersTable } from '@/db/users/schema'
 
 async function getSession(api_session_id: string) {
   const [session] = await db
@@ -16,6 +18,16 @@ async function getSession(api_session_id: string) {
     .limit(1)
 
   return session
+}
+
+async function getUserBySessionId(sessionId: string) {
+  const [user] = await db
+    .select({ short_id: UsersTable.short_id, email: UsersTable.email })
+    .from(SessionsTable)
+    .where(eq(SessionsTable.short_id, sessionId))
+    .leftJoin(UsersTable, eq(UsersTable.short_id, SessionsTable.created_by))
+
+  return user
 }
 
 function formatChannelId(session_id: string) {
@@ -85,6 +97,21 @@ async function createCall(eventType: string, data: any) {
 
   // DO NOT SAVE THIS TO DB
   // await updateEvents(session, newEvent)
+
+  const user = await getUserBySessionId(session.short_id)
+  await logsnag?.publish({
+    channel: 'chat',
+    event: 'Call Received',
+    icon: '📞',
+    description: `${
+      user?.email || `Session ${session.short_id}`
+    } received a call`,
+    tags: {
+      'session-id': session.short_id,
+      'api-session-id': api_session_id,
+      'user-id': user?.short_id || '',
+    },
+  })
 }
 
 async function endCall(eventType: string, data: any) {
@@ -105,6 +132,21 @@ async function endCall(eventType: string, data: any) {
   await pusher?.trigger(channelId, 'user-chat', newEvent)
 
   await updateEvents(session, newEvent)
+
+  const user = await getUserBySessionId(session.short_id)
+  await logsnag?.publish({
+    channel: 'chat',
+    event: 'Call Ended',
+    icon: '🔚',
+    description: `${
+      user?.email || `Session ${session.short_id}`
+    } ended a call that lasted for ${formatSeconds(+data.duration || 0)}`,
+    tags: {
+      'session-id': session.short_id,
+      'api-session-id': api_session_id,
+      'user-id': user?.short_id || '',
+    },
+  })
 }
 
 async function updateDataset(data: any) {

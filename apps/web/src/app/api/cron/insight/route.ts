@@ -83,6 +83,7 @@ export async function GET() {
         {
           title: 'Total Chats',
           value: totalSessionsCount,
+          icon: '💭',
         },
         {
           title: 'Total Messages',
@@ -92,6 +93,7 @@ export async function GET() {
         {
           title: 'Average Messages Per Chat',
           value: avgMessagesPerSession,
+          icon: '💬',
         },
         {
           title: 'Total Users',

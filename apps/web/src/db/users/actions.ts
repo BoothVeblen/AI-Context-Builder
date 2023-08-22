@@ -23,12 +23,12 @@ export async function addUser(user: NewUser) {
 
 export async function editUser(id: string, newValue: Partial<NewUser>) {
   try {
-    const response = await db
+    const [user] = await db
       .update(UsersTable)
       .set(newValue)
       .where(eq(UsersTable.short_id, id))
       .returning()
-    return { response }
+    return { user }
   } catch (error: any) {
     return {
       error: error.message,
@@ -71,6 +71,21 @@ export async function fetchUserInfoById(id: string) {
       },
     }).then((res) => res.json())
 
+    return { user }
+  } catch (error: any) {
+    return {
+      error: error.message,
+    }
+  }
+}
+
+export async function removeUser(id: string) {
+  try {
+    const [user] = await db
+      .update(UsersTable)
+      .set({ archived: true })
+      .where(eq(UsersTable.short_id, id))
+      .returning()
     return { user }
   } catch (error: any) {
     return {
