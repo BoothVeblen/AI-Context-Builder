@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useRef, useState } from 'react'
 import { Download, Eye, Loader2, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -92,7 +92,7 @@ export const PDFFile = (props: FileItemProps) => {
           file?.status === 'error' ? 'border-[#ff4d4f]' : ''
         }`}
       >
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center justify-between gap-2">
           <div className={`flex-b flex w-[90%] items-center gap-2 `}>
             <PdfImage />
             <div className="flex w-full flex-col gap-1">
@@ -100,7 +100,7 @@ export const PDFFile = (props: FileItemProps) => {
                 {file?.name}
               </div>
               {file?.status === 'uploading' && (
-                <Progress value={file?.percent || 0} className="h-1" />
+                <Progress value={file?.percent} className="h-1" />
               )}
             </div>
           </div>

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import axios from 'axios'
 import { Camera, Upload as UploadIcon } from 'lucide-react'
 import RcUpload from 'rc-upload'
 import type { UploadProps as RcUploadProps } from 'rc-upload'
@@ -10,6 +11,7 @@ import { Button } from '../ui/button'
 import { ImageFile, PDFFile } from './component'
 import {
   BeforeUploadValueType,
+  FilePercent,
   RcFile,
   UploadChangeParam,
   UploadFile,
@@ -63,7 +65,7 @@ const Upload = (props: UploadProps) => {
   const [mergedFileList, setMergedFileList] = useState<UploadFile<any>[]>(files)
   const [_, setDragState] = React.useState<string>('drop')
   const [cancelCount, setCancelCount] = React.useState(0)
-
+  const [process, setProcess] = useState<FilePercent[]>([])
   // cancel axios request when uploading
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const controller = useMemo(() => new AbortController(), [cancelCount])
@@ -119,27 +121,25 @@ const Upload = (props: UploadProps) => {
       if (event) {
         changeInfo.event = event
       }
-
       flushSync(() => {
-        if (onChange) {
-          onChange?.(changeInfo)
-        } else {
-          // google api for upload
-          if (isValid !== false && changeInfo?.file?.status !== 'removed') {
-            uploadFile({
-              controller,
-              file: changeInfo?.file,
-              mergedFileList: changeInfo?.fileList,
-              onChangeFileList,
-              setMergedFileList,
-              setIsUploading,
-              fileType,
-            })
-          }
+        // google api for upload
+        if (isValid !== false && changeInfo?.file?.status !== 'removed') {
+          uploadFile({
+            controller,
+            file: changeInfo?.file,
+            mergedFileList: changeInfo?.fileList,
+            onChangeFileList,
+            setMergedFileList,
+            setIsUploading,
+            setProcess,
+            process,
+            fileType,
+          })
         }
       })
     },
-    [maxCount, onChange, isValid, controller, onChangeFileList, fileType]
+
+    [maxCount, process, isValid, controller, onChangeFileList, fileType]
   )
 
   const mergedBeforeUpload = async (file: RcFile, fileListArgs: RcFile[]) => {
@@ -159,7 +159,6 @@ const Upload = (props: UploadProps) => {
     const objectFileList = batchFileInfoList.map((info) =>
       file2Obj(info.file as RcFile)
     )
-
     // Concat new files with prev files
     let newFileList = [...mergedFileList]
 
@@ -176,7 +175,6 @@ const Upload = (props: UploadProps) => {
         // `beforeUpload` return false
         const { originFileObj } = fileObj
         let clone
-
         try {
           clone = new File([originFileObj], originFileObj.name, {
             type: originFileObj.type,
@@ -196,60 +194,6 @@ const Upload = (props: UploadProps) => {
       }
       onInternalChange(triggerFileObj, newFileList)
     })
-  }
-
-  const onSuccess = (response: any, file: RcFile, xhr: any) => {
-    try {
-      if (typeof response === 'string') {
-        response = JSON.parse(response)
-      }
-    } catch (e) {
-      /* do nothing */
-    }
-
-    // removed
-    if (!getFileItem(file, mergedFileList)) {
-      return
-    }
-
-    const targetItem = file2Obj(file)
-    targetItem.status = 'done'
-    targetItem.percent = 100
-    targetItem.response = response
-    const nextFileList = updateFileList(targetItem, mergedFileList)
-
-    onInternalChange(targetItem, nextFileList)
-  }
-
-  const onError = (error: Error, response: any, file: RcFile) => {
-    // removed
-    if (!getFileItem(file, mergedFileList)) {
-      return
-    }
-
-    const targetItem = file2Obj(file)
-    targetItem.error = error
-    targetItem.response = response
-    targetItem.status = 'error'
-
-    const nextFileList = updateFileList(targetItem, mergedFileList)
-
-    onInternalChange(targetItem, nextFileList)
-  }
-
-  const onProgress = (e: { percent: number }, file: RcFile) => {
-    // removed
-    if (!getFileItem(file, mergedFileList)) {
-      return
-    }
-
-    const targetItem = file2Obj(file)
-    targetItem.status = 'uploading'
-    targetItem.percent = e.percent
-
-    const nextFileList = updateFileList(targetItem, mergedFileList)
-
-    onInternalChange(targetItem, nextFileList, e)
   }
 
   const handleRemove = useCallback(
@@ -302,12 +246,11 @@ const Upload = (props: UploadProps) => {
       })
     },
     [
+      onRemove,
       controller,
       mergedFileList,
       onChangeFileList,
       onInternalChange,
-      onRemove,
-      setMergedFileList,
       fileType,
     ]
   )
@@ -343,9 +286,6 @@ const Upload = (props: UploadProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rcUploadProps = {
     onBatchStart,
-    onError,
-    onProgress,
-    onSuccess,
     ...props,
     data,
     multiple,
@@ -483,6 +423,9 @@ const Upload = (props: UploadProps) => {
           >
             {(listType === 'pdf' || listType === 'images-list') &&
               mergedFileList?.map((file: UploadFile) => {
+                const percent = process?.filter(
+                  (item) => item?.uid === file?.uid
+                )?.[0]?.percent
                 return listType === 'pdf' ? (
                   <PDFFile
                     {...props}
@@ -491,6 +434,7 @@ const Upload = (props: UploadProps) => {
                     onRemove={handleRemove}
                     listProps={listProps}
                     key={file?.uid}
+                    progress={percent}
                   />
                 ) : (
                   <ImageFile
