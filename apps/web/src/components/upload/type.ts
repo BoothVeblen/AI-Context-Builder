@@ -161,9 +161,6 @@ export interface UploadFileProps {
   fileType?: string
   controller?: AbortController
   source?: CancelTokenSource
-  process?: FilePercent[]
   onChangeFileList?: (files: FileProps[]) => void
-  setMergedFileList?: (files: UploadFile<any>[]) => void
   setIsUploading: (s: boolean) => void
-  setProcess?: (s: FilePercent[]) => void
 }

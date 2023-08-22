@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import axios from 'axios'
 import { Camera, Upload as UploadIcon } from 'lucide-react'
 import RcUpload from 'rc-upload'
 import type { UploadProps as RcUploadProps } from 'rc-upload'
@@ -21,7 +20,6 @@ import {
   changeToUploadFile,
   file2Obj,
   FileProps,
-  getFileItem,
   removeFileItem,
   updateFileList,
   uploadFile,
@@ -129,17 +127,14 @@ const Upload = (props: UploadProps) => {
             file: changeInfo?.file,
             mergedFileList: changeInfo?.fileList,
             onChangeFileList,
-            setMergedFileList,
             setIsUploading,
-            setProcess,
-            process,
             fileType,
           })
         }
       })
     },
 
-    [maxCount, process, isValid, controller, onChangeFileList, fileType]
+    [maxCount, isValid, controller, onChangeFileList, fileType]
   )
 
   const mergedBeforeUpload = async (file: RcFile, fileListArgs: RcFile[]) => {
@@ -282,7 +277,6 @@ const Upload = (props: UploadProps) => {
         .catch(console.error)
     }
   }
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rcUploadProps = {
     onBatchStart,
@@ -401,7 +395,6 @@ const Upload = (props: UploadProps) => {
     handleRemove,
     showFileList,
   ])
-
   return (
     <div>
       <div
