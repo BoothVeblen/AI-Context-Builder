@@ -163,4 +163,5 @@ export interface UploadFileProps {
   source?: CancelTokenSource
   onChangeFileList?: (files: FileProps[]) => void
   setIsUploading: (s: boolean) => void
+  setProcess?: (s: FilePercent[]) => void
 }
