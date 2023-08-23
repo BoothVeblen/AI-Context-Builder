@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { clerkClient } from '@clerk/nextjs'
 
 import { auth } from '@/lib/auth'
-import { addUser } from '@/db/users/actions'
+import { editUser } from '@/db/users/actions'
+import { formatUser } from '@/db/users/utils'
 
 export async function GET() {
   const { userId } = auth()
@@ -17,18 +18,16 @@ export async function GET() {
     limit: totalUsers,
   })
 
-  const userValues = users.map((user) => ({
-    short_id: user.id,
-    last_name: user.lastName,
-    first_name: user.firstName,
-    image_url: user.imageUrl,
-    username: user.username,
-    created_at: new Date(user.createdAt),
-  }))
+  const userValues = users.map(formatUser)
 
-  userValues.forEach((user) => {
-    addUser(user)
-  })
+  const queue = []
+
+  for (const user of userValues) {
+    const task = editUser(user.short_id, user)
+    queue.push(task)
+  }
+
+  await Promise.all(queue)
 
   return NextResponse.json({ success: true, data: { totalUsers, userValues } })
 }
