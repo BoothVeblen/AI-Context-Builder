@@ -63,9 +63,6 @@ export async function addSession(appId: string) {
   if (foundApp.opening_remarks) {
     eventMessageContent = foundApp.opening_remarks
   }
-  if (foundApp.enable_video_interaction) {
-    eventMessageContent = null
-  }
   const sessionVal = {
     short_id: nanoid(),
     name: `Chat ${sessionCount + 1}`,
@@ -228,9 +225,6 @@ export async function getLatestSessionId(appId: string) {
       let eventMessageContent = null
       if (foundApp.opening_remarks) {
         eventMessageContent = foundApp.opening_remarks
-      }
-      if (foundApp.enable_video_interaction) {
-        eventMessageContent = null
       }
       const sessionVal = {
         short_id: nanoid(),

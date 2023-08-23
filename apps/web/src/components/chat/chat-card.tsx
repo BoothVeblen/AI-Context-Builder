@@ -120,9 +120,12 @@ const ChatCard = (props: IProps) => {
   const showError = isEnd && error && !isUser
 
   const { user } = useUser()
+  console.log('user?.imageUrl:', user?.imageUrl)
 
   const color = getAvatarBgColor(appId || '')
-  const username = user?.primaryEmailAddress?.emailAddress
+  const username = [user?.firstName || '', user?.lastName || '']
+    .join(' ')
+    .trim()
   const icon = isUser ? user?.imageUrl : appIcon
   const name = (isUser ? username : appName) || ''
 
@@ -157,7 +160,13 @@ const ChatCard = (props: IProps) => {
               icon ? 'bg-white' : `bg-${color}-600`
             )}
           >
-            <AvatarImage src={icon} alt={name} className="object-cover" />
+            {icon && (
+              <img
+                src={icon}
+                alt={name}
+                className="aspect-square h-full w-full object-cover"
+              />
+            )}
             <AvatarFallback className="bg-transparent text-white">
               {getFirstLetter(name)}
             </AvatarFallback>
