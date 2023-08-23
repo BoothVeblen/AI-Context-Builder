@@ -49,12 +49,13 @@ async function createUser(data: UserJSON) {
   } else {
     await logsnag?.publish({
       channel: 'user',
-      event: 'User Created',
-      icon: '😀',
+      event: 'New User',
+      icon: '🎉',
       description: `${newUser.email} created an account`,
       tags: {
         'user-id': newUser.short_id,
       },
+      notify: true,
     })
   }
 }
@@ -68,8 +69,8 @@ async function updateUser(data: UserJSON) {
   } else {
     await logsnag?.publish({
       channel: 'user',
-      event: 'User Updated',
-      icon: '😀',
+      event: 'User Account Updated',
+      icon: '👤',
       description: `${updatedUser.email} updated his/her account`,
       tags: {
         'user-id': updatedUser.short_id,
@@ -87,8 +88,8 @@ async function deleteUser(data: DeletedObjectJSON) {
     } else {
       await logsnag?.publish({
         channel: 'user',
-        event: 'User Removed',
-        icon: '😀',
+        event: 'User Account Deleted',
+        icon: '😥',
         description: `${result.user?.email} account has been removed`,
         tags: {
           'user-id': id,
