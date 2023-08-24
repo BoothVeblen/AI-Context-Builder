@@ -8,7 +8,6 @@ import { isEqual, omit } from 'lodash'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
-import { serverLog } from '@/lib/posthog'
 import { nanoid } from '@/lib/utils'
 import { FileProps } from '@/components/upload/utils'
 
@@ -31,13 +30,6 @@ export async function addDataset(
       }
     )
     if (res.status !== 200) {
-      serverLog.capture({
-        distinctId: userId,
-        event: 'ai_service_error:add_dataset',
-        properties: {
-          message: res.message,
-        },
-      })
       return null
     }
     api_dataset_id = res?.data?.id
@@ -52,15 +44,6 @@ export async function addDataset(
     config,
   }
   const newDataset = await db.insert(DatasetsTable).values(data).returning()
-
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:add_dataset',
-    properties: {
-      dataset_id: newDataset[0]?.short_id,
-      api_dataset_id,
-    },
-  })
 
   const datasetId = newDataset[0]?.short_id
   return { datasetId, name: newDataset[0].name }
@@ -144,16 +127,6 @@ export async function editDataset(
         editParams
       )
       if (res.status !== 200) {
-        serverLog.capture({
-          distinctId: userId,
-          event: 'ai_service_error:edit_dataset',
-          properties: {
-            message: res.message,
-            dataset_id: datasetId,
-            api_dataset_id,
-            value: editParams,
-          },
-        })
         return
       }
     }
@@ -168,15 +141,6 @@ export async function editDataset(
         eq(DatasetsTable.created_by, userId)
       )
     )
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:edit_dataset',
-    properties: {
-      dataset_id: datasetId,
-      api_dataset_id,
-      value: newValue,
-    },
-  })
 
   return response
 }
@@ -195,15 +159,6 @@ export async function removeDataset(datasetId: string) {
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`
     )
     if (res?.status !== 200) {
-      serverLog.capture({
-        distinctId: userId,
-        event: 'ai_service_error:remove_dataset',
-        properties: {
-          message: res.message,
-          dataset_id: datasetId,
-          api_dataset_id,
-        },
-      })
       return Promise.resolve([])
     }
   }
@@ -217,14 +172,6 @@ export async function removeDataset(datasetId: string) {
         eq(DatasetsTable.created_by, userId)
       )
     )
-  serverLog.capture({
-    distinctId: userId,
-    event: 'success:remove_dataset',
-    properties: {
-      dataset_id: datasetId,
-      api_dataset_id,
-    },
-  })
 
   return response
 }

@@ -15,11 +15,10 @@ or
 
 Run the app locally:
 
+1. Copy `.env.example` to `.env.local` and modify the value accordingly.
 1. [Install Docker](https://docs.docker.com/get-docker/) on your machine.
 1. Run `docker compose up`
 1. Visit `http://localhost:3000`
-
-Do you require further customization, such as authentication or connecting to another database? If so, copy `.env.example` to `.env.local` and modify the value accordingly.
 
 ## 🧑‍💻 Contributing
 
