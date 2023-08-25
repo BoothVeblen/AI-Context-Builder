@@ -158,7 +158,7 @@ export interface FilePercent {
 export interface UploadFileProps {
   file: UploadFile
   fileList: UploadFile<any>[]
-  mergedFileList?: UploadFile<any>[]
+  setMergedFileList?: (s: UploadFile<any>[]) => void
   fileType?: string
   aborts: RefObject<AbortRef>
   source?: CancelTokenSource

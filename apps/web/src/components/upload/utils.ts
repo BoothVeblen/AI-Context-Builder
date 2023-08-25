@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import axios from 'axios'
 
 import { nanoid } from '@/lib/utils'
@@ -82,27 +83,30 @@ export const getBase64 = (img: RcFile, callback: (url: string) => void) => {
 }
 
 export const handleSuccess = ({
-  fileList,
   fileType,
+  setMergedFileList,
   onChangeFileList,
 }: {
-  fileList: UploadFile[]
+  setMergedFileList?: (s: any) => void
   fileType?: string
   onChangeFileList?: (files: FileProps[]) => void
 }) => {
-  const success = fileList?.filter(
-    (item) => item?.status === 'success' && item?.url
-  )
-  const data = success?.reduce((m: FileProps[], item: UploadFile) => {
-    m.push({
-      url: item?.url || '',
-      uid: nanoid(),
-      type: fileType || item?.type,
-      name: item?.name,
-    })
-    return m
-  }, [])
-  onChangeFileList?.(data)
+  setMergedFileList?.((files: UploadFile[]) => {
+    const success = files?.filter(
+      (item) => item?.status === 'success' && item?.url
+    )
+    const data = success?.reduce((m: FileProps[], item: UploadFile) => {
+      m.push({
+        url: item?.url || '',
+        uid: nanoid(),
+        type: fileType || item?.type,
+        name: item?.name,
+      })
+      return m
+    }, [])
+    onChangeFileList?.(data)
+    return files
+  })
 }
 
 const handelProcess = (file: UploadFile, setProcess?: any) => {
@@ -125,6 +129,7 @@ const handelProcess = (file: UploadFile, setProcess?: any) => {
 export const uploadFile = async ({
   file,
   fileList,
+  setMergedFileList,
   aborts,
   setProcess,
   onChangeFileList,
@@ -133,6 +138,7 @@ export const uploadFile = async ({
 }: UploadFileProps) => {
   setIsUploading(true)
   if (!file) return
+  file.status = 'uploading'
   const filename = encodeURIComponent(file?.name || '')
   const res = await fetch(`/api/upload-url/gcp?filename=${filename}`)
   const { success, data } = await res.json()
@@ -171,7 +177,7 @@ export const uploadFile = async ({
       file.url = file_url
       setIsUploading(false)
       handleSuccess({
-        fileList,
+        setMergedFileList,
         onChangeFileList,
         fileType,
       })

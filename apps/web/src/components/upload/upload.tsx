@@ -126,6 +126,7 @@ const Upload = (props: UploadProps) => {
         if (isValid !== false && changeInfo?.file?.status !== 'removed') {
           uploadFile({
             aborts: aborts,
+            setMergedFileList,
             ...changeInfo,
             onChangeFileList,
             setIsUploading,
