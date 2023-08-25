@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Camera, Upload as UploadIcon } from 'lucide-react'
 import RcUpload from 'rc-upload'
 import type { UploadProps as RcUploadProps } from 'rc-upload'
@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { ImageFile, PDFFile } from './component'
 import {
+  AbortRef,
   BeforeUploadValueType,
   FilePercent,
   RcFile,
@@ -62,11 +63,10 @@ const Upload = (props: UploadProps) => {
   >(true)
   const [mergedFileList, setMergedFileList] = useState<UploadFile<any>[]>(files)
   const [_, setDragState] = React.useState<string>('drop')
-  const [cancelCount, setCancelCount] = React.useState(0)
+  const aborts = useRef<AbortRef>([])
   const [process, setProcess] = useState<FilePercent[]>([])
   // cancel axios request when uploading
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const controller = useMemo(() => new AbortController(), [cancelCount])
 
   const unloadCallback = (event: BeforeUnloadEvent) => {
     event.preventDefault()
@@ -74,7 +74,9 @@ const Upload = (props: UploadProps) => {
     return ''
   }
 
-  const handleEndConcert = () => controller.abort()
+  const handleEndConcert = () => {
+    aborts?.current?.forEach((item) => item?.control?.abort())
+  }
 
   useEffect(() => {
     setUploading?.(isUploading)
@@ -123,9 +125,8 @@ const Upload = (props: UploadProps) => {
         // google api for upload
         if (isValid !== false && changeInfo?.file?.status !== 'removed') {
           uploadFile({
-            controller,
-            file: changeInfo?.file,
-            mergedFileList: changeInfo?.fileList,
+            aborts: aborts,
+            ...changeInfo,
             onChangeFileList,
             setIsUploading,
             fileType,
@@ -135,9 +136,8 @@ const Upload = (props: UploadProps) => {
       })
     },
 
-    [maxCount, isValid, controller, onChangeFileList, fileType]
+    [maxCount, isValid, onChangeFileList, fileType]
   )
-
   const mergedBeforeUpload = async (file: RcFile, fileListArgs: RcFile[]) => {
     let parsedFile: File | Blob | string = file
     if (beforeUpload) {
@@ -202,8 +202,6 @@ const Upload = (props: UploadProps) => {
         if (ret === false) {
           return
         }
-        controller.abort()
-        setCancelCount((c) => c + 1)
 
         const removedFileList = removeFileItem(file, mergedFileList)
         if (removedFileList?.length) {
@@ -217,8 +215,19 @@ const Upload = (props: UploadProps) => {
               item.status = 'removed'
             }
           })
+          // to abort the show fileList
+          upload.current?.abort(currentFile as RcFile)
+
+          // to abort the current axios request
+          const current = aborts?.current?.find(
+            (item) => item?.uid === file?.uid
+          )
+          current?.control?.abort()
+
           // handle fileList
-          const removed = removedFileList?.reduce(
+          // to fix when removed the formFile url is empty
+          const formFile = removedFileList?.filter((item) => !!item?.url)
+          const removed = formFile?.reduce(
             (m: FileProps[], item: UploadFile) => {
               m.push({
                 url: item?.url || '',
@@ -246,10 +255,10 @@ const Upload = (props: UploadProps) => {
     },
     [
       onRemove,
-      controller,
       mergedFileList,
       onChangeFileList,
       onInternalChange,
+      process,
       fileType,
     ]
   )
@@ -281,6 +290,7 @@ const Upload = (props: UploadProps) => {
         .catch(console.error)
     }
   }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rcUploadProps = {
     onBatchStart,
@@ -399,6 +409,7 @@ const Upload = (props: UploadProps) => {
     handleRemove,
     showFileList,
   ])
+
   return (
     <div>
       <div
