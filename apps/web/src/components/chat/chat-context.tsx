@@ -2,13 +2,14 @@
 
 import { createContext, PropsWithChildren, useContext } from 'react'
 
-import { ChatApp, ChatSession } from './types'
+import { ChatApp, ChatSession, ChatUser } from './types'
 
 export type ChatMode = 'live' | 'debug' | 'history'
 
 interface BaseChatContextType {
-  app: ChatApp | null
+  app?: ChatApp | null
   session: ChatSession
+  user?: ChatUser | null
   mode: ChatMode
   isLoading?: boolean
 }

@@ -13,9 +13,9 @@ import { nanoid, safeParse } from '@/lib/utils'
 import {
   defaultWorkflowData,
   defaultWorkflowTree,
-} from '@/app/app/[app_id]/settings/workflow/task-default-value'
-import { WorkflowItem } from '@/app/app/[app_id]/settings/workflow/type'
-import { taskToApiFormatter } from '@/app/app/[app_id]/settings/workflow/utils'
+} from '@/app/app/[app_id]/(manage)/settings/workflow/task-default-value'
+import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
+import { taskToApiFormatter } from '@/app/app/[app_id]/(manage)/settings/workflow/utils'
 
 import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { DatasetsTable } from '../datasets/schema'

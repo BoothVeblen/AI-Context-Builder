@@ -7,7 +7,7 @@ import { createStore, useStore } from 'zustand'
 
 import { TreeItem } from '@/components/dnd/types'
 
-import { WorkflowItem } from '../settings/workflow/type'
+import { WorkflowItem } from '../(manage)/settings/workflow/type'
 import { DatasetProps } from './page'
 
 interface Props {

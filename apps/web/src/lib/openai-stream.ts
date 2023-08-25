@@ -14,7 +14,7 @@ export async function OpenAIStream({
   payload: any
   callback?: {
     onStart?: () => Promise<void> | void
-    onCompletion?: (completion: string) => Promise<void> | void
+    onCompletion?: (completion: string, token: number) => Promise<void> | void
   }
   data: Record<string, unknown>
 }) {
@@ -24,6 +24,8 @@ export async function OpenAIStream({
   let counter = 0
   let completion = ''
   let initialed = false
+  // todo impl
+  // let token = 0
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
     headers: {
@@ -55,7 +57,8 @@ export async function OpenAIStream({
               }
             }
             if (callback?.onCompletion) {
-              await callback.onCompletion(completion)
+              // todo actual impl
+              await callback.onCompletion(completion, 50)
             }
             controller.close()
             return

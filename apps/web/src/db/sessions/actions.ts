@@ -3,7 +3,18 @@ import 'server-only'
 import { redirect } from 'next/navigation'
 import { Message } from 'ai'
 import axios from 'axios'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  isNull,
+  like,
+  notLike,
+  or,
+  SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
@@ -13,6 +24,7 @@ import { ChatMessage, EventMessage } from '@/components/chat/types'
 
 import { AppsTable } from '../apps/schema'
 import { checkUserId } from '../users/actions'
+import { UsersTable } from '../users/schema'
 import { Session, SessionsTable } from './schema'
 
 export async function addSession(appId: string) {
@@ -239,6 +251,7 @@ export async function getSession(sessionId: string, appId?: string) {
         )
       )
       .leftJoin(AppsTable, eq(SessionsTable.app_id, AppsTable.short_id))
+      .leftJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id))
 
     if (!session) {
       throw new Error('Session not found')
@@ -247,6 +260,7 @@ export async function getSession(sessionId: string, appId?: string) {
     return {
       session: session.sessions,
       app: session.apps,
+      user: session.users,
     }
   } catch (error: any) {
     if (appId) {
@@ -288,12 +302,30 @@ export async function updateMessagesToSession(
       throw new Error('Not authenticated')
     }
 
+    const [session] = await db
+      .select()
+      .from(SessionsTable)
+      .where(eq(SessionsTable.short_id, sessionId))
+
+    const currentMessages = safeParse(session.messages_str, [])
+
     const formattedMessages = messages.map(formatId).map(formatTimestamp)
 
+    // todo impl single message chat
+    const mergedMessages = formattedMessages.map((message, id) => {
+      const currentMessage = currentMessages[id]
+      if (currentMessage?.id === message.id) {
+        return {
+          ...message,
+          ...currentMessage,
+        }
+      }
+      return message
+    })
     await db
       .update(SessionsTable)
       .set({
-        messages_str: JSON.stringify(formattedMessages),
+        messages_str: JSON.stringify(mergedMessages),
       })
       .where(
         and(
@@ -361,4 +393,111 @@ export async function addFeedback({
       error: error.message,
     }
   }
+}
+
+export async function getMonitoringData({
+  appId,
+  pageSize = 10,
+  page = 0,
+  feedback,
+  timeframe,
+  search,
+}: {
+  appId: string
+  pageSize?: number
+  page?: number
+  timeframe?: string
+  feedback?: string
+  search?: string
+}) {
+  const timeframes = {
+    last7days: gte(SessionsTable.created_at, sql`now() - interval '7 days'`),
+    last3months: gte(
+      SessionsTable.created_at,
+      sql`now() - interval '3 months'`
+    ),
+    last12months: gte(
+      SessionsTable.created_at,
+      sql`now() - interval '12 months'`
+    ),
+    monthtodate: gte(SessionsTable.created_at, sql`date_trunc('month', now())`),
+    quartertodate: gte(
+      SessionsTable.created_at,
+      sql`date_trunc('quarter', now())`
+    ),
+    today: gte(SessionsTable.created_at, sql`date_trunc('day', now())`),
+    yeartodate: gte(SessionsTable.created_at, sql`date_trunc('year', now())`),
+  }
+
+  const feedbacks = {
+    userfeedback: like(SessionsTable.messages_str, `%feedback%`),
+    nofeedback: or(
+      isNull(SessionsTable.messages_str),
+      notLike(SessionsTable.messages_str, `%feedback%`)
+    ),
+    all: null,
+  }
+
+  const query = [
+    timeframe && timeframes[timeframe as keyof typeof timeframes],
+    feedback && feedbacks[feedback as keyof typeof feedbacks],
+    search && like(SessionsTable.messages_str, `%${search}%`),
+  ].filter(Boolean) as SQL[]
+
+  const start = Date.now()
+  const [items, [count], [app]] = await Promise.all([
+    db
+      .select()
+      .from(SessionsTable)
+      .leftJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id))
+      .where(and(eq(SessionsTable.app_id, appId), ...query))
+      .limit(pageSize)
+      .offset(page * pageSize),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(SessionsTable)
+      .where(and(eq(SessionsTable.app_id, appId), ...query)),
+    db.select().from(AppsTable).where(eq(AppsTable.short_id, appId)),
+  ])
+
+  console.log('getMonitoringData db query time:', Date.now() - start)
+
+  const ret = {
+    sessions: items.map((item) => {
+      const messages = JSON.parse(
+        item.sessions.messages_str || '[]'
+      ) as ChatMessage[]
+
+      const aggregation = messages.reduce(
+        (acc, message) => {
+          acc.total++
+          if (message.feedback === 'good') {
+            acc.feedback.good++
+          }
+          if (message.feedback === 'bad') {
+            acc.feedback.bad++
+          }
+          return acc
+        },
+        {
+          total: 0,
+          feedback: {
+            good: 0,
+            bad: 0,
+          },
+        }
+      )
+      return {
+        ...item.sessions,
+        email: item.users?.email,
+        first_name: item.users?.first_name,
+        last_name: item.users?.last_name,
+        image_url: item.users?.image_url,
+        ...aggregation,
+      }
+    }),
+    count: count?.count || 0,
+    app,
+  }
+  return ret
 }

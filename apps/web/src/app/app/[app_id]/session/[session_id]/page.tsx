@@ -13,7 +13,7 @@ interface IProps {
 
 export default async function SessionPage({ params }: IProps) {
   const { app_id, session_id } = params
-  const { session, app } = await getSession(session_id, app_id)
+  const { session, app, user } = await getSession(session_id, app_id)
 
   return (
     <>
@@ -22,6 +22,7 @@ export default async function SessionPage({ params }: IProps) {
           mode="live"
           app={app}
           session={session}
+          user={user}
           initialMessages={safeParse(session.messages_str, [])}
           initialEvents={safeParse(session.events_str, [])}
         />

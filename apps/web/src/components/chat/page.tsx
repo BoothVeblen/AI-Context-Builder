@@ -14,7 +14,13 @@ import ChatHeader from './chat-header'
 import ChatInput from './chat-input'
 import ChatList from './chat-list'
 import RestartConfirmPage from './restart-confirm'
-import { ChatApp, ChatMessage, ChatSession, EventMessage } from './types'
+import {
+  ChatApp,
+  ChatMessage,
+  ChatSession,
+  ChatUser,
+  EventMessage,
+} from './types'
 import useConfigBase64 from './use-config-base64'
 import { useChat } from './useChat'
 import VideoCallConfirmDialog from './video-call-confirm-dialog'
@@ -53,6 +59,7 @@ function addEvent(
 interface BaseChatProps {
   session: ChatSession
   app: ChatApp | null
+  user?: ChatUser | null
   mode: ChatMode
   initialMessages?: ChatMessage[]
   initialEvents?: EventMessage[]
@@ -83,7 +90,14 @@ const createInputMessage = (input: string) => {
 }
 
 const Chat = (props: ChatProps) => {
-  const { app, session, mode, initialMessages = [], initialEvents = [] } = props
+  const {
+    app,
+    session,
+    user,
+    mode,
+    initialMessages = [],
+    initialEvents = [],
+  } = props
   const appId = app?.short_id
   const appName = app?.name || ''
   const {
@@ -237,6 +251,7 @@ const Chat = (props: ChatProps) => {
     <ChatContextProvider
       app={app}
       session={session}
+      user={user}
       mode={mode}
       isLoading={isLoading}
     >

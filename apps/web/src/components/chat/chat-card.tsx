@@ -12,6 +12,7 @@ import {
   getAvatarBgColor,
   getFirstLetter,
 } from '@/lib/utils'
+import { User } from '@/db/users/schema'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Text from '../ui/text'
@@ -19,7 +20,7 @@ import ChatActions from './chat-actions'
 import { useChatContext } from './chat-context'
 import ChatFeedbackButtons from './feedback/chat-feedback-buttons'
 import { Markdown } from './markdown/markdown'
-import { Message } from './types'
+import { ChatUser, Message } from './types'
 
 interface IProps {
   message?: Message
@@ -70,6 +71,15 @@ const AlertErrorIcon = ({ className }: { className: string }) => (
   </svg>
 )
 
+function formatUser(user?: ChatUser | null) {
+  if (user == null) return {}
+  return {
+    firstName: user.first_name,
+    lastName: user.last_name,
+    imageUrl: user.image_url,
+  }
+}
+
 function EventMessage({ data }: { data: any }) {
   let icon
   let message
@@ -114,12 +124,14 @@ function EventMessage({ data }: { data: any }) {
 
 const ChatCard = (props: IProps) => {
   const { message, error = '', isEnd } = props
-  const { app, mode, isLoading } = useChatContext()
+  const { app, mode, isLoading, user: chatUser } = useChatContext()
   const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
   const isUser = message?.role === 'user'
   const showError = isEnd && error && !isUser
 
-  const { user } = useUser()
+  const { user: currentUser } = useUser()
+
+  const user = mode === 'debug' ? currentUser : formatUser(chatUser)
 
   const color = getAvatarBgColor(appId || '')
   const username = [user?.firstName || '', user?.lastName || '']
@@ -203,7 +215,7 @@ const ChatCard = (props: IProps) => {
                 // or any other messages
                 ((isEnd && !isLoading) || !isEnd) && (
                   <ChatActions>
-                    <ChatFeedbackButtons messageId={message?.id} />
+                    <ChatFeedbackButtons message={message} />
                   </ChatActions>
                 )}
             </div>

@@ -2,6 +2,7 @@ import { type Message as RawMessage } from 'ai'
 
 import { App } from '@/db/apps/schema'
 import { Session } from '@/db/sessions/schema'
+import { User } from '@/db/users/schema'
 
 import { ChatFeedbackType } from './feedback/types'
 
@@ -11,6 +12,8 @@ export type ChatApp = Pick<
   App,
   'short_id' | 'icon' | 'name' | 'opening_remarks' | 'enable_video_interaction'
 >
+
+export type ChatUser = Pick<User, 'first_name' | 'last_name' | 'image_url'>
 
 interface BaseMessage {
   createdAt?: Date
@@ -29,6 +32,11 @@ export interface ChatMessage extends BaseMessage, RawMessage {
   feedback?: ChatFeedbackType
   feedback_content?: string
   content: string
+  meta?: {
+    latency?: number
+    token?: number
+    raw?: string
+  }
 }
 
 export type Message = ChatMessage | EventMessage
