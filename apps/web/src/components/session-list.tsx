@@ -22,9 +22,6 @@ export default function SessionList({ appId, sessionList }: IProps) {
   } = useSWR<Session[]>(`/api/apps/${appId}/sessions`, fetcher, {
     fallbackData: sessionList,
   })
-  // console.log('isLoading:', isLoading)
-  // console.log('data:', sessionListData)
-  // console.log('error:', error)
 
   const isOnlyOneSession = sessionListData?.length === 1
 

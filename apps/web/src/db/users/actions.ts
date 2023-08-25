@@ -55,7 +55,6 @@ export async function checkUserId(id: string) {
 
     return false
   } catch (error: any) {
-    console.log('checkUserId error:', error.message)
     return {
       error: error.message,
     }

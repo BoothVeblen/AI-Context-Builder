@@ -55,7 +55,6 @@ function useAutoSave(key: string, value: any) {
   React.useEffect(() => {
     async function init() {
       if (value !== latestValue.current) {
-        console.log('saving data:', key, value)
         await trigger({ [key]: value })
         latestValue.current = value
         router.refresh()

@@ -95,14 +95,12 @@ const CreateAppDialog = (props: IProps) => {
   const onSubmit = async (data: FormValuesProps) => {
     try {
       const json = await trigger(data)
-      console.log('CreateAppDialog onSubmit json:', json)
       setOpen(false)
       mutate('/api/me/workspace')
       const nextUrl = `/app/${json.appId}/session/${json.sessionId}`
       router.push(`/app/${json.appId}/settings/basics?nextUrl=${nextUrl}`)
       router.refresh()
     } catch (error: any) {
-      console.log('CreateAppDialog onSubmit error:', error)
       toast({
         variant: 'destructive',
         title: 'Create failed!',

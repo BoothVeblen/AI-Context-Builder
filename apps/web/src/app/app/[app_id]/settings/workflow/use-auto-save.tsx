@@ -18,7 +18,6 @@ export default function useAutoSave<T extends FieldValues>(
   const latestFormValueStrRef = React.useRef(JSON.stringify(defaultValues))
 
   function onSubmit(data: T) {
-    console.log('onSubmit data:', data)
     onSave(data)
     latestFormValueStrRef.current = JSON.stringify(data)
   }

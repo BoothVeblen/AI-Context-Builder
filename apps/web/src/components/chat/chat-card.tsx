@@ -120,7 +120,6 @@ const ChatCard = (props: IProps) => {
   const showError = isEnd && error && !isUser
 
   const { user } = useUser()
-  console.log('user?.imageUrl:', user?.imageUrl)
 
   const color = getAvatarBgColor(appId || '')
   const username = [user?.firstName || '', user?.lastName || '']

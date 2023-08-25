@@ -31,11 +31,9 @@ export default function SessionListHeader({ appId }: IProps) {
   async function handleAdd() {
     try {
       const json = await trigger()
-      console.log('SessionListHeader handleAdd json:', json)
       mutate('/api/me/workspace')
       router.push(`/app/${appId}/session/${json.sessionId}`)
     } catch (error: any) {
-      console.log('SessionListHeader handleAdd error:', error)
       toast({
         variant: 'destructive',
         title: 'Chat Creation Failed',

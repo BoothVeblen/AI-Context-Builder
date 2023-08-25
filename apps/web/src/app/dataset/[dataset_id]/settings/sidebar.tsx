@@ -76,13 +76,10 @@ const SlideBar = ({
 
   const handelDelete = async () => {
     try {
-      const json = await trigger()
-      console.log('delete dataset json:', json)
+      await trigger()
       router.push('/datasets')
       router.refresh()
-    } catch (error) {
-      console.log('delete dataset error:', error)
-    }
+    } catch (error) {}
   }
   return (
     <div className="h-full w-[276px]">

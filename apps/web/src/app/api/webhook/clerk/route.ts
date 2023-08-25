@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: event.type })
   } catch (error: any) {
-    console.log('webhook clerk error:', error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

@@ -177,9 +177,6 @@ export const uploadFile = async ({
       })
     })
     .catch(async (error) => {
-      if (axios.isCancel(error)) {
-        console.log('Request canceled', error.message)
-      }
       setIsUploading(false)
       file.status = 'error'
       console.error(error)

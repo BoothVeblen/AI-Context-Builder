@@ -73,10 +73,7 @@ const CreateDialog = () => {
       setOpen(false)
       router.refresh()
       router.push(`/dataset/${json?.datasetId}`)
-      console.log('add dataset success', json)
-    } catch (error) {
-      console.log('add dataset error', error)
-    }
+    } catch (error) {}
   }
 
   const handleCancel = () => {

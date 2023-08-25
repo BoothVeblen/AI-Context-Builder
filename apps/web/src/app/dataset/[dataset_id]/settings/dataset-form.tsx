@@ -92,10 +92,7 @@ const DatasetForm = ({
       setValues({ name: json.body?.name, ...json?.body?.config })
       latestFormValueRef.current = data
       router.refresh()
-      console.log(`edit Dataset onSubmit json:`, json)
-    } catch (error) {
-      console.log('edit dataset error', error)
-    }
+    } catch (error) {}
   }
 
   useEffect(() => {

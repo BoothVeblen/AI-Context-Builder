@@ -130,18 +130,15 @@ export const ExampleQuestion = () => {
     <div className="mt-4">
       <Text variant="body2">Example Questions:</Text>
       <div className="flex flex-col gap-1">
-        {questions?.map((item) => {
-          console.log(item)
-          return (
-            <Text
-              variant="body2"
-              className="cursor-pointer hover:text-slate-900	"
-              key={item}
-            >
-              {item}
-            </Text>
-          )
-        })}
+        {questions?.map((item) => (
+          <Text
+            variant="body2"
+            className="cursor-pointer hover:text-slate-900	"
+            key={item}
+          >
+            {item}
+          </Text>
+        ))}
       </div>
     </div>
   )

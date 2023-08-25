@@ -217,7 +217,6 @@ export async function getLatestSessionId(appId: string) {
 
     return foundSession.short_id
   } catch (error: any) {
-    console.log('error:', error)
     redirect('/')
   }
 }
@@ -291,11 +290,6 @@ export async function updateMessagesToSession(
 
     const formattedMessages = messages.map(formatId).map(formatTimestamp)
 
-    console.log(
-      'BEGIN updateMessagesToSession db update:',
-      userId,
-      formattedMessages.length
-    )
     await db
       .update(SessionsTable)
       .set({
@@ -307,9 +301,7 @@ export async function updateMessagesToSession(
           eq(SessionsTable.created_by, userId)
         )
       )
-    console.log('END updateMessagesToSession db update')
   } catch (error: any) {
-    console.error('updateMessagesToSession error:', error.message)
     return {
       error: error.message,
     }

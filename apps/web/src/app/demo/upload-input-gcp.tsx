@@ -36,21 +36,15 @@ export default function UploadInputGCP() {
       axios
         .post(upload_url, formData, {
           onUploadProgress: (progressEvent) => {
-            console.log('progressEvent:', progressEvent)
             const { progress = 0 } = progressEvent
             setProgress(progress * 100)
           },
         })
         .then(() => {
-          console.log('upload success:', file_url)
           setFileUrl(file_url)
         })
-        .catch((error) => {
-          console.error(error)
-        })
-    } catch (error) {
-      console.log('error:', error)
-    }
+        .catch(() => {})
+    } catch (error) {}
   }
 
   return (

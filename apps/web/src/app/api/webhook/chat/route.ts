@@ -64,13 +64,12 @@ export async function POST(req: NextRequest) {
         break
       }
       default: {
-        console.log('webhook chat error:', event)
+        throw new Error(`Unknown event type: ${event.type}`)
       }
     }
 
     return NextResponse.json({ success: true, data: event.type })
   } catch (error: any) {
-    console.log('webhook chat error:', error.message)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

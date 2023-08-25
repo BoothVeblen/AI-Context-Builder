@@ -29,21 +29,15 @@ export default function UploadInputLocal() {
       axios
         .post(UPLOAD_API_URL, formData, {
           onUploadProgress: (progressEvent) => {
-            console.log('progressEvent:', progressEvent)
             const { progress = 0 } = progressEvent
             setProgress(progress * 100)
           },
         })
-        .then((res) => {
-          console.log('upload success:', res)
+        .then(() => {
           setFileUrl(url)
         })
-        .catch((error) => {
-          console.error(error)
-        })
-    } catch (error) {
-      console.log('error:', error)
-    }
+        .catch(() => {})
+    } catch (error) {}
   }
 
   return (

@@ -29,15 +29,12 @@ export default function DeleteAppButton({ id, name }: IProps) {
 
   async function handleConfirm() {
     try {
-      const json = await trigger()
-      console.log('remove app json:', json)
+      await trigger()
       mutate('/api/me/workspace')
       router.push('/apps')
       router.refresh()
       chatStore.removeSession(id)
-    } catch (error) {
-      console.log('AppSettingDialog handleRemove error:', error)
-    }
+    } catch (error) {}
   }
 
   return (
