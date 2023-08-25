@@ -8,6 +8,8 @@ import { fetcher } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/confirm-dialog'
 
+import { useChatStore } from './chat-debug/store'
+
 function removeApp(url: string) {
   return fetcher(url, { method: 'DELETE' })
 }
@@ -23,6 +25,7 @@ export default function DeleteAppButton({ id, name }: IProps) {
   const { trigger, isMutating } = useSWRMutation(`/api/apps/${id}`, removeApp)
 
   const [open, setOpen] = React.useState(false)
+  const chatStore = useChatStore()
 
   async function handleConfirm() {
     try {
@@ -31,6 +34,7 @@ export default function DeleteAppButton({ id, name }: IProps) {
       mutate('/api/me/workspace')
       router.push('/apps')
       router.refresh()
+      chatStore.removeSession(id)
     } catch (error) {
       console.log('AppSettingDialog handleRemove error:', error)
     }

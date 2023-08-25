@@ -62,6 +62,7 @@ interface DebugChatProps extends BaseChatProps {
   mode: 'debug'
   isConfigChanged?: boolean
   setInitialMessages?: (messages: ChatMessage[]) => void
+  onRestart?: () => void
 }
 
 interface LiveChatProps extends BaseChatProps {
@@ -69,6 +70,17 @@ interface LiveChatProps extends BaseChatProps {
 }
 
 export type ChatProps = LiveChatProps | DebugChatProps
+
+const createInputMessage = (input: string) => {
+  const inputMsg: ChatMessage = {
+    id: nanoid(),
+    content: input,
+    createdAt: new Date(),
+    role: 'user',
+    type: 'chat',
+  }
+  return inputMsg
+}
 
 const Chat = (props: ChatProps) => {
   const { app, session, mode, initialMessages = [], initialEvents = [] } = props
@@ -80,8 +92,9 @@ const Chat = (props: ChatProps) => {
     api_session_id: apiSessionId,
   } = session
 
+  const isDebug = mode === 'debug'
   const [confirmReset, setConfirmReset] = useState(
-    mode === 'debug' && props.isConfigChanged && initialMessages?.length !== 0
+    isDebug && props.isConfigChanged && initialMessages?.length !== 0
   )
 
   const { scrollRef, setAutoScroll } = useScrollToBottom()
@@ -106,8 +119,12 @@ const Chat = (props: ChatProps) => {
     },
     sendExtraMessageFields: true,
     onFinish: (message) => {
-      if (mode === 'debug') {
-        props.setInitialMessages?.([...messages, message])
+      if (isDebug && currentInput?.current) {
+        props?.setInitialMessages?.([
+          ...messages,
+          currentInput.current,
+          message,
+        ])
       }
     },
   })
@@ -116,9 +133,12 @@ const Chat = (props: ChatProps) => {
     id: sessionId,
     initialEvents,
   })
+
   const [isOpenCallConfirm, setIsOpenCallConfirm] = useState(false)
   const callLinkRef = useRef('')
   const configStr = useConfigBase64({ appName })
+
+  const currentInput = useRef<ChatMessage>()
   const onAdd = useCallback(
     (newEventMessage: any) => {
       if (newEventMessage?.eventType === 'call.created') {
@@ -145,6 +165,7 @@ const Chat = (props: ChatProps) => {
       (a, b) => formatToTimestamp(a.createdAt) - formatToTimestamp(b.createdAt)
     )
   }, [messages, eventMessages])
+
   const disabled = !input || input.trim() === '' || isLoading
 
   const handelReload = () => {
@@ -160,13 +181,8 @@ const Chat = (props: ChatProps) => {
 
   usePageTitle(sessionName)
 
-  const onRestart = () => {
-    handelStop()
-    setMessages([])
-    setConfirmReset(false)
-  }
-
-  const onCancel = () => {
+  const handleRestartConfirm = () => {
+    handleRestart()
     setConfirmReset(false)
   }
 
@@ -176,9 +192,14 @@ const Chat = (props: ChatProps) => {
     }
     handleSubmit(e)
     setAutoScroll(true)
+    if (isDebug) {
+      currentInput.current = createInputMessage(input)
+    }
   }
 
-  const disabledRestart = !messages || messages.length === 0
+  const disabledRestart =
+    messages.length === 0 ||
+    ((app?.opening_remarks && messages?.length == 1) as boolean)
 
   const handleAccept = useCallback(() => {
     window.open(callLinkRef.current, '_blank')
@@ -204,6 +225,14 @@ const Chat = (props: ChatProps) => {
     addEventTrigger({ session_id: sessionId, event: message })
   }, [sessionId, addEventTrigger, setEventMessages])
 
+  const handleRestart = () => {
+    handelStop()
+    setMessages([])
+    if (isDebug) {
+      props?.onRestart?.()
+    }
+  }
+
   return (
     <ChatContextProvider
       app={app}
@@ -213,14 +242,14 @@ const Chat = (props: ChatProps) => {
     >
       <div className="relative h-full w-full">
         {confirmReset && (
-          <RestartConfirmPage onRestart={onRestart} onCancel={onCancel} />
+          <RestartConfirmPage
+            onRestart={handleRestartConfirm}
+            onCancel={() => setConfirmReset(false)}
+          />
         )}
         <div className="flex h-full w-full flex-col">
           <ChatHeader
-            onRestart={() => {
-              handelStop()
-              setMessages([])
-            }}
+            onRestart={handleRestart}
             disabledRestart={disabledRestart}
           />
           <ChatList
