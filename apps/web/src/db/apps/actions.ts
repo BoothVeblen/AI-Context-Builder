@@ -10,12 +10,16 @@ import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { logsnag } from '@/lib/logsnag'
 import { nanoid, safeParse } from '@/lib/utils'
+import { TreeItem } from '@/components/dnd/types'
 import {
   defaultWorkflowData,
   defaultWorkflowTree,
 } from '@/app/app/[app_id]/(manage)/settings/workflow/task-default-value'
 import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
-import { taskToApiFormatter } from '@/app/app/[app_id]/(manage)/settings/workflow/utils'
+import {
+  formatTreeWithData,
+  taskToApiFormatter,
+} from '@/app/app/[app_id]/(manage)/settings/workflow/utils'
 
 import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { DatasetsTable } from '../datasets/schema'
@@ -344,7 +348,15 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
         throw new Error('api_model_id is not found, please create a new app')
       }
 
-      const workflow = safeParse(newValue.published_workflow_data_str, [])
+      const tree = safeParse(
+        newValue.published_workflow_tree_str,
+        []
+      ) as TreeItem[]
+      const data = safeParse(
+        newValue.published_workflow_data_str,
+        []
+      ) as WorkflowItem[]
+      const workflow = formatTreeWithData(tree, data)
       const chains = workflow.map(taskToApiFormatter)
       let { data: res } = await axios.patch(
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`,
