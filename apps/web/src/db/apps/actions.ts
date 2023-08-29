@@ -615,11 +615,19 @@ export async function addDebugSession(api_model_id: string) {
   }
 }
 
-export async function getDebugSessionId(tasks: WorkflowItem[]) {
+export async function getDebugSessionId({
+  tree,
+  data,
+}: {
+  tree: TreeItem[]
+  data: WorkflowItem[]
+}) {
   const { userId } = auth()
   if (!userId || !flags.enabledAIService) return null
 
-  const chains = tasks.map(taskToApiFormatter)
+  const workflow = formatTreeWithData(tree, data)
+  const chains = workflow.map(taskToApiFormatter)
+
   const { data: res } = await axios.post(
     `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
     {

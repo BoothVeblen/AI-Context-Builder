@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import Chat from '@/components/chat/page'
 import { ChatMessage, EventMessage } from '@/components/chat/types'
+import { TreeItem } from '@/components/dnd/types'
 
 import { useWorkflowContext } from '../workflow/store'
 import { WorkflowItem } from '../workflow/type'
@@ -20,7 +21,10 @@ interface IProps {
   app: App
 }
 
-function getApiSessionId(url: string, { arg }: { arg: WorkflowItem[] }) {
+function getApiSessionId(
+  url: string,
+  { arg }: { arg: { tree: TreeItem[]; data: WorkflowItem[] } }
+) {
   return fetcher(url, {
     method: 'POST',
     body: JSON.stringify(arg),
@@ -36,6 +40,7 @@ const ChatDebug = ({ app }: IProps) => {
 
   const sessionIdRef = React.useRef(`debug-${appId}`)
 
+  const workflowTree = useWorkflowContext((state) => state.workflowTree)
   const workflowData = useWorkflowContext((state) => state.workflowData)
   const [latestWorkflowData, setLatestWorkflowData] =
     React.useState<WorkflowItem[]>(workflowData)
@@ -50,7 +55,7 @@ const ChatDebug = ({ app }: IProps) => {
   const handleClick = () => {
     getMessageHistory()
     if (shouldResetApiSessionId) {
-      trigger(workflowData).then((res) => {
+      trigger({ tree: workflowTree, data: workflowData }).then((res) => {
         setApiSessionId(res?.api_session_id)
         setOpen(true)
       })
