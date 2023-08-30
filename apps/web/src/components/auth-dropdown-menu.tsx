@@ -54,7 +54,11 @@ export default function AuthDropdownMenu({ children }: IProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <SignOutButton>
+          <SignOutButton
+            signOutCallback={() => {
+              location.replace('/')
+            }}
+          >
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setIsLoggingOut(true)}
