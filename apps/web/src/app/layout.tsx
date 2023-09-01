@@ -1,5 +1,7 @@
 import './globals.css'
 
+import { Analytics } from '@vercel/analytics/react'
+
 import { Toaster } from '@/components/ui/toaster'
 import Provider from '@/components/provider'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -26,6 +28,7 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             {children}
             <Toaster />
+            <Analytics />
           </ThemeProvider>
         </body>
       </html>
