@@ -42,3 +42,16 @@ export interface ChatMessage extends BaseMessage, RawMessage {
 }
 
 export type Message = ChatMessage | EventMessage
+
+export interface ProcessTaskFromAPI {
+  key: string
+  type: string
+  finished?: boolean
+  succeed?: boolean
+}
+
+export interface ProcessTask {
+  key: string
+  type: string
+  status: 'none' | 'pending' | 'succeed' | 'failed'
+}

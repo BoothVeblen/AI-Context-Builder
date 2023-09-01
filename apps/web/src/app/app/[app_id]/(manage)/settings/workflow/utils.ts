@@ -33,3 +33,28 @@ export function formatTreeWithData(
 
   return result
 }
+
+export const formatWorkflowDataToSuggestionData = (
+  workflowData: WorkflowItem[]
+) => {
+  return workflowData?.reduce(
+    (m: { id: string; display: string }[], item: WorkflowItem) => {
+      const key = `${item?.type}-${item?.key}.output`
+      m?.push({ id: key, display: key })
+      return m
+    },
+    []
+  )
+}
+
+export function suggestionDataFormatter(id: string) {
+  return { id, display: id }
+}
+
+export function formatRetrieverType(str: string) {
+  return str
+    ?.split('_')
+    ?.join(' ')
+    .toLowerCase()
+    .replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
+}

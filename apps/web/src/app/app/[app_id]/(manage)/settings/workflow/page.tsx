@@ -28,8 +28,8 @@ export default async function Page({ params }: IProps) {
     published_workflow_data_str,
   } = appDetail
 
-  const defaultWorkflowTree = safeParse(workflow_tree_str, [])
-  const defaultWorkflowData = safeParse(workflow_data_str, [])
+  const DEFAULT_WORKFLOW_TREE = safeParse(workflow_tree_str, [])
+  const DEFAULT_WORKFLOW_DATA = safeParse(workflow_data_str, [])
   const defaultPublishedWorkflowTree = safeParse(
     published_workflow_tree_str,
     []
@@ -51,11 +51,11 @@ export default async function Page({ params }: IProps) {
 
   return (
     <WorkflowProvider
-      workflowTree={defaultWorkflowTree}
-      workflowData={defaultWorkflowData}
+      workflowTree={DEFAULT_WORKFLOW_TREE}
+      workflowData={DEFAULT_WORKFLOW_DATA}
       publishedWorkflowTree={defaultPublishedWorkflowTree}
       publishedWorkflowData={defaultPublishedWorkflowData}
-      selectedTaskId={defaultWorkflowTree[0]?.id ?? null}
+      selectedTaskId={DEFAULT_WORKFLOW_TREE[0]?.id ?? null}
       datasetOptions={datasetOptions}
     >
       <div className="flex h-full">

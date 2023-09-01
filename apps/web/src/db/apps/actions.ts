@@ -12,9 +12,9 @@ import { logsnag } from '@/lib/logsnag'
 import { nanoid, safeParse } from '@/lib/utils'
 import { TreeItem } from '@/components/dnd/types'
 import {
-  defaultWorkflowData,
-  defaultWorkflowTree,
-} from '@/app/app/[app_id]/(manage)/settings/workflow/task-default-value'
+  DEFAULT_WORKFLOW_DATA,
+  DEFAULT_WORKFLOW_TREE,
+} from '@/app/app/[app_id]/(manage)/settings/workflow/const'
 import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
 import {
   formatTreeWithData,
@@ -63,7 +63,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
         },
       })
 
-      const chains = defaultWorkflowData.map(taskToApiFormatter)
+      const chains = DEFAULT_WORKFLOW_DATA.map(taskToApiFormatter)
       const { data: res } = await axios.post(
         `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
         {
@@ -79,10 +79,10 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
     const appVal = {
       ...app,
       short_id: nanoid(),
-      workflow_tree_str: JSON.stringify(defaultWorkflowTree),
-      workflow_data_str: JSON.stringify(defaultWorkflowData),
-      published_workflow_tree_str: JSON.stringify(defaultWorkflowTree),
-      published_workflow_data_str: JSON.stringify(defaultWorkflowData),
+      workflow_tree_str: JSON.stringify(DEFAULT_WORKFLOW_TREE),
+      workflow_data_str: JSON.stringify(DEFAULT_WORKFLOW_DATA),
+      published_workflow_tree_str: JSON.stringify(DEFAULT_WORKFLOW_TREE),
+      published_workflow_data_str: JSON.stringify(DEFAULT_WORKFLOW_DATA),
       api_model_id,
       created_by: userId,
     }

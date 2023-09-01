@@ -18,28 +18,17 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useFormField } from '@/components/ui/form'
 
-import { IFormSchema } from './task-item-conversational-retrieval-qa'
+interface IProps {
+  config: { title: string; prompt: string }[]
+}
 
-const TEMPLATES = [
-  {
-    title: 'Roleplay - Interviewer',
-    prompt: `I want you to act as an software engineer internship interviewer. I will be the candidate and you will ask me the interview questions for the position position. I want you to only reply as the interviewer. Do not write all the conservation at once. I want you to only do the interview with me. Ask me the questions and wait for my answers. Do not write explanations. Ask me the questions one by one like an interviewer does and wait for my answers.`,
-  },
-  {
-    title: 'Multilingual translation assistant',
-    prompt: `You are a helpful assistant that translates English to French.`,
-  },
-  {
-    title: 'Product customer service',
-    prompt: `You are a customer service agent, answering customer questions. Only answer what you know.`,
-  },
-]
-
-const AddTemplateButton = () => {
+const AddTemplateButton = ({ config }: IProps) => {
   const [open, setOpen] = useState(false)
-  const form = useFormContext<IFormSchema>()
-  const { setValue } = form
+  const { setValue } = useFormContext()
+  const { name } = useFormField()
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
@@ -62,14 +51,14 @@ const AddTemplateButton = () => {
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {TEMPLATES.map((item) => {
+              {config.map((item) => {
                 return (
                   <CommandItem
                     className="p-3"
                     value={item?.prompt}
                     key={item.title}
                     onSelect={() => {
-                      setValue('prompt.template', item?.prompt)
+                      setValue(name, item?.prompt)
                       setOpen(false)
                     }}
                   >

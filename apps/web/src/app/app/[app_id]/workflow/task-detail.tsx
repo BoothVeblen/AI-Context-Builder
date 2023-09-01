@@ -7,8 +7,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PdfImage } from '@/components/upload/component'
 
-import { getToolKeys } from '../(manage)/settings/workflow/prompt-mentions'
+import { SUB_TYPE_MAP } from '../(manage)/settings/workflow/const'
 import { WorkflowItem } from '../(manage)/settings/workflow/type'
+import {
+  formatRetrieverType,
+  formatWorkflowDataToSuggestionData,
+} from '../(manage)/settings/workflow/utils'
 import styles from './mention-input.module.css'
 import { DatasetProps } from './page'
 import { useWorkflowContext } from './store'
@@ -18,31 +22,20 @@ interface IProps {
   onClose: () => void
 }
 
-function UpCaseStr(str: string) {
-  return str
-    ?.split('_')
-    ?.join(' ')
-    .toLowerCase()
-    .replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
-}
-
 export default function TaskDetail({ value, onClose }: IProps) {
   const linkedDatasets = useWorkflowContext((state) => state.linkedDatasets)
   if (!value) return null
 
   const { subType, formValueStr, key, type } = value
   const formValue = safeParse(formValueStr, {})
-  const title =
-    subType === 'conversation_chain'
-      ? 'Conversation Chain'
-      : 'Conversational Retrieval QA'
+  const title = SUB_TYPE_MAP[subType as keyof typeof SUB_TYPE_MAP]?.title ?? ''
   const modelName = formValue.llm?.name
   const temperature = formValue.llm?.temperature
   const topP = formValue.llm?.top_p
   const presencePenalty = formValue.llm?.presence_penalty
   const frequencyPenalty = formValue.llm?.frequency_penalty
   const promptTemplate = formValue.prompt?.template
-  const retriever = UpCaseStr(formValue?.retriever?.type)
+  const retriever = formatRetrieverType(formValue?.retriever?.type)
   const keyLabel = `${type}-${key}`
   const datasetIds = formValue?.data?.datasets
   const datasets = linkedDatasets?.filter(
@@ -81,7 +74,10 @@ export default function TaskDetail({ value, onClose }: IProps) {
 
 const PromptItem = ({ promptTemplate }: { promptTemplate: string }) => {
   const workflowData = useWorkflowContext((state) => state.workflowData)
-  const data = useMemo(() => getToolKeys(workflowData), [workflowData])
+  const data = useMemo(
+    () => formatWorkflowDataToSuggestionData(workflowData),
+    [workflowData]
+  )
 
   return (
     <div className="space-y-2">

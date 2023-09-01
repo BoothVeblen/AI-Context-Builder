@@ -1,6 +1,14 @@
-import { cn } from '@/lib/utils'
+import { Dispatch, SetStateAction } from 'react'
+import { ZapIcon, ZapOffIcon } from 'lucide-react'
 
-import { Button } from '../ui/button'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+
 import { useChatContext } from './chat-context'
 
 interface IconBoxProps {
@@ -22,12 +30,19 @@ export const IconBox = (props: IconBoxProps) => (
 interface IProps {
   onRestart?: () => void
   disabledRestart?: boolean
+  showProcess?: boolean
+  setShowProcess?: Dispatch<SetStateAction<boolean>>
 }
 
-const ChatHeader = ({ onRestart, disabledRestart }: IProps) => {
+const ChatHeader = ({
+  onRestart,
+  disabledRestart,
+  showProcess,
+  setShowProcess,
+}: IProps) => {
   const { session, mode } = useChatContext()
-
   const { name } = session
+
   return (
     <div
       className={cn(
@@ -49,7 +64,27 @@ const ChatHeader = ({ onRestart, disabledRestart }: IProps) => {
       ) : (
         <div className="flex w-full items-center justify-between px-6 py-3">
           <h2 className="font-medium">{name}</h2>
-          <div className="flex"></div>
+          {mode === 'live' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8"
+                  onClick={() => setShowProcess?.((s: boolean) => !s)}
+                >
+                  {!showProcess ? (
+                    <ZapIcon size="16" />
+                  ) : (
+                    <ZapOffIcon size="16" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{showProcess ? 'Hide process' : 'Show process'}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       )}
     </div>

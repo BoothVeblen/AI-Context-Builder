@@ -5,6 +5,7 @@ import * as React from 'react'
 import { useWorkflowContext } from './store'
 import TaskItemConversationChain from './task-item-conversation-chain'
 import TaskItemConversationalRetrievalQA from './task-item-conversational-retrieval-qa'
+import TaskItemSelfCheckingChain from './task-item-self-checking-chain'
 
 export default function TaskDetail() {
   const selectedTask = useWorkflowContext((state) =>
@@ -42,6 +43,15 @@ export default function TaskDetail() {
     case 'conversational_retrieval_qa_chain':
       return (
         <TaskItemConversationalRetrievalQA
+          key={selectedTask.id}
+          keyLabel={keyLabel}
+          taskId={selectedTask.id}
+          formValue={selectedTaskFormValue}
+        />
+      )
+    case 'self_checking_chain':
+      return (
+        <TaskItemSelfCheckingChain
           key={selectedTask.id}
           keyLabel={keyLabel}
           taskId={selectedTask.id}

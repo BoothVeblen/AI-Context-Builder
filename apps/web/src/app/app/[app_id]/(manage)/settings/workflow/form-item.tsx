@@ -8,8 +8,9 @@ import {
   TrashIcon,
 } from 'lucide-react'
 import { FieldValues, Path, PathValue, useFormContext } from 'react-hook-form'
+import { SuggestionDataItem } from 'react-mentions'
 
-import { cn } from '@/lib/utils'
+import { clamp, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
+import { MentionTextarea } from '@/components/mention-textarea'
 import { PdfImage } from '@/components/upload/component'
 
 const labelFilterBuilder =
@@ -47,8 +49,10 @@ const labelFilterBuilder =
 interface IInputItem<T> {
   name: Path<T>
   type?: HTMLInputTypeAttribute | undefined
-  label?: string
+  label?: string | ReactNode
   placeholder?: string
+  min?: number
+  max?: number
 }
 
 export function InputItem<T extends FieldValues>({
@@ -56,6 +60,8 @@ export function InputItem<T extends FieldValues>({
   type,
   label,
   placeholder,
+  min,
+  max,
 }: IInputItem<T>) {
   const form = useFormContext()
 
@@ -67,7 +73,20 @@ export function InputItem<T extends FieldValues>({
         <FormItem>
           {label && <FormLabel>{label}</FormLabel>}
           <FormControl>
-            <Input placeholder={placeholder} type={type} {...field} />
+            <Input
+              placeholder={placeholder}
+              type={type}
+              {...field}
+              value={field.value}
+              onChange={(e) => {
+                if (type === 'number') {
+                  const val = clamp(+e.target.value, min, max)
+                  field.onChange(val)
+                } else {
+                  field.onChange(e)
+                }
+              }}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -236,10 +255,8 @@ export function SlideItem<T extends FieldValues>({
                 {...field}
                 value={field.value}
                 onChange={(e) => {
-                  const value = +e.target.value
-                  const val =
-                    value > (max || 1) ? max : value < (min || 0) ? min : value
-                  field.onChange(val as any)
+                  const val = clamp(+e.target.value, min, max)
+                  field.onChange(val)
                 }}
                 className="h-10 w-18"
               />
@@ -317,7 +334,7 @@ export function ListSelectItem<T extends FieldValues>({
                         }
                         className="flex items-center justify-between space-x-2"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between truncate">
                           {item.icon === 'pdf' && (
                             <PdfImage className="mr-3 shrink-0" />
                           )}
@@ -367,6 +384,40 @@ export function ListSelectItem<T extends FieldValues>({
                 </div>
               )
             })}
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export interface IMentionTextareaItem<T> {
+  name: Path<T>
+  label?: string | ReactNode
+  data: SuggestionDataItem[]
+}
+
+export function MentionTextareaItem<T extends FieldValues>({
+  name,
+  label,
+  data,
+}: IMentionTextareaItem<T>) {
+  const form = useFormContext<T>()
+
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          {label && <FormLabel>{label}</FormLabel>}
+          <FormControl>
+            <MentionTextarea
+              value={field.value}
+              onChange={field.onChange}
+              data={data}
+            />
+          </FormControl>
+          <FormMessage />
         </FormItem>
       )}
     />

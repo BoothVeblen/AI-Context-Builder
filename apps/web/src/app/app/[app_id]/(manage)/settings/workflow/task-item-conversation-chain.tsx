@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronRightIcon, Info, Plus } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -10,40 +10,33 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 
 import AddTemplateButton from './add-template-button'
-import { MAX_MAX_TOKENS } from './const'
-import { InputItem, SelectItem, SlideItem, TextareaItem } from './form-item'
-import PromptMentions from './prompt-mentions'
+import {
+  MAX_MAX_TOKENS,
+  SYSTEM_PROMPT_TEMPLATES,
+  TASK_DEFAULT_VALUE_MAP,
+} from './const'
+import {
+  InputItem,
+  MentionTextareaItem,
+  SelectItem,
+  SlideItem,
+} from './form-item'
+import FormItemTitle from './form-item-title'
 import { useWorkflowContext } from './store'
-import { TaskDefaultValueMap } from './task-default-value'
 import useAutoSave from './use-auto-save'
 import useResetForm from './use-reset-form'
+import {
+  formatWorkflowDataToSuggestionData,
+  suggestionDataFormatter,
+} from './utils'
 
 interface IProps {
   taskId: string
   keyLabel?: string
   formValue: any
 }
-
-export const TemplateInfo = () => (
-  <div className="flex items-center gap-1">
-    Template
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Info size={18} color="#94A3B8" />
-      </TooltipTrigger>
-      <TooltipContent className="relative left-[88px] w-[332px]">
-        <p className="break-words text-sm font-normal">{`If you want to quote the output results of another chain, please enter {key.output}.`}</p>
-      </TooltipContent>
-    </Tooltip>
-  </div>
-)
 
 export default function TaskItemConversationChain({
   taskId,
@@ -75,6 +68,7 @@ const FormSchema = z.object({
   }),
   prompt: z.object({
     template: z.string().optional(),
+    basic_prompt: z.string().optional(),
   }),
 })
 
@@ -86,7 +80,7 @@ interface FormProviderProps {
   formValue: any
 }
 
-const DEFAULT_VALUES: IFormSchema = TaskDefaultValueMap['conversation_chain']
+const DEFAULT_VALUES: IFormSchema = TASK_DEFAULT_VALUE_MAP['conversation_chain']
 
 function FormProvider({ children, taskId, formValue }: FormProviderProps) {
   const defaultValues = formValue || DEFAULT_VALUES
@@ -218,18 +212,44 @@ function FormItemLLM() {
 }
 
 function FormItemPrompt() {
+  const workflowData = useWorkflowContext((state) => state.workflowData)
+
+  const suggestionData = React.useMemo(
+    () => [
+      ...['chat_history', 'question'].map(suggestionDataFormatter),
+      ...formatWorkflowDataToSuggestionData(workflowData),
+    ],
+    [workflowData]
+  )
+
   return (
     <div className="space-y-4">
       <div className="text-sm font-medium text-slate-500">PROMPT</div>
       <div className="space-y-8">
-        <PromptMentions<IFormSchema>
+        <MentionTextareaItem<IFormSchema>
           name="prompt.template"
           label={
-            <div className="flex items-center justify-between ">
-              <TemplateInfo />
-              <AddTemplateButton />
+            <div className="flex items-center justify-between">
+              <FormItemTitle
+                title="System Prompt"
+                tip="If you want to quote the output results of another chain, please enter {key.output}."
+              />
+              <AddTemplateButton config={SYSTEM_PROMPT_TEMPLATES} />
             </div>
           }
+          data={suggestionData}
+        />
+        <MentionTextareaItem<IFormSchema>
+          name="prompt.basic_prompt"
+          label={
+            <div className="flex items-center justify-between">
+              <FormItemTitle
+                title="Basic Prompt"
+                tip="This is where the AI makes its judgments, and it is recommended not to make any modifications."
+              />
+            </div>
+          }
+          data={suggestionData}
         />
       </div>
     </div>

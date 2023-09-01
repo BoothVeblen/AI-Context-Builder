@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { PlusIcon, WrenchIcon } from 'lucide-react'
+import { PlusIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,49 +27,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
+import { ADD_TASK_BUTTON_CONFIG, TYPE_MAP } from './const'
 import { useWorkflowContext } from './store'
 import { WorkflowType } from './type'
-
-const ICON_MAP = {
-  tool: WrenchIcon,
-}
-
-const CONFIG = [
-  {
-    type: 'tool',
-    title: 'Tools',
-    desc: 'Some encapsulated tools to handle certain tasks.',
-    children: [
-      {
-        title: 'Chains',
-        children: [
-          {
-            subType: 'conversation_chain',
-            title: 'Conversation chain',
-            desc: 'Basic example of conversation with a Prompt Template and LLM Model',
-          },
-          {
-            subType: 'conversational_retrieval_qa_chain',
-            title: 'Conversational Retrieval QA',
-            desc: 'Support uploading data sources and searching for answers from data sources',
-          },
-        ],
-      },
-    ],
-  },
-] satisfies {
-  type: 'tool'
-  title: string
-  desc: string
-  children: {
-    title: string
-    children: {
-      subType: string
-      title: string
-      desc: string
-    }[]
-  }[]
-}[]
 
 export default function AddTaskButton() {
   const [open, setOpen] = React.useState(false)
@@ -90,8 +50,8 @@ export default function AddTaskButton() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-96" align="start">
-        {CONFIG.map((item) => {
-          const Icon = ICON_MAP[item.type]
+        {ADD_TASK_BUTTON_CONFIG.map((item) => {
+          const Icon = TYPE_MAP[item.type].icon
           return (
             <DropdownMenuSub key={item.type}>
               <DropdownMenuSubTrigger>

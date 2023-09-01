@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronRightIcon } from 'lucide-react'
+import { ChevronRightIcon, Info } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -10,20 +10,24 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import AddTemplateButton from './add-template-button'
 import {
-  BASIC_PROMPT_TEMPLATES,
   MAX_MAX_TOKENS,
   SYSTEM_PROMPT_TEMPLATES,
   TASK_DEFAULT_VALUE_MAP,
 } from './const'
 import {
   InputItem,
-  ListSelectItem,
   MentionTextareaItem,
   SelectItem,
   SlideItem,
+  TextareaItem,
 } from './form-item'
 import FormItemTitle from './form-item-title'
 import { useWorkflowContext } from './store'
@@ -40,7 +44,21 @@ interface IProps {
   formValue: any
 }
 
-export default function TaskItemConversationalRetrievalQA({
+export const TemplateInfo = () => (
+  <div className="flex items-center gap-1">
+    System Prompt
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Info size={18} color="#94A3B8" />
+      </TooltipTrigger>
+      <TooltipContent className="relative left-[88px] w-[332px]">
+        <p className="break-words text-sm font-normal">{`If you want to quote the output results of another chain, please enter {key.output}.`}</p>
+      </TooltipContent>
+    </Tooltip>
+  </div>
+)
+
+export default function TaskItemSelfCheckingChain({
   taskId,
   keyLabel,
   formValue,
@@ -70,17 +88,13 @@ const FormSchema = z.object({
   }),
   prompt: z.object({
     template: z.string().optional(),
-    basic_prompt: z.string().optional(),
-  }),
-  retriever: z.object({
-    type: z.string(),
-  }),
-  data: z.object({
-    datasets: z.array(z.string()).optional(),
+    target: z.string().optional(),
+    check_prompt: z.string().optional(),
+    follow_up_questions_num: z.number().min(0).step(1),
   }),
 })
 
-export type IFormSchema = z.infer<typeof FormSchema>
+type IFormSchema = z.infer<typeof FormSchema>
 
 interface FormProviderProps {
   children: React.ReactNode
@@ -89,7 +103,7 @@ interface FormProviderProps {
 }
 
 const DEFAULT_VALUES: IFormSchema =
-  TASK_DEFAULT_VALUE_MAP['conversational_retrieval_qa_chain']
+  TASK_DEFAULT_VALUE_MAP['self_checking_chain']
 
 function FormProvider({ children, taskId, formValue }: FormProviderProps) {
   const defaultValues = formValue || DEFAULT_VALUES
@@ -122,18 +136,13 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
     <div className="h-full w-[380px] shrink-0 overflow-auto border-l border-slate-200 scrollbar-none">
       <div className="space-y-6 p-6 pb-[280px]">
         <div className="space-y-[10px]">
-          <h2 className="text-lg font-semibold">Conversational Retrieval QA</h2>
+          <h2 className="text-lg font-semibold">Self Checking</h2>
           {keyLabel && <Badge variant="secondary">key: {keyLabel}</Badge>}
         </div>
-
         <div className="space-y-6">
           <FormItemLLM />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
           <FormItemPrompt />
-          <div className="-mx-6 h-px shrink-0 bg-slate-100" />
-          <FormItemRetriever />
-          <div className="-mx-6 h-px shrink-0 bg-slate-100" />
-          <FormItemData />
         </div>
       </div>
     </div>
@@ -230,7 +239,7 @@ function FormItemPrompt() {
 
   const suggestionData = React.useMemo(
     () => [
-      ...['context', 'chat_history', 'question'].map(suggestionDataFormatter),
+      ...['target', 'chat_history'].map(suggestionDataFormatter),
       ...formatWorkflowDataToSuggestionData(workflowData),
     ],
     [workflowData]
@@ -253,57 +262,30 @@ function FormItemPrompt() {
           }
           data={suggestionData}
         />
-        <MentionTextareaItem<IFormSchema>
-          name="prompt.basic_prompt"
+        <TextareaItem<IFormSchema>
+          name="prompt.target"
           label={
-            <div className="flex items-center justify-between">
-              <FormItemTitle
-                title="Basic Prompt"
-                tip="This is where the AI makes its judgments, and it is recommended not to make any modifications."
-              />
-              <AddTemplateButton config={BASIC_PROMPT_TEMPLATES} />
-            </div>
+            <FormItemTitle
+              title="Target"
+              tip="Enter your goal, and let the AI determine whether the conversation has achieved its target."
+            />
+          }
+        />
+        <MentionTextareaItem<IFormSchema>
+          name="prompt.check_prompt"
+          label={
+            <FormItemTitle
+              title="Check Prompt"
+              tip="This is where the AI makes its judgments, and it is recommended not to make any modifications."
+            />
           }
           data={suggestionData}
         />
-      </div>
-    </div>
-  )
-}
-
-const RETRIEVER_TYPE_OPTIONS = [
-  {
-    label: 'Pinecone Hybrid Search',
-    value: 'pinecone_hybrid_search',
-  },
-]
-
-function FormItemRetriever() {
-  return (
-    <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">RETRIEVERS</div>
-      <div className="space-y-8">
-        <SelectItem<IFormSchema>
-          name="retriever.type"
-          label="Type"
-          options={RETRIEVER_TYPE_OPTIONS}
-        />
-      </div>
-    </div>
-  )
-}
-
-function FormItemData() {
-  const datasetOptions = useWorkflowContext((state) => state.datasetOptions)
-
-  return (
-    <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-500">DATA</div>
-      <div className="space-y-8">
-        <ListSelectItem<IFormSchema>
-          name="data.datasets"
-          label="Dataset"
-          options={datasetOptions}
+        <InputItem<IFormSchema>
+          name="prompt.follow_up_questions_num"
+          type="number"
+          label="Maximum follow-up questions"
+          min={0}
         />
       </div>
     </div>

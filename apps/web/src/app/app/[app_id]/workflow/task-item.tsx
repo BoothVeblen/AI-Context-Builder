@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { TreeItem } from '@/components/dnd/types'
 
+import { SUB_TYPE_MAP } from '../(manage)/settings/workflow/const'
 import { useWorkflowContext } from './store'
 
 interface IProps {
@@ -28,9 +29,7 @@ export default function TaskItem({
   const value = workflowData.find((d) => d.id === id)
 
   const title =
-    value?.subType === 'conversation_chain'
-      ? 'Conversation Chain'
-      : 'Conversational Retrieval QA'
+    SUB_TYPE_MAP[value?.subType as keyof typeof SUB_TYPE_MAP]?.title ?? ''
 
   return (
     <div className="pl-12 pt-4">

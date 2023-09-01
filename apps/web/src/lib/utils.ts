@@ -101,3 +101,7 @@ export function formatSeconds(seconds: number) {
   }
   return new Date(seconds * 1000).toISOString().slice(11, 19)
 }
+
+export function clamp(num: number, min?: number, max?: number) {
+  return Math.min(Math.max(num, min ?? -Infinity), max ?? Infinity)
+}
