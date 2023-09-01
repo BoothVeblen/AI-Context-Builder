@@ -34,8 +34,10 @@ export interface ChatMessage extends BaseMessage, RawMessage {
   content: string
   meta?: {
     latency?: number
-    token?: number
-    raw?: string
+    token?: {
+      total_tokens?: number
+    }
+    raw?: any
   }
 }
 

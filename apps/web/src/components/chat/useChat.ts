@@ -417,6 +417,7 @@ export function useChat({
           content: input,
           role: 'user',
           createdAt: new Date(),
+          type: 'chat',
         },
         { options, functions, function_call }
       )

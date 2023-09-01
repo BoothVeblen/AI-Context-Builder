@@ -99,7 +99,10 @@ export const MonitoringTable = ({ preloaded }: Props) => {
       },
       {
         accessorKey: 'total',
-        header: 'Message Count',
+        header: () => <div className="text-right">Message Count</div>,
+        cell: ({ row }) => {
+          return <div className="text-right">{row.getValue('total')}</div>
+        },
       },
       {
         accessorKey: 'feedback',
@@ -170,7 +173,7 @@ export const MonitoringTable = ({ preloaded }: Props) => {
           },
           {
             value: 'all',
-            label: 'ALL',
+            label: 'All',
           },
         ],
       },
@@ -266,9 +269,9 @@ export const MonitoringTable = ({ preloaded }: Props) => {
       >
         <SheetContent
           side="right"
-          className="overflow-scroll sm:max-w-2xl md:max-w-2xl"
+          className="overflow-scroll p-0 sm:max-w-[720px] md:max-w-[720px]"
         >
-          <SheetHeader className="flex-row items-center justify-between space-y-0">
+          <SheetHeader className="sticky top-0 z-20 flex-row items-center justify-between space-y-0 border-b bg-white px-6 py-4">
             <SheetTitle>Conversation ID: {selectedSession?.id}</SheetTitle>
             <SheetClose>
               <XIcon
@@ -277,14 +280,16 @@ export const MonitoringTable = ({ preloaded }: Props) => {
               />
             </SheetClose>
           </SheetHeader>
-          <ChatContextProvider
-            mode="history"
-            app={data?.app}
-            user={user}
-            session={selectedSession!}
-          >
-            <ChatList messages={messages} />
-          </ChatContextProvider>
+          <div className="px-6">
+            <ChatContextProvider
+              mode="history"
+              app={data?.app}
+              user={user}
+              session={selectedSession!}
+            >
+              <ChatList messages={messages} />
+            </ChatContextProvider>
+          </div>
         </SheetContent>
       </Sheet>
     </div>

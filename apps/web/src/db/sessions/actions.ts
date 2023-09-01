@@ -449,10 +449,11 @@ export async function getMonitoringData({
     db
       .select()
       .from(SessionsTable)
-      .leftJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id))
+      .orderBy(desc(SessionsTable.created_at))
       .where(and(eq(SessionsTable.app_id, appId), ...query))
       .limit(pageSize)
-      .offset(page * pageSize),
+      .offset(page * pageSize)
+      .leftJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id)),
     db
       .select({ count: sql<number>`count(*)` })
       .from(SessionsTable)

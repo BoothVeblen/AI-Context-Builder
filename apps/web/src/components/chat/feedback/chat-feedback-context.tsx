@@ -10,37 +10,36 @@ import {
 
 import { Dialog } from '@/components/ui/dialog'
 
+import { Message } from '../types'
 import { ChatFeedbackType } from './types'
 
 type ChatFeedbackContextType = {
   toggleFeedback: (messageId: string, type: ChatFeedbackType) => void
   type?: ChatFeedbackType
   messageId?: string
-  feedbacked: Record<string, ChatFeedbackType>
   reset: () => void
+  messages: Message[]
 }
 
 const ChatFeedbackContext = createContext<ChatFeedbackContextType>(
   {} as ChatFeedbackContextType
 )
 
-const ChatFeedbackContextProvider = ({ children }: PropsWithChildren) => {
+const ChatFeedbackContextProvider = ({
+  children,
+  messages,
+}: PropsWithChildren<{
+  messages: Message[]
+}>) => {
   const [open, setOpen] = useState(false)
   const [messageId, setMessageId] = useState<string>()
   const [type, setType] = useState<ChatFeedbackType>()
-  const [feedbacked, setFeedbacked] = useState<
-    Record<string, ChatFeedbackType>
-  >({})
 
   const toggleFeedback = useCallback(
     (messageId: string, type: ChatFeedbackType) => {
       setOpen(true)
       setMessageId(messageId)
       setType(type)
-      setFeedbacked((prev) => ({
-        ...prev,
-        [messageId]: type,
-      }))
     },
     []
   )
@@ -57,8 +56,8 @@ const ChatFeedbackContextProvider = ({ children }: PropsWithChildren) => {
         toggleFeedback,
         messageId,
         type,
-        feedbacked,
         reset,
+        messages,
       }}
     >
       <Dialog open={open} onOpenChange={(open) => setOpen(open)}>

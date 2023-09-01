@@ -14,7 +14,10 @@ export async function OpenAIStream({
   payload: any
   callback?: {
     onStart?: () => Promise<void> | void
-    onCompletion?: (completion: string, token: number) => Promise<void> | void
+    onCompletion?: (
+      completion: string,
+      metadata: Record<string, any>
+    ) => Promise<void> | void
   }
   data: Record<string, unknown>
 }) {
@@ -44,6 +47,8 @@ export async function OpenAIStream({
         controller.enqueue(queue)
       }, 20 * 1000)
 
+      let metadata: any
+
       controller.enqueue(encoder.encode(`[DATA]${JSON.stringify(data)}`))
 
       async function onParse(event: ParsedEvent | ReconnectInterval) {
@@ -58,14 +63,15 @@ export async function OpenAIStream({
             }
             if (callback?.onCompletion) {
               // todo actual impl
-              await callback.onCompletion(completion, 50)
+              await callback.onCompletion(completion, metadata ?? {})
             }
             controller.close()
             return
           }
           try {
             const json = JSON.parse(data)
-            const text = json.choices[0].delta?.content || ''
+            metadata = json.metadata
+            const text = json.choices?.[0].delta?.content || ''
             if (counter < 2 && (text.match(/\n/) || []).length) {
               return
             }

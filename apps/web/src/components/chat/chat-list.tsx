@@ -30,7 +30,7 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
       ref={scrollRef}
       onWheel={() => setAutoScroll?.(false)}
     >
-      <ChatFeedbackContextProvider>
+      <ChatFeedbackContextProvider messages={messages}>
         {messages?.map((message: any, index: number) => {
           return (
             <ChatCard

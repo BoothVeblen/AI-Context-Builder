@@ -3,13 +3,14 @@
 import { useCallback } from 'react'
 import { TooltipTrigger } from '@radix-ui/react-tooltip'
 import { Clock, Code2, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { mutate } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent } from '@/components/ui/tooltip'
 
 import { useChatContext } from '../chat-context'
-import { ChatMessage } from '../types'
+import { ChatMessage, Message } from '../types'
 import { useChatFeedbackContext } from './chat-feedback-context'
 import submitFeedback from './service'
 import { ChatFeedbackType } from './types'
@@ -27,10 +28,11 @@ const ChatFeedbackButtons = (props: Props) => {
   const { message } = props
   const { id, feedback, feedback_content, meta } = message
   const { latency, token, raw } = meta || {}
+  const { total_tokens } = token || {}
   const { session, mode } = useChatContext()
   const { short_id: session_id } = session || {}
 
-  const { toggleFeedback, feedbacked } = useChatFeedbackContext()
+  const { toggleFeedback, messages } = useChatFeedbackContext()
 
   const { trigger } = useSWRMutation('/api/chat/feedback', submitFeedback)
 
@@ -43,10 +45,23 @@ const ChatFeedbackButtons = (props: Props) => {
           session_id,
         })
 
+        mutate<Message[]>(
+          ['/api/chat', session_id],
+          messages.map((message: Message) => {
+            if (message.type === 'chat' && message.id === id) {
+              return {
+                ...message,
+                feedback: type,
+              }
+            }
+            return message
+          })
+        )
+
         toggleFeedback(id, type)
       }
     },
-    [id, toggleFeedback, session_id, trigger]
+    [id, trigger, session_id, messages, toggleFeedback]
   )
 
   const renderButton = useCallback(
@@ -91,7 +106,7 @@ const ChatFeedbackButtons = (props: Props) => {
     return null
   }
 
-  const status = feedback || feedbacked[id]
+  const status = feedback
 
   // todo refactor
   if (mode === 'history') {
@@ -101,20 +116,9 @@ const ChatFeedbackButtons = (props: Props) => {
     } else if (feedback === 'bad') {
       button = renderButton('bad', false)
     }
-    if (feedback_content) {
-      button = (
-        <Tooltip>
-          <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent side="bottom" className="p-4">
-            {feedback_content}
-          </TooltipContent>
-        </Tooltip>
-      )
-    }
 
     return (
       <>
-        {button}
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="ml-1 rounded-md border bg-white p-2">
@@ -123,7 +127,7 @@ const ChatFeedbackButtons = (props: Props) => {
           </TooltipTrigger>
           <TooltipContent
             side="bottom"
-            className="min-h-10 max-h-96 w-96 space-y-3 p-4"
+            className="max-h-fit min-h-min max-w-lg space-y-3 p-4"
           >
             <div className="font-medium">API request detail:</div>
 
@@ -137,15 +141,33 @@ const ChatFeedbackButtons = (props: Props) => {
                 </>
               )}
               {latency && token && <div className="px-2 font-medium">|</div>}
-              {token && <div className="text-slate-500">{token} tokens</div>}
+              {total_tokens !== undefined && (
+                <div className="text-slate-500">{total_tokens} tokens</div>
+              )}
             </div>
             {raw && (
               <div className="rounded-lg bg-slate-100 p-2">
-                <pre className="max-h-40 overflow-y-scroll whitespace-pre-wrap break-all">
+                <pre className="max-h-80 overflow-y-scroll whitespace-pre-wrap break-all">
                   {JSON.stringify(raw, null, 2)}
                 </pre>
               </div>
             )}
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            className="max-w-lg space-y-3 break-words p-4"
+          >
+            <div className="font-semibold">
+              {feedback === 'good' && 'User liked this'}
+              {feedback === 'bad' && 'User disliked this'}
+              {feedback_content && ':'}
+            </div>
+            {feedback_content
+              ?.split('\n')
+              .map((line, index) => <div key={index}>{line}</div>)}
           </TooltipContent>
         </Tooltip>
       </>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -19,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
@@ -39,39 +40,6 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
   const [open, setOpen] = useState<boolean>(false)
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false)
 
-  const menus = [
-    ...(isOwner
-      ? [
-          {
-            id: 'settings',
-            name: 'App Settings',
-            icon: <Settings size={16} />,
-            link: `/app/${appId}/settings/basics`,
-          },
-          // TODO: Add this back when we get confirmation from PM
-          // {
-          //   id: 'analysis',
-          //   name: 'App Analysis',
-          //   icon: <Activity size={16} />,
-          //   link: `/app/${appId}/analysis/monitoring`,
-          // },
-        ]
-      : []),
-    {
-      id: 'share',
-      name: 'Share',
-      icon: <Share size={16} />,
-      link: ` /app/${appId}/share`,
-    },
-    {
-      id: 'delete',
-      name: 'Leave App',
-      icon: <LogOutIcon size={16} />,
-      link: '',
-      danger: true,
-    },
-  ]
-
   const router = useRouter()
   const { mutate } = useSWRConfig()
   const { trigger, isMutating } = useSWRMutation(
@@ -87,6 +55,40 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
       router.refresh()
     } catch (error) {}
   }
+  const renderItem = useCallback(
+    ({
+      icon,
+      link,
+      name,
+      danger = false,
+      onClick,
+    }: {
+      name: string
+      icon: React.ReactNode
+      link: string
+      onClick?: () => void
+      danger?: boolean
+    }) => (
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => {
+          setOpen(false)
+          onClick?.()
+        }}
+      >
+        <Link
+          href={link}
+          className={cn(
+            'flex w-full items-center gap-2	text-sm font-medium',
+            danger ? 'text-red-500 hover:text-red-500' : 'text-slate-700'
+          )}
+        >
+          {icon} {name}
+        </Link>
+      </DropdownMenuItem>
+    ),
+    []
+  )
 
   return (
     <>
@@ -101,31 +103,33 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[220px]" align="end">
-          {menus?.map((item) => {
-            return (
-              <DropdownMenuItem
-                key={item.id}
-                className="cursor-pointer"
-                onClick={() => {
-                  setOpen(false)
-                  if (item.id === 'delete') {
-                    setDeleteDialog(true)
-                  }
-                }}
-              >
-                <Link
-                  href={item?.link}
-                  className={cn(
-                    'flex w-full items-center gap-2	text-sm font-medium',
-                    item.danger
-                      ? 'text-red-500 hover:text-red-500'
-                      : 'text-slate-700'
-                  )}
-                >
-                  {item?.icon} {item?.name}
-                </Link>
-              </DropdownMenuItem>
-            )
+          {isOwner && (
+            <>
+              {renderItem({
+                icon: <Settings size={16} />,
+                link: `/app/${appId}/settings/basics`,
+                name: 'App Settings',
+              })}
+              {renderItem({
+                icon: <Activity size={16} />,
+                link: `/app/${appId}/analysis/monitoring`,
+                name: 'App Analysis',
+              })}
+              <DropdownMenuSeparator />
+            </>
+          )}
+          {renderItem({
+            icon: <Share size={16} />,
+            link: `/app/${appId}/share`,
+            name: 'Share',
+          })}
+          <DropdownMenuSeparator />
+          {renderItem({
+            icon: <LogOutIcon size={16} />,
+            link: '',
+            name: 'Leave App',
+            danger: true,
+            onClick: () => setDeleteDialog(true),
           })}
         </DropdownMenuContent>
       </DropdownMenu>
