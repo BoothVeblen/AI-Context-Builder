@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { XIcon } from 'lucide-react'
 import { Mention, MentionsInput } from 'react-mentions'
 
@@ -9,10 +8,7 @@ import { PdfImage } from '@/components/upload/component'
 
 import { SUB_TYPE_MAP } from '../(manage)/settings/workflow/const'
 import { WorkflowItem } from '../(manage)/settings/workflow/type'
-import {
-  formatRetrieverType,
-  formatWorkflowDataToSuggestionData,
-} from '../(manage)/settings/workflow/utils'
+import { formatRetrieverType } from '../(manage)/settings/workflow/utils'
 import styles from './mention-input.module.css'
 import { DatasetProps } from './page'
 import { useWorkflowContext } from './store'
@@ -34,7 +30,11 @@ export default function TaskDetail({ value, onClose }: IProps) {
   const topP = formValue.llm?.top_p
   const presencePenalty = formValue.llm?.presence_penalty
   const frequencyPenalty = formValue.llm?.frequency_penalty
-  const promptTemplate = formValue.prompt?.template
+  const systemPrompt = formValue.prompt?.template
+  const basicPrompt = formValue.prompt?.basic_prompt
+  const target = formValue.prompt?.target
+  const checkPrompt = formValue.prompt?.check_prompt
+  const followUpQuestionsNumber = formValue.prompt?.follow_up_questions_num
   const retriever = formatRetrieverType(formValue?.retriever?.type)
   const keyLabel = `${type}-${key}`
   const datasetIds = formValue?.data?.datasets
@@ -60,7 +60,18 @@ export default function TaskDetail({ value, onClose }: IProps) {
       </div>
 
       <Item label="Model" value={modelName} />
-      <PromptItem promptTemplate={promptTemplate || ''} />
+      {systemPrompt && (
+        <PromptItem title="System Prompt" value={systemPrompt} />
+      )}
+      {basicPrompt && <PromptItem title="Basic Prompt" value={basicPrompt} />}
+      {target && <Item label="Target" value={target} />}
+      {checkPrompt && <PromptItem title="Check Prompt" value={checkPrompt} />}
+      {followUpQuestionsNumber != null && (
+        <Item
+          label="Maximum follow-up questions"
+          value={followUpQuestionsNumber}
+        />
+      )}
 
       <Item label="Temperature" value={temperature} />
       <Item label="Top P" value={topP} />
@@ -72,19 +83,13 @@ export default function TaskDetail({ value, onClose }: IProps) {
   )
 }
 
-const PromptItem = ({ promptTemplate }: { promptTemplate: string }) => {
-  const workflowData = useWorkflowContext((state) => state.workflowData)
-  const data = useMemo(
-    () => formatWorkflowDataToSuggestionData(workflowData),
-    [workflowData]
-  )
-
+const PromptItem = ({ title, value }: { title: string; value: string }) => {
   return (
     <div className="space-y-2">
-      <div className="text-base font-medium">Prompt</div>
-      <MentionsInput value={promptTemplate} disabled classNames={styles}>
+      <div className="text-base font-medium">{title}</div>
+      <MentionsInput value={value} disabled classNames={styles}>
         <Mention
-          data={data}
+          data={[]}
           markup="[__display__]"
           className={styles.mentions__mention}
           trigger="{"
