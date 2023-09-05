@@ -17,7 +17,7 @@ class WebhookHandler:
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
         reraise=True,
-        after=(after_log(logger, 10)),
+        after=after_log(logger, 10),
     )
     def update_status(self, dataset_id: str, status: int):
         logger.info(f"Updating status of {dataset_id} to {status}")
