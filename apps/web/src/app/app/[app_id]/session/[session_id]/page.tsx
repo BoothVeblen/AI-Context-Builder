@@ -1,8 +1,16 @@
 import { safeParse } from '@/lib/utils'
 import { App } from '@/db/apps/schema'
+import { getMessages } from '@/db/messages/actions'
 import { getSession } from '@/db/sessions/actions'
 import Chat from '@/components/chat/page'
-import { Message, ProcessTask } from '@/components/chat/types'
+import { ProcessTask } from '@/components/chat/types'
+import {
+  chatMessagesFilter,
+  chatMessagesFormatter,
+  eventMessagesFilter,
+  eventMessagesFormatter,
+  messagesBuilder,
+} from '@/components/chat/utils'
 import { TreeItem } from '@/components/dnd/types'
 
 import { WorkflowItem } from '../../(manage)/settings/workflow/type'
@@ -38,12 +46,14 @@ export default async function SessionPage({ params }: IProps) {
   const { app_id, session_id } = params
   const { session, app, user } = await getSession(session_id, app_id)
 
-  const messages = safeParse(session.messages_str, []).map(
-    (message: Message) => ({
-      ...message,
-      type: 'chat',
-    })
-  )
+  const rawMessages = await getMessages(session_id)
+  const allMessages = messagesBuilder(rawMessages)
+  const chatMessages = allMessages
+    .filter(chatMessagesFilter)
+    .map(chatMessagesFormatter)
+  const eventMessages = allMessages
+    .filter(eventMessagesFilter)
+    .map(eventMessagesFormatter)
 
   const workflow = app ? getWorkflow(app) : []
 
@@ -55,8 +65,8 @@ export default async function SessionPage({ params }: IProps) {
           app={app}
           session={session}
           user={user}
-          initialMessages={messages}
-          initialEvents={safeParse(session.events_str, [])}
+          initialMessages={chatMessages}
+          initialEvents={eventMessages}
           workflow={workflow}
         />
       </div>

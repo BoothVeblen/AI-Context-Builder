@@ -25,13 +25,13 @@ interface BaseMessage {
 export interface EventMessage extends BaseMessage {
   type: 'event'
   eventType: string
+  content?: string
 }
 
 export interface ChatMessage extends BaseMessage, RawMessage {
   type: 'chat'
   feedback?: ChatFeedbackType
   feedback_content?: string
-  content: string
   meta?: {
     latency?: number
     token?: {

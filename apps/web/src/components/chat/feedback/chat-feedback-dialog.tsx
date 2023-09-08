@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 
 import { DialogContent, DialogHeader } from '../../ui/dialog'
-import { useChatContext } from '../chat-context'
 import { useChatFeedbackContext } from './chat-feedback-context'
 import submitFeedback from './service'
 
@@ -34,8 +33,6 @@ const remarks = [
 
 const ChatFeedbackDialog = () => {
   const { messageId, type, reset } = useChatFeedbackContext()
-  const { session } = useChatContext()
-  const { short_id: session_id } = session
 
   const {
     register,
@@ -109,7 +106,6 @@ const ChatFeedbackDialog = () => {
     trigger({
       content: trimmed,
       message_id: messageId,
-      session_id,
       type,
     })
   }

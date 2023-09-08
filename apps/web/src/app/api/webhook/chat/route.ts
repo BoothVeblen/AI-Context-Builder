@@ -5,9 +5,11 @@ import { nanoid } from 'nanoid'
 import { db } from '@/lib/drizzle-edge'
 import { logsnag } from '@/lib/logsnag'
 import { initPusher } from '@/lib/pusher-server'
-import { formatSeconds, safeParse } from '@/lib/utils'
+import { formatSeconds } from '@/lib/utils'
 import { DatasetsTable } from '@/db/datasets/schema'
-import { Session, SessionsTable } from '@/db/sessions/schema'
+import { addMessage } from '@/db/messages/actions'
+import { formatEventMessage } from '@/db/messages/utils'
+import { SessionsTable } from '@/db/sessions/schema'
 import { UsersTable } from '@/db/users/schema'
 
 async function getSession(api_session_id: string) {
@@ -32,18 +34,6 @@ async function getUserBySessionId(sessionId: string) {
 
 function formatChannelId(session_id: string) {
   return `session-${session_id}`
-}
-
-async function updateEvents(session: Session, newEvent: any) {
-  const oldEvents = safeParse(session.events_str, [])
-  const newEvents = [...oldEvents, newEvent]
-
-  await db
-    .update(SessionsTable)
-    .set({
-      events_str: JSON.stringify(newEvents),
-    })
-    .where(eq(SessionsTable.short_id, session.short_id))
 }
 
 export async function POST(req: NextRequest) {
@@ -95,7 +85,6 @@ async function createCall(eventType: string, data: any) {
   await pusher?.trigger(channelId, 'user-chat', newEvent)
 
   // DO NOT SAVE THIS TO DB
-  // await updateEvents(session, newEvent)
 
   const user = await getUserBySessionId(session.short_id)
   await logsnag?.publish({
@@ -122,7 +111,7 @@ async function endCall(eventType: string, data: any) {
     id: nanoid(),
     type: 'event',
     eventType,
-    duration,
+    call_duration: duration,
     createdAt: Date.now(),
   }
 
@@ -130,7 +119,13 @@ async function endCall(eventType: string, data: any) {
   const pusher = initPusher()
   await pusher?.trigger(channelId, 'user-chat', newEvent)
 
-  await updateEvents(session, newEvent)
+  const message = formatEventMessage({
+    short_id: newEvent.id,
+    session_id: session.short_id,
+    event_type: newEvent.eventType,
+    call_duration: newEvent.call_duration,
+  })
+  await addMessage(message)
 
   const user = await getUserBySessionId(session.short_id)
   await logsnag?.publish({
@@ -139,7 +134,9 @@ async function endCall(eventType: string, data: any) {
     icon: '🔚',
     description: `${
       user?.email || `Session ${session.short_id}`
-    } ended a call that lasted for ${formatSeconds(+data.duration || 0)}`,
+    } ended a call that lasted for ${formatSeconds(
+      +(message.call_duration || 0)
+    )}`,
     tags: {
       'session-id': session.short_id,
       'api-session-id': api_session_id,

@@ -42,7 +42,6 @@ const ChatFeedbackButtons = (props: Props) => {
         trigger({
           message_id: id,
           type,
-          session_id,
         })
 
         mutate<Message[]>(

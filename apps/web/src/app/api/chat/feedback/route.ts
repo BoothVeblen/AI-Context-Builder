@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
-import { addFeedback } from '@/db/sessions/actions'
+import { addFeedback } from '@/db/messages/actions'
 import { ChatFeedbackType } from '@/components/chat/feedback/types'
 
 export const runtime = 'edge'
 
 export type ChatFeedbackRequest = {
-  session_id: string
   message_id: string
-  content?: string
   type: ChatFeedbackType
+  content?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -20,10 +19,9 @@ export async function POST(req: NextRequest) {
   }
 
   const body: ChatFeedbackRequest = await req.json()
-  const { session_id, message_id, content, type } = body
+  const { message_id, content, type } = body
 
   await addFeedback({
-    sessionId: session_id,
     messageId: message_id,
     feedback: type,
     content,

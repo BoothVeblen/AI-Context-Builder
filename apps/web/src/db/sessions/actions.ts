@@ -1,16 +1,16 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
-import { Message } from 'ai'
 import axios from 'axios'
 import {
   and,
   desc,
   eq,
   gte,
-  isNull,
-  like,
-  notLike,
+  ilike,
+  inArray,
+  isNotNull,
+  notInArray,
   or,
   SQL,
   sql,
@@ -19,13 +19,15 @@ import {
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
-import { nanoid, safeParse } from '@/lib/utils'
-import { ChatMessage, EventMessage } from '@/components/chat/types'
+import { nanoid } from '@/lib/utils'
 
 import { AppsTable } from '../apps/schema'
+import { addMessage } from '../messages/actions'
+import { MessagesTable } from '../messages/schema'
+import { formatEventMessage } from '../messages/utils'
 import { checkUserId } from '../users/actions'
 import { UsersTable } from '../users/schema'
-import { Session, SessionsTable } from './schema'
+import { SessionsTable } from './schema'
 
 export async function addSession(appId: string) {
   const { userId } = auth()
@@ -62,32 +64,26 @@ export async function addSession(appId: string) {
     )
   const sessionCount = Number(allSessions?.count) || 0
 
-  let eventMessageContent = null
-  if (foundApp.opening_remarks) {
-    eventMessageContent = foundApp.opening_remarks
-  }
   const sessionVal = {
     short_id: nanoid(),
     name: `Chat ${sessionCount + 1}`,
     app_id: appId,
     api_session_id,
     created_by: userId,
-    events_str: eventMessageContent
-      ? JSON.stringify([
-          {
-            type: 'event',
-            id: nanoid(),
-            role: 'assistant',
-            content: eventMessageContent,
-            createdAt: Date.now(),
-          },
-        ])
-      : null,
   }
   const [newSession] = await db
     .insert(SessionsTable)
     .values(sessionVal)
     .returning()
+
+  if (foundApp.opening_remarks) {
+    const message = formatEventMessage({
+      session_id: newSession.short_id,
+      event_type: 'basic.opening_remarks',
+      content: foundApp.opening_remarks,
+    })
+    await addMessage(message)
+  }
 
   return { sessionId: newSession.short_id }
 }
@@ -198,32 +194,27 @@ export async function getLatestSessionId(appId: string) {
         }
         api_session_id = res?.data?.session_id
       }
-      let eventMessageContent = null
-      if (foundApp.opening_remarks) {
-        eventMessageContent = foundApp.opening_remarks
-      }
       const sessionVal = {
         short_id: nanoid(),
         name: 'Chat 1',
         app_id: appId,
         created_by: userId,
         api_session_id,
-        events_str: eventMessageContent
-          ? JSON.stringify([
-              {
-                type: 'event',
-                id: nanoid(),
-                role: 'assistant',
-                content: eventMessageContent,
-                createdAt: Date.now(),
-              },
-            ])
-          : null,
       }
       const [newSession] = await db
         .insert(SessionsTable)
         .values(sessionVal)
         .returning()
+
+      if (foundApp.opening_remarks) {
+        const message = formatEventMessage({
+          session_id: newSession.short_id,
+          event_type: 'basic.opening_remarks',
+          content: foundApp.opening_remarks,
+        })
+        await addMessage(message)
+      }
+
       return newSession.short_id
     }
 
@@ -270,129 +261,45 @@ export async function getSession(sessionId: string, appId?: string) {
   }
 }
 
-function formatId(message: Message) {
-  if (!message.id) {
-    return {
-      ...message,
-      id: nanoid(),
-    }
-  }
-  return message
+const timeframes = {
+  last7days: gte(SessionsTable.created_at, sql`now() - interval '7 days'`),
+  last3months: gte(SessionsTable.created_at, sql`now() - interval '3 months'`),
+  last12months: gte(
+    SessionsTable.created_at,
+    sql`now() - interval '12 months'`
+  ),
+  monthtodate: gte(SessionsTable.created_at, sql`date_trunc('month', now())`),
+  quartertodate: gte(
+    SessionsTable.created_at,
+    sql`date_trunc('quarter', now())`
+  ),
+  today: gte(SessionsTable.created_at, sql`date_trunc('day', now())`),
+  yeartodate: gte(SessionsTable.created_at, sql`date_trunc('year', now())`),
 }
 
-function formatTimestamp(message: Message) {
-  if (typeof message.createdAt !== 'number') {
-    return {
-      ...message,
-      createdAt: new Date(message.createdAt || Date.now()).getTime(),
-    }
-  }
+const messageIdsHasFeedbackQuery = db
+  .select({ data: MessagesTable.session_id })
+  .from(MessagesTable)
+  .where(isNotNull(MessagesTable.feedback))
 
-  return message
-}
-
-export async function updateMessagesToSession(
-  sessionId: string,
-  messages: Message[],
-  appId?: string
-) {
-  const { userId } = auth()
-  try {
-    if (!userId) {
-      throw new Error('Not authenticated')
-    }
-
-    const [session] = await db
-      .select()
-      .from(SessionsTable)
-      .where(eq(SessionsTable.short_id, sessionId))
-
-    const currentMessages = safeParse(session.messages_str, [])
-
-    const formattedMessages = messages.map(formatId).map(formatTimestamp)
-
-    // todo impl single message chat
-    const mergedMessages = formattedMessages.map((message, id) => {
-      const currentMessage = currentMessages[id]
-      if (currentMessage?.id === message.id) {
-        return {
-          ...message,
-          ...currentMessage,
-        }
-      }
-      return message
-    })
-    await db
-      .update(SessionsTable)
-      .set({
-        messages_str: JSON.stringify(mergedMessages),
-      })
-      .where(
-        and(
-          eq(SessionsTable.short_id, sessionId),
-          eq(SessionsTable.created_by, userId)
+const messageIdsSearchQueryBuilder = (search: string) =>
+  db
+    .select({ data: MessagesTable.session_id })
+    .from(MessagesTable)
+    .where(
+      and(
+        eq(MessagesTable.type, 'chat'),
+        or(
+          ilike(MessagesTable.query, `%${search}%`),
+          ilike(MessagesTable.answer, `%${search}%`)
         )
       )
-  } catch (error: any) {
-    return {
-      error: error.message,
-    }
-  }
-}
-
-export async function updateEvents(session: Session, newEvent: EventMessage) {
-  const oldEvents = safeParse(session.events_str, [])
-  const newEvents = [...oldEvents, newEvent].map(formatId).map(formatTimestamp)
-
-  await db
-    .update(SessionsTable)
-    .set({
-      events_str: JSON.stringify(newEvents),
-    })
-    .where(eq(SessionsTable.short_id, session.short_id))
-}
-
-export async function addFeedback({
-  sessionId,
-  messageId,
-  feedback,
-  content,
-}: {
-  sessionId: string
-  messageId: string
-  feedback: 'good' | 'bad'
-  content?: string
-}) {
-  try {
-    const [{ messages_str }] = await db
-      .select()
-      .from(SessionsTable)
-      .where(eq(SessionsTable.short_id, sessionId))
-    if (!messages_str) {
-      return
-    }
-
-    const updatedMessage = JSON.parse(messages_str).map(
-      (message: ChatMessage) => {
-        if (message.id === messageId) {
-          message.feedback = feedback
-          message.feedback_content = content
-        }
-        return message
-      }
     )
 
-    await db
-      .update(SessionsTable)
-      .set({
-        messages_str: JSON.stringify(updatedMessage),
-      })
-      .where(eq(SessionsTable.short_id, sessionId))
-  } catch (error: any) {
-    return {
-      error: error.message,
-    }
-  }
+const feedbacks = {
+  userfeedback: inArray(SessionsTable.short_id, messageIdsHasFeedbackQuery),
+  nofeedback: notInArray(SessionsTable.short_id, messageIdsHasFeedbackQuery),
+  all: null,
 }
 
 export async function getMonitoringData({
@@ -410,95 +317,60 @@ export async function getMonitoringData({
   feedback?: string
   search?: string
 }) {
-  const timeframes = {
-    last7days: gte(SessionsTable.created_at, sql`now() - interval '7 days'`),
-    last3months: gte(
-      SessionsTable.created_at,
-      sql`now() - interval '3 months'`
-    ),
-    last12months: gte(
-      SessionsTable.created_at,
-      sql`now() - interval '12 months'`
-    ),
-    monthtodate: gte(SessionsTable.created_at, sql`date_trunc('month', now())`),
-    quartertodate: gte(
-      SessionsTable.created_at,
-      sql`date_trunc('quarter', now())`
-    ),
-    today: gte(SessionsTable.created_at, sql`date_trunc('day', now())`),
-    yeartodate: gte(SessionsTable.created_at, sql`date_trunc('year', now())`),
-  }
-
-  const feedbacks = {
-    userfeedback: like(SessionsTable.messages_str, `%feedback%`),
-    nofeedback: or(
-      isNull(SessionsTable.messages_str),
-      notLike(SessionsTable.messages_str, `%feedback%`)
-    ),
-    all: null,
-  }
-
-  const query = [
+  const sessionFilters = [
+    eq(SessionsTable.app_id, appId),
     timeframe && timeframes[timeframe as keyof typeof timeframes],
     feedback && feedbacks[feedback as keyof typeof feedbacks],
-    search && like(SessionsTable.messages_str, `%${search}%`),
+    search &&
+      inArray(SessionsTable.short_id, messageIdsSearchQueryBuilder(search)),
   ].filter(Boolean) as SQL[]
 
-  const start = Date.now()
-  const [items, [count], [app]] = await Promise.all([
-    db
-      .select()
-      .from(SessionsTable)
-      .orderBy(desc(SessionsTable.created_at))
-      .where(and(eq(SessionsTable.app_id, appId), ...query))
-      .limit(pageSize)
-      .offset(page * pageSize)
-      .leftJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id)),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(SessionsTable)
-      .where(and(eq(SessionsTable.app_id, appId), ...query)),
-    db.select().from(AppsTable).where(eq(AppsTable.short_id, appId)),
-  ])
+  let sessionsQuery = db
+    .select({
+      id: SessionsTable.id,
+      short_id: SessionsTable.short_id,
+      created_at: SessionsTable.created_at,
+      email: UsersTable.email,
+      total: sql<number>`count(${MessagesTable.id})`,
+      feedback: {
+        good: sql<number>`count(${MessagesTable.feedback}) filter (where ${MessagesTable.feedback} = 'good')`,
+        bad: sql<number>`count(${MessagesTable.feedback}) filter (where ${MessagesTable.feedback} = 'bad')`,
+      },
+    })
+    .from(SessionsTable)
+    .orderBy(desc(SessionsTable.created_at))
+    .limit(pageSize)
+    .offset(page * pageSize)
+    .innerJoin(UsersTable, eq(SessionsTable.created_by, UsersTable.short_id))
+    .leftJoin(
+      MessagesTable,
+      eq(SessionsTable.short_id, MessagesTable.session_id)
+    )
+    .where(and(...sessionFilters))
+    .groupBy(
+      SessionsTable.id,
+      SessionsTable.short_id,
+      SessionsTable.created_at,
+      UsersTable.email
+    )
 
+  const sessionsCountQuery = db
+    .select({ count: sql<number>`count(*)` })
+    .from(SessionsTable)
+    .where(and(...sessionFilters))
+
+  const appQuery = db
+    .select()
+    .from(AppsTable)
+    .where(eq(AppsTable.short_id, appId))
+
+  const start = Date.now()
+  const [sessions, [sessionsCount], [app]] = await Promise.all([
+    sessionsQuery,
+    sessionsCountQuery,
+    appQuery,
+  ])
   console.log('getMonitoringData db query time:', Date.now() - start)
 
-  const ret = {
-    sessions: items.map((item) => {
-      const messages = JSON.parse(
-        item.sessions.messages_str || '[]'
-      ) as ChatMessage[]
-
-      const aggregation = messages.reduce(
-        (acc, message) => {
-          acc.total++
-          if (message.feedback === 'good') {
-            acc.feedback.good++
-          }
-          if (message.feedback === 'bad') {
-            acc.feedback.bad++
-          }
-          return acc
-        },
-        {
-          total: 0,
-          feedback: {
-            good: 0,
-            bad: 0,
-          },
-        }
-      )
-      return {
-        ...item.sessions,
-        email: item.users?.email,
-        first_name: item.users?.first_name,
-        last_name: item.users?.last_name,
-        image_url: item.users?.image_url,
-        ...aggregation,
-      }
-    }),
-    count: count?.count || 0,
-    app,
-  }
-  return ret
+  return { sessions, count: sessionsCount.count || 0, app }
 }

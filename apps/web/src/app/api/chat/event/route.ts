@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/drizzle-edge'
-import { updateEvents } from '@/db/sessions/actions'
+import { addMessage } from '@/db/messages/actions'
+import { formatEventMessage } from '@/db/messages/utils'
 import { SessionsTable } from '@/db/sessions/schema'
 import { EventMessage } from '@/components/chat/types'
 
@@ -24,7 +25,11 @@ export async function POST(req: NextRequest) {
     }
     const session = await getSession(session_id)
     if (!session) throw new Error('Session not found')
-    await updateEvents(session, event)
+    const message = formatEventMessage({
+      session_id,
+      event_type: event.eventType,
+    })
+    await addMessage(message)
     return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message })

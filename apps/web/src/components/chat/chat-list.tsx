@@ -9,6 +9,7 @@ import { useChatContext } from './chat-context'
 import { ChatFeedbackContextProvider } from './feedback/chat-feedback-context'
 import ChatFeedbackDialog from './feedback/chat-feedback-dialog'
 import { Message } from './types'
+import { keyBuilder } from './utils'
 
 interface IProps {
   messages: Message[]
@@ -32,10 +33,11 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
     >
       <ChatFeedbackContextProvider messages={messages}>
         {messages?.map((message: any, index: number) => {
+          const key = keyBuilder(message)
           return (
             <ChatCard
               message={message}
-              key={message?.id}
+              key={key}
               error={error}
               isEnd={index === messages.length - 1}
             />
