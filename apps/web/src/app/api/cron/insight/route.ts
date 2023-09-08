@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { logsnag } from '@/lib/logsnag'
 import { AppsTable } from '@/db/apps/schema'
+import { MessagesTable } from '@/db/messages/schema'
 import { SessionsTable } from '@/db/sessions/schema'
 import { UsersTable } from '@/db/users/schema'
 
@@ -57,7 +58,7 @@ export async function GET() {
 
     if (flags.isProd) {
       const queue = []
-      const pub = logsnag?.publish({
+      const pub = logsnag?.track({
         channel: 'insight',
         event: 'Web Insight',
         icon: '➡️',
@@ -111,7 +112,7 @@ export async function GET() {
         },
       ]
       for (const insight of insights) {
-        const task = logsnag?.insight(insight)
+        const task = logsnag?.insight.track(insight)
         queue.push(task)
       }
       await Promise.all(queue)
@@ -141,26 +142,15 @@ async function getTotalSessionsCount() {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(SessionsTable)
-    .where(eq(SessionsTable.archived, false))
   return +count
 }
 
 async function getTotalMessagesCount() {
-  const sessions = await db
-    .select({ messages_str: SessionsTable.messages_str })
-    .from(SessionsTable)
-    .where(eq(SessionsTable.archived, false))
-
-  let totalMessagesCount = 0
-  for (const session of sessions) {
-    if (session.messages_str) {
-      const messages = JSON.parse(session.messages_str)
-      const messagesCount = messages.length || 0
-      totalMessagesCount += messagesCount
-    }
-  }
-
-  return totalMessagesCount
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(MessagesTable)
+    .where(eq(MessagesTable.archived, false))
+  return +count
 }
 
 async function getTotalUsersCount() {
@@ -180,8 +170,8 @@ async function getActiveUsersCount() {
   let totalActiveUsersCount = 0
   for (const user of users) {
     if (user.short_id) {
-      const sessions = await db
-        .select({ messages_str: SessionsTable.messages_str })
+      const sessionsIdQuery = db
+        .select({ data: SessionsTable.short_id })
         .from(SessionsTable)
         .where(
           and(
@@ -189,16 +179,10 @@ async function getActiveUsersCount() {
             eq(SessionsTable.archived, false)
           )
         )
-
-      let totalMessagesCount = 0
-      for (const session of sessions) {
-        if (session.messages_str) {
-          const messages = JSON.parse(session.messages_str)
-          const messagesCount = messages.length || 0
-          totalMessagesCount += messagesCount
-        }
-      }
-
+      const [{ count: totalMessagesCount }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(MessagesTable)
+        .where(inArray(MessagesTable.session_id, sessionsIdQuery))
       if (totalMessagesCount > 10) {
         totalActiveUsersCount += 1
       }

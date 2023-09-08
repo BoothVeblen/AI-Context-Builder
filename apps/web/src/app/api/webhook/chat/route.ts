@@ -87,7 +87,8 @@ async function createCall(eventType: string, data: any) {
   // DO NOT SAVE THIS TO DB
 
   const user = await getUserBySessionId(session.short_id)
-  await logsnag?.publish({
+  await logsnag?.track({
+    ...(user?.short_id ? { user_id: user?.short_id } : {}),
     channel: 'chat',
     event: 'Call Received',
     icon: '📞',
@@ -128,7 +129,8 @@ async function endCall(eventType: string, data: any) {
   await addMessage(message)
 
   const user = await getUserBySessionId(session.short_id)
-  await logsnag?.publish({
+  await logsnag?.track({
+    ...(user?.short_id ? { user_id: user?.short_id } : {}),
     channel: 'chat',
     event: 'Call Ended',
     icon: '🔚',

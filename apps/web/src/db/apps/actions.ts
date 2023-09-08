@@ -40,7 +40,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     const email = await currentUserEmail()
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Create App Request',
       icon: '➡️',
@@ -54,7 +55,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     let api_model_id = null
     if (flags.enabledAIService) {
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Create App Request to API service',
         icon: '➡️',
@@ -92,7 +94,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     const appId = newApp?.short_id
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Create App Request',
       icon: '✅',
@@ -105,7 +108,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       },
     })
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Create Session Request',
       icon: '➡️',
@@ -120,7 +124,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
 
     let api_session_id = null
     if (flags.enabledAIService) {
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Create Session Request to API service',
         icon: '➡️',
@@ -164,7 +169,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       await addMessage(message)
     }
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Create Session Request',
       icon: '✅',
@@ -186,7 +192,8 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
     const { userId } = auth()
     if (userId) {
       const email = await currentUserEmail()
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Create App Request',
         icon: '❌',
@@ -287,7 +294,8 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
       )
       .returning()
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Edit App Request',
       icon: '✅',
@@ -304,7 +312,8 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
     const { userId } = auth()
     if (userId) {
       const email = await currentUserEmail()
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Edit App Request',
         icon: '❌',
@@ -443,7 +452,8 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       )
       .returning()
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Publish App Request',
       icon: '✅',
@@ -461,7 +471,8 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
     const { userId } = auth()
     if (userId) {
       const email = await currentUserEmail()
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Publish App Request',
         icon: '❌',
@@ -502,7 +513,8 @@ export async function removeApp(appId: string) {
       )
       .returning()
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Delete App Request',
       icon: '✅',
@@ -519,7 +531,8 @@ export async function removeApp(appId: string) {
     const { userId } = auth()
     if (userId) {
       const email = await currentUserEmail()
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Delete App Request',
         icon: '❌',
@@ -574,7 +587,8 @@ export async function addDebugSession(api_model_id: string) {
       throw new Error(`API service error: ${res.message}`)
     }
 
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: userId,
       channel: 'creator',
       event: 'Debug App Request',
       icon: '✅',
@@ -591,7 +605,8 @@ export async function addDebugSession(api_model_id: string) {
     const { userId } = auth()
     if (userId) {
       const email = await currentUserEmail()
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: userId,
         channel: 'creator',
         event: 'Debug App Request',
         icon: '❌',

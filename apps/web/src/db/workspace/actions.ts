@@ -40,7 +40,8 @@ export async function addToWorkspace(appId: string) {
     .where(eq(AppsTable.short_id, appId))
     .limit(1)
 
-  await logsnag?.publish({
+  await logsnag?.track({
+    user_id: userId,
     channel: 'user',
     event: 'Add App to Workspace Request',
     icon: '➡️',
@@ -55,7 +56,8 @@ export async function addToWorkspace(appId: string) {
   const val = { short_id: nanoid(), app_id: appId, user_id: userId }
   const [newWorkspace] = await db.insert(WorkspaceTable).values(val).returning()
 
-  await logsnag?.publish({
+  await logsnag?.track({
+    user_id: userId,
     channel: 'user',
     event: 'Add App to Workspace Request',
     icon: '✅',
@@ -152,7 +154,8 @@ export async function removeFromWorkspace(appId: string) {
     .where(eq(AppsTable.short_id, appId))
     .limit(1)
 
-  await logsnag?.publish({
+  await logsnag?.track({
+    user_id: userId,
     channel: 'creator',
     event: 'Remove App from Workspace Request',
     icon: '➡️',
@@ -172,7 +175,8 @@ export async function removeFromWorkspace(appId: string) {
     )
     .returning()
 
-  await logsnag?.publish({
+  await logsnag?.track({
+    user_id: userId,
     channel: 'creator',
     event: 'Remove App from Workspace Request',
     icon: '✅',

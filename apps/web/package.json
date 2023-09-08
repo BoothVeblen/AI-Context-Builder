@@ -63,7 +63,7 @@
     "immer": "^10.0.2",
     "js-base64": "^3.7.5",
     "lodash": "^4.17.21",
-    "logsnag": "^0.1.8",
+    "logsnag": "^1.0.0",
     "lucide-react": "^0.263.1",
     "ms": "^3.0.0-canary.1",
     "nanoid": "^4.0.2",

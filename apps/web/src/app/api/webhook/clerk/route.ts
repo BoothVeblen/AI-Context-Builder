@@ -46,7 +46,19 @@ async function createUser(data: UserJSON) {
   if (result.error) {
     throw new Error(result.error)
   } else {
-    await logsnag?.publish({
+    await logsnag?.identify({
+      user_id: newUser.short_id,
+      properties: {
+        ...(newUser.email ? { email: newUser.email } : {}),
+        ...(newUser.last_name ? { last_name: newUser.last_name } : {}),
+        ...(newUser.first_name ? { first_name: newUser.first_name } : {}),
+        ...(newUser.created_at
+          ? { created_at: newUser.created_at.toUTCString() }
+          : {}),
+      },
+    })
+    await logsnag?.track({
+      user_id: newUser.short_id,
       channel: 'user',
       event: 'New User',
       icon: '🎉',
@@ -66,7 +78,8 @@ async function updateUser(data: UserJSON) {
   if (result.error) {
     throw new Error(result.error)
   } else {
-    await logsnag?.publish({
+    await logsnag?.track({
+      user_id: updatedUser.short_id,
       channel: 'user',
       event: 'User Account Updated',
       icon: '👤',
@@ -85,7 +98,8 @@ async function deleteUser(data: DeletedObjectJSON) {
     if (result.error) {
       throw new Error(result.error)
     } else {
-      await logsnag?.publish({
+      await logsnag?.track({
+        user_id: id,
         channel: 'user',
         event: 'User Account Deleted',
         icon: '😥',
