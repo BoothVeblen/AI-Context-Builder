@@ -97,8 +97,8 @@ export async function POST(req: NextRequest) {
           feedback: null,
           feedback_content: null,
           latency,
-          ...(metadata?.total_tokens && {
-            total_tokens: metadata.total_tokens,
+          ...(metadata?.token?.total_tokens && {
+            total_tokens: metadata.token.total_tokens,
           }),
           ...(metadata?.raw && { raw: metadata.raw }),
         }
