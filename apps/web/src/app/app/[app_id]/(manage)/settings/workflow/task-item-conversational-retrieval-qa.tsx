@@ -230,7 +230,7 @@ function FormItemPrompt() {
 
   const suggestionData = React.useMemo(
     () => [
-      ...['context', 'chat_history', 'question'].map(suggestionDataFormatter),
+      ...['context'].map(suggestionDataFormatter),
       ...formatWorkflowDataToSuggestionData(workflowData),
     ],
     [workflowData]

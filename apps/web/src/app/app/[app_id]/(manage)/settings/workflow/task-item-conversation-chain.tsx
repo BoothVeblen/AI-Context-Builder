@@ -27,10 +27,7 @@ import FormItemTitle from './form-item-title'
 import { useWorkflowContext } from './store'
 import useAutoSave from './use-auto-save'
 import useResetForm from './use-reset-form'
-import {
-  formatWorkflowDataToSuggestionData,
-  suggestionDataFormatter,
-} from './utils'
+import { formatWorkflowDataToSuggestionData } from './utils'
 
 interface IProps {
   taskId: string
@@ -68,7 +65,6 @@ const FormSchema = z.object({
   }),
   prompt: z.object({
     template: z.string().optional(),
-    basic_prompt: z.string().optional(),
   }),
 })
 
@@ -215,10 +211,7 @@ function FormItemPrompt() {
   const workflowData = useWorkflowContext((state) => state.workflowData)
 
   const suggestionData = React.useMemo(
-    () => [
-      ...['chat_history', 'question'].map(suggestionDataFormatter),
-      ...formatWorkflowDataToSuggestionData(workflowData),
-    ],
+    () => formatWorkflowDataToSuggestionData(workflowData),
     [workflowData]
   )
 
@@ -235,18 +228,6 @@ function FormItemPrompt() {
                 tip="If you want to quote the output results of another chain, please enter {key.output}."
               />
               <AddTemplateButton config={SYSTEM_PROMPT_TEMPLATES} />
-            </div>
-          }
-          data={suggestionData}
-        />
-        <MentionTextareaItem<IFormSchema>
-          name="prompt.basic_prompt"
-          label={
-            <div className="flex items-center justify-between">
-              <FormItemTitle
-                title="Basic Prompt"
-                tip="This is where the AI makes its judgments, and it is recommended not to make any modifications."
-              />
             </div>
           }
           data={suggestionData}

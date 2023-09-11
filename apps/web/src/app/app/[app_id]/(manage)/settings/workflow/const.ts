@@ -85,11 +85,6 @@ export const TASK_DEFAULT_VALUE_MAP = {
     },
     prompt: {
       template: '',
-      basic_prompt: `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-Current conversation:
-[{chat_history}]
-Human: [{question}]
-AI:`,
     },
   },
   conversational_retrieval_qa_chain: {
@@ -105,9 +100,7 @@ AI:`,
     prompt: {
       template: '',
       basic_prompt: `background: '''[{context}]'''
-chat history: [{chat_history}]
-Use the text separated by three quotation marks in the background to answer the question. Do not add any additional information. Make sure the answer is correct, do not output false content. If the answer cannot be found in the text, please write "The answer is not provided in the document".
-[{question}]`,
+Use the text separated by three quotation marks in the background to answer the question. Do not add any additional information. Make sure the answer is correct, do not output false content. If the answer cannot be found in the text, please write "The answer is not provided in the document".`,
     },
     retriever: {
       type: 'pinecone_hybrid_search',
@@ -129,8 +122,8 @@ Use the text separated by three quotation marks in the background to answer the 
     prompt: {
       template: '',
       target: '',
-      check_prompt:
-        'The goal is [{target}], and the content of the conversation is [{chat_history}]. Please determine if the dialogue has achieved the target. If so, only output "Yes" and do not provide any other explanations. If not, in order to achieve the goal, combine with the following dialogue and ask a question again.',
+      check_prompt: `The goal is [{target}].
+Please determine if this conversation has achieved its objective. If the objective has been met, simply respond with "yes" and refrain from adding further comments. If the objective hasn't been met, in order to continue pursuing the objective, please raise a follow-up question based on the content of this conversation. Ensure that, in the event the objective hasn't been met, your question is definitely aimed at achieving the objective and doesn't deviate from it."`,
       follow_up_questions_num: 1,
     },
   },
@@ -169,14 +162,11 @@ export const BASIC_PROMPT_TEMPLATES = [
   {
     title: 'Default Template',
     prompt: `background: '''[{context}]'''
-chat history: [{chat_history}]
-Use the text separated by three quotation marks in the background to answer the question. Do not add any additional information. Make sure the answer is correct, do not output false content. If the answer cannot be found in the text, please write "The answer is not provided in the document".
-[{question}]`,
+Use the text separated by three quotation marks in the background to answer the question. Do not add any additional information. Make sure the answer is correct, do not output false content. If the answer cannot be found in the text, please write "The answer is not provided in the document".`,
   },
   {
     title: 'Additional Information',
     prompt: `background: '''[{context}]'''
-chat history: [{chat_history}]
 Prioritize using the text separated by three quotation marks in the background to answer the questions. Do not add any additional information. Ensure the answer is correct and do not provide false information."
 If the answer cannot be found in the text, you may use other known information to answer, but ensure the answer is correct and do not provide false information.`,
   },
