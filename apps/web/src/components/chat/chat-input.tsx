@@ -34,7 +34,6 @@ const ChatInput = ({
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const { formRef, onKeyDown } = useEnterSubmit()
-
   return (
     <div
       className={cn(
@@ -64,7 +63,11 @@ const ChatInput = ({
             placeholder="Type a message"
             value={input}
             onChange={handleInputChange}
-            onKeyDown={onKeyDown}
+            onKeyDown={(e) => {
+              if (!disabled) {
+                onKeyDown(e)
+              }
+            }}
             minRows={1}
             maxRows={8}
           />

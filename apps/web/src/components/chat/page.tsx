@@ -184,8 +184,9 @@ const Chat = (props: ChatProps) => {
     )
   }, [messages, eventMessages])
 
-  const disabled = !input || input.trim() === '' || isLoading
-
+  const set = new Set(input?.split(''))
+  const isEmpty = set?.size === 1 && set.has('\n')
+  const disabled = isEmpty || !input || !input?.trim() || isLoading
   const handelReload = () => {
     setAutoScroll(true)
     reload()
