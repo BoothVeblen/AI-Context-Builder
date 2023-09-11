@@ -1,112 +1,19 @@
+import inspect
 import re
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, cast
-from asyncio import sleep, Task
-import asyncio
 
-from langchain.callbacks import AsyncIteratorCallbackHandler
+from langchain.callbacks.manager import (
+    AsyncCallbackManagerForChainRun,
+    CallbackManagerForChainRun,
+)
 from langchain.chains import ConversationalRetrievalChain, RetrievalQA
+from langchain.chains.base import Chain
 from langchain.chains.retrieval_qa.base import BaseRetrievalQA
+from langchain.prompts.base import BasePromptTemplate
+from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.output import LLMResult
-from pydantic import Field
-
-
-class SequentialChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
-    def __init__(self) -> None:
-        super().__init__()
-
-    async def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ):
-        await super().on_llm_start(serialized, prompts, **kwargs)
-
-    async def on_llm_end(self, response: LLMResult, **kwargs: Any):
-        await super().on_llm_end(response, **kwargs)
-
-    async def on_llm_new_token(self, token: str, **kwargs: Any):
-        return await super().on_llm_new_token(token, **kwargs)
-
-    async def on_chain_start(
-        self,
-        serialized: Dict[str, Any],
-        inputs: Dict[str, Any],
-        *,
-        run_id,
-        parent_run_id=None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
-    ) -> None:
-        """Run when chain starts running."""
-        pass
-
-    async def on_chain_end(
-        self,
-        outputs: Dict[str, Any],
-        *,
-        run_id,
-        parent_run_id: None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
-    ) -> None:
-        """Run when chain ends running."""
-        pass
-
-
-class ChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
-    index: int = Field(default=0)
-    chain_type: str = Field(default="")
-
-    def __init__(self, index, chain_type) -> None:
-        self.index = index
-        self.chain_type = chain_type
-        super().__init__()
-
-    async def on_chain_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ):
-        await super().on_llm_start(serialized, prompts, **kwargs)
-
-    async def on_chain_end(self, response: LLMResult, **kwargs: Any):
-        await super().on_llm_end(response, **kwargs)
-
-    async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        return await super().on_llm_new_token(token, **kwargs)
-
-
-class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
-    current_number: int = Field(default=0)
-    sending_number: bool = Field(default=True)
-
-    def __init__(self) -> None:
-        self.timer_task: Task = None
-        super().__init__()
-        if self.timer_task:
-            self.timer_task.cancel()
-        self.done.clear()
-        self.current_number = 0
-        self.timer_task = asyncio.create_task(self._send_number())
-
-    async def _send_number(self):
-        # do this since frontend will close over the connection if no data is sent for 30 seconds
-        while True and self.sending_number:
-            await sleep(28)
-            self.queue.put_nowait("chunk data")
-            self.current_number += 1
-
-    async def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ):
-        self.sending_number = False
-        await super().on_llm_start(serialized, prompts, **kwargs)
-
-    async def on_llm_end(self, response: LLMResult, **kwargs: Any):
-        if self.timer_task:
-            self.timer_task.cancel()
-        await super().on_llm_end(response, **kwargs)
-
-    async def on_llm_new_token(self, token: str, **kwargs: Any):
-        return await super().on_llm_new_token(token, **kwargs)
-
+from pydantic import Extra, Field
 
 tool_output_pattern = re.compile(r"\[\{tool-\d+\.output\}\]")
 tool_output_brackets_pattern = re.compile(r"\[\{(\btool-\d+\-output\b)\}\]")
@@ -166,3 +73,112 @@ class PatchedRetrievalQA(RetrievalQA):
     @property
     def output_keys(self) -> List[str]:
         return [self.output_key]
+
+    async def _acall(
+        self,
+        inputs: Dict[str, Any],
+        run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
+    ) -> Dict[str, Any]:
+        """Run get_relevant_text and llm on input query.
+
+        If chain has 'return_source_documents' as 'True', returns
+        the retrieved documents as well under the key 'source_documents'.
+
+        Example:
+        .. code-block:: python
+
+        res = indexqa({'query': 'This is my query'})
+        answer, docs = res['result'], res['source_documents']
+        """
+        _run_manager = run_manager or AsyncCallbackManagerForChainRun.get_noop_manager()
+        question = inputs[self.input_key]
+        accepts_run_manager = (
+            "run_manager" in inspect.signature(self._aget_docs).parameters
+        )
+        if accepts_run_manager:
+            docs = await self._aget_docs(question, run_manager=_run_manager)
+        else:
+            docs = await self._aget_docs(question)  # type: ignore[call-arg]
+        # To add input variables to the prompt, we need to patch it⬇️
+        _input = deepcopy(inputs)
+        _input.pop("question")
+        answer = await self.combine_documents_chain.arun(
+            input_documents=docs,
+            question=question,
+            callbacks=_run_manager.get_child(),
+            **_input,
+        )
+
+        if self.return_source_documents:
+            return {self.output_key: answer, "source_documents": docs}
+        else:
+            return {self.output_key: answer}
+
+
+class BaseCustomChain(Chain):
+    prompt: BasePromptTemplate
+    llm: BaseLanguageModel
+    output_key: str = "text"
+
+    class Config:
+        extra = Extra.forbid
+        arbitrary_types_allowed = True
+
+    @property
+    def input_keys(self) -> List[str]:
+        return self.prompt.input_variables
+
+    @property
+    def output_keys(self) -> List[str]:
+        return [self.output_key]
+
+    def _call(
+        self, inputs: Dict[str, Any], run_manager: CallbackManagerForChainRun = None
+    ) -> Dict[str, str]:
+        # Your custom chain logic goes here
+        # This is just an example that mimics LLMChain
+        prompt_value = self.prompt.format_prompt(**inputs)
+        # Whenever you call a language model, or another chain, you should pass
+        # a callback manager to it. This allows the inner run to be tracked by
+        # any callbacks that are registered on the outer run.
+        # You can always obtain a callback manager for this by calling
+        # `run_manager.get_child()` as shown below.
+        response = self.llm.generate_prompt(
+            [prompt_value], callbacks=[run_manager.get_child() if run_manager else None]
+        )
+        # If you want to log something about this run, you can do so by calling
+        # methods on the `run_manager`, as shown below. This will trigger any
+        # callbacks that are registered for that event.
+        if run_manager:
+            run_manager.on_text("Log something about this run")
+        return {self.output_key: response.generations[0][0].text}
+
+    async def acall(
+        self,
+        inputs: Dict[str, Any],
+        run_manager: AsyncCallbackManagerForChainRun = None,
+    ) -> Dict[str, str]:
+        # Your custom chain logic goes here
+        # This is just an example that mimics LLMChain
+        prompt_value = self.prompt.format_prompt(**inputs)
+
+        # Whenever you call a language model, or another chain, you should pass
+        # a callback manager to it. This allows the inner run to be tracked by
+        # any callbacks that are registered on the outer run.
+        # You can always obtain a callback manager for this by calling
+        # `run_manager.get_child()` as shown below.
+        response = await self.llm.agenerate_prompt(
+            [prompt_value], callbacks=run_manager.get_child() if run_manager else None
+        )
+
+        # If you want to log something about this run, you can do so by calling
+        # methods on the `run_manager`, as shown below. This will trigger any
+        # callbacks that are registered for that event.
+        if run_manager:
+            await run_manager.on_text("Log something about this run")
+
+        return {self.output_key: response.generations[0][0].text}
+
+    @property
+    def _chain_type(self) -> str:
+        return "custom_chain"

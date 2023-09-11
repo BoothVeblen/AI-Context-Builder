@@ -22,6 +22,10 @@ class LLM(BaseModel):
 
 class Prompt(BaseModel):
     template: str = Field(default_factory=str)
+    target: Optional[str] = Field(default=None)
+    check_prompt: Optional[str] = Field(default=None)
+    follow_up_questions_num: Optional[int] = Field(default=0)
+    basic_prompt: Optional[str] = Field(default=None)
 
 
 class Chain(BaseModel):

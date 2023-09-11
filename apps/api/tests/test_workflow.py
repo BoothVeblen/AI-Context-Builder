@@ -6,10 +6,9 @@ from models.base import (
     Chain,
     Dataset,
     Document,
-    session_state_manager,
     Messages,
 )
-from models.controller import model_manager, dataset_manager
+from models.controller import model_manager, dataset_manager, session_state_manager
 from utils import OPENAI_API_KEY
 from routers.chat import send_message
 import uuid
@@ -44,7 +43,9 @@ Standalone question:"""
         documents=[document],
     )
 
-    dataset_manager.update_dataset(dataset.id, dataset.dict())
+    updated_dict = dataset.dict()
+    updated_dict.pop("id")
+    dataset_manager.update_dataset(dataset.id, updated_dict)
 
     chain1 = Chain(
         llm=llm1,

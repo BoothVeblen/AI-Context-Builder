@@ -11,4 +11,4 @@ from .chat import (
 
 from .dataset import Document, Dataset, DatasetStatusWebhookRequest
 from .model import LLM, Prompt, Chain, Model
-from .session_state import session_state_manager
+from .session_state import SessionState

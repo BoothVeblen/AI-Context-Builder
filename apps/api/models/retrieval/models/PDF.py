@@ -129,6 +129,9 @@ class PDFRetrieverMixin:
         if vector == {}:
             logger.warning(f"vector {id} not found when getting chains")
             return []
+        logger.info(
+            f"relative chains: {vector.get('metadata', {}).get('relative_chains', [])}"
+        )
         return vector.get("metadata", {}).get("relative_chains", [])
 
     @classmethod
@@ -140,7 +143,18 @@ class PDFRetrieverMixin:
         known_chains = self.get_relative_chains(dataset)
         chain_urn = f"{model_id}-{chain_key}"
         known_chains.append(chain_urn)
+        logger.info(f"Adding chain {chain_urn} to dataset {dataset.id}")
+        logger.info(f"Known chains: {known_chains}")
+        logger.info(
+            f"Dataset {dataset.id} has {len(dataset.documents)} documents, first documents: {dataset.documents[0].page_size} pages"
+        )
         for doc in dataset.documents:
+            if doc.page_size == 0:
+                logger.warning(
+                    f"Document {doc.url} has page_size 0 when adding relative chain"
+                )
+                doc.page_size = PDFLoader.get_document_page_size(doc)
+                logger.info(f"Updated Document {doc.url} page_size to {doc.page_size}")
             for i in range(doc.page_size):
                 id = f"{dataset.id}-{doc.url}-{i}"
                 index.update(
@@ -148,6 +162,7 @@ class PDFRetrieverMixin:
                     set_metadata={"relative_chains": known_chains},
                     namespace="withcontext",
                 )
+                logger.info(f"Updated {id} with relative chains {known_chains}")
 
     @classmethod
     def delete_relative_chain_from_dataset(

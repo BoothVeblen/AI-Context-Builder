@@ -61,11 +61,22 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: WEBHOOK_KEY
+            - name: GRAPH_SIGNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: GRAPH_SIGNAL_API_KEY
+            - name: LOGSNAG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: LOGSNAG_API_KEY
             - name: WEBHOOK_ENDPOINT
               value: https://build.withcontext.ai/api/webhook/chat
             - name: BACKEND_URL
               value: http://api.withcontext.ai
+
           resources:
             limits:
-              memory: '2000Mi'
-              cpu: '2'
+              memory: '10000Mi'
+              cpu: '5'

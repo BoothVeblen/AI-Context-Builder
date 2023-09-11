@@ -3,12 +3,15 @@ import sys
 from uuid import uuid4
 
 import graphsignal
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from loguru import logger
 from models.base.dataset import Dataset
 from models.controller import dataset_manager
 from models.retrieval import Retriever
 from pydantic import BaseModel
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=1000)
 
 
 class IndexResponse(BaseModel):
@@ -39,7 +42,7 @@ def get_datasets():
         }
 
 
-async def background_create_dataset(dataset: Dataset):
+def background_create_dataset(dataset: Dataset):
     try:
         dataset_manager.save_dataset(dataset)
         logger.info(f"Dataset {dataset.id} created.")
@@ -48,12 +51,13 @@ async def background_create_dataset(dataset: Dataset):
 
 
 @router.post("/", tags=["datasets"])
-async def create_dataset(dataset: Dataset, background_tasks: BackgroundTasks):
+async def create_dataset(dataset: Dataset):
     with graphsignal.start_trace("create_dataset"):
         logger.info(f"dataset creating: {dataset}")
         dataset.id = uuid4().hex
         try:
-            background_tasks.add_task(background_create_dataset, dataset)
+            loop = asyncio.get_event_loop()
+            loop.run_in_executor(executor, background_create_dataset, dataset)
             return {"data": {"id": dataset.id}, "message": "success", "status": 200}
         except Exception as e:
             logger.error(e)
@@ -62,7 +66,7 @@ async def create_dataset(dataset: Dataset, background_tasks: BackgroundTasks):
             )
 
 
-async def background_upsert_dataset(id: str, dataset_info: dict):
+def background_upsert_dataset(id: str, dataset_info: dict):
     try:
         dataset_manager.upsert_dataset(id, dataset_info)
         logger.info(f"Upsert for dataset {id} completed.")
@@ -71,11 +75,12 @@ async def background_upsert_dataset(id: str, dataset_info: dict):
 
 
 @router.patch("/{id}", tags=["datasets"])
-async def update_dataset(id: str, dataset: dict, background_tasks: BackgroundTasks):
+async def update_dataset(id: str, dataset: dict):
     with graphsignal.start_trace("update_dataset"):
         logger.info(f"dataset updating: {dataset}")
         try:
-            background_tasks.add_task(background_upsert_dataset, id, dataset)
+            loop = asyncio.get_event_loop()
+            loop.run_in_executor(executor, background_upsert_dataset, id, dataset)
             return {"message": "success", "status": 200}
         except Exception as e:
             logger.error(e)

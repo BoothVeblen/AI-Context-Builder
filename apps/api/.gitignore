@@ -2,3 +2,4 @@ __pycache__
 .env
 backend-secret.yaml
 test-backend-deployment.yaml
+Dockerfile.test

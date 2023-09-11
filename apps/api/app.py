@@ -9,29 +9,20 @@ import traceback
 import graphsignal
 from loguru import logger
 import sys
+from utils import GRAPH_SIGNAL_API_KEY
 
 logger.add(sys.stdout, format="{time} {level} {message}", level="INFO", enqueue=True)
 
 
 load_dotenv()
 
-app = FastAPI()
-graphsignal.configure(
-    api_key="9b243ea3f6775da54a7a5ae0127dfe79", deployment="my-app-prod"
-)
+app = FastAPI(docs_url=None, redoc_url=None)
+graphsignal.configure(api_key=GRAPH_SIGNAL_API_KEY, deployment="my-app-prod")
 
 
-@app.exception_handler(Exception)
-async def validation_exception_handler(request: Request, exc: Exception):
-    logger.error(f"unexcepted error: {exc} \nwith request: {request}")
-    stack_trace = "".join(
-        traceback.TracebackException.from_exception(exc).format()
-    )  # <-- get the actual error stack trace
-    logger.error(stack_trace)
-    return JSONResponse(
-        status_code=500,
-        content={"message": f"unexcepted error: {exc}"},
-    )
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 
 app.include_router(chat.router)
