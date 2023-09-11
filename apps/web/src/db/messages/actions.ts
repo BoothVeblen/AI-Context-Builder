@@ -4,8 +4,7 @@ import { redirect } from 'next/navigation'
 import { and, asc, desc, eq } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
-// why use pool at this action? see https://github.com/withcontext-ai/builder/pull/162
-import { db } from '@/lib/drizzle-pool'
+import { db } from '@/lib/drizzle-edge'
 
 import { Message, MessagesTable, NewMessage } from './schema'
 
@@ -17,7 +16,19 @@ export async function getMessages(sessionId: string) {
     }
 
     const sq = db
-      .select()
+      .select({
+        short_id: MessagesTable.short_id,
+        session_id: MessagesTable.session_id,
+        created_at: MessagesTable.created_at,
+        type: MessagesTable.type,
+        query: MessagesTable.query,
+        answer: MessagesTable.answer,
+        feedback: MessagesTable.feedback,
+        content: MessagesTable.content,
+        event_type: MessagesTable.event_type,
+        call_duration: MessagesTable.call_duration,
+        // do not include `raw` data, it will cause neon error when the raw size is too big
+      })
       .from(MessagesTable)
       .where(
         and(

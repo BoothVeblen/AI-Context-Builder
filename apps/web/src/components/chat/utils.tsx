@@ -47,7 +47,7 @@ export const messageFormatter = (m: Message) => {
   return null
 }
 
-export const messagesBuilder = (messages: MessageSchema[]) => {
+export const messagesBuilder = (messages: Partial<MessageSchema>[]) => {
   const result = []
   for (const m of messages) {
     if (m.type === 'chat') {
