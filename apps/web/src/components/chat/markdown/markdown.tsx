@@ -15,12 +15,17 @@ import { CodeBlock } from './code-block'
 import { MarkdownProps } from './type'
 
 export const Markdown = (props: MarkdownProps) => {
-  const { className, showCustomerCard: showCustomerCard, ...others } = props
+  const {
+    className,
+    showCustomerCard: showCustomerCard,
+    isUser,
+    ...others
+  } = props
   return (
     <ReactMarkdown
       className={cn(
         'prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
-        className
+        cn(isUser ? 'text-white' : 'text-black')
       )}
       components={{
         p({ children }) {
@@ -58,6 +63,15 @@ export const Markdown = (props: MarkdownProps) => {
               language={(match && match[1]) || ''}
               value={String(children).replace(/\n$/, '')}
               {...props}
+            />
+          )
+        },
+        a({ ...props }) {
+          return (
+            <a
+              {...props}
+              target="_blank"
+              className={isUser ? 'text-white' : 'text-black'}
             />
           )
         },

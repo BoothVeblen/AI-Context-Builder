@@ -158,11 +158,7 @@ const ChatCard = (props: IProps) => {
     if (!content) {
       return <Loader2 className="h-3 w-3 animate-spin" />
     }
-    return (
-      <Markdown className={cn(isUser ? 'text-white' : 'text-black	')}>
-        {content}
-      </Markdown>
-    )
+    return <Markdown isUser={isUser}>{content}</Markdown>
   }, [isUser, message])
 
   return (
