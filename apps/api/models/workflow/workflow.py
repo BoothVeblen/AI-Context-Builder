@@ -101,7 +101,7 @@ class Workflow(BaseModel):
         top_p = llm.pop("top_p")
         frequency_penalty = llm.pop("frequency_penalty")
         presence_penalty = llm.pop("presence_penalty")
-        if llm_model != "Azure-GPT-3.5":
+        if llm_model == "Azure-GPT-3.5":
             llm = AzureChatOpenAI(
                 openai_api_base=AZURE_BASE_URL,
                 openai_api_version=AZURE_API_VERSION,
