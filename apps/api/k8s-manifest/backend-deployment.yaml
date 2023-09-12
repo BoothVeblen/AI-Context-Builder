@@ -76,6 +76,11 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: UPSTASH_REDIS_REST_TOKEN
+            - name: AZURE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: AZURE_API_KEY
             - name: LOGSNAG_API_KEY
               valueFrom:
                 secretKeyRef:

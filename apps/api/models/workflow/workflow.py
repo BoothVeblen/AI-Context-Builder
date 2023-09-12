@@ -1,42 +1,48 @@
-from typing import List, Optional, Union
 import asyncio
+from typing import List, Optional, Union
+
+import redis
 from langchain.callbacks import (
     AsyncIteratorCallbackHandler,
     OpenAICallbackHandler,
     get_openai_callback,
 )
 from langchain.chains import LLMChain, SequentialChain
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
+from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseMessage
 from langchain.schema.messages import get_buffer_string
 from loguru import logger
 from models.base.model import Model
 from models.retrieval import Retriever
-from langchain.memory import ConversationBufferMemory
+from utils.config import (
+    AZURE_API_VERSION,
+    AZURE_BASE_URL,
+    AZURE_DEPLOYMENT_NAME,
+    AZURE_API_KEY,
+)
+from pydantic import BaseModel
+
+from .callbacks import (
+    CostCalcAsyncHandler,
+    IOTraceCallbackHandler,
+    LLMAsyncIteratorCallbackHandler,
+    SequentialChainAsyncIteratorCallbackHandler,
+    TokenCostProcess,
+)
 from .custom_chain import (
-    EnhanceSequentialChain,
-    TargetedChainStatus,
-    TargetedChain,
     EnhanceConversationalRetrievalChain,
     EnhanceConversationChain,
+    EnhanceSequentialChain,
+    TargetedChain,
+    TargetedChainStatus,
 )
 from .utils import (
     PatchedRetrievalQA,
     extract_tool_patterns_from_brackets,
     replace_dot_with_dash_for_tool_pattern,
 )
-
-from .callbacks import (
-    CostCalcAsyncHandler,
-    LLMAsyncIteratorCallbackHandler,
-    SequentialChainAsyncIteratorCallbackHandler,
-    TokenCostProcess,
-    IOTraceCallbackHandler,
-)
-from pydantic import BaseModel
-import redis
-
 
 CHAT_HISTORY_KEY = "chat_history"
 QUESTION_KEY = "question"
@@ -95,19 +101,36 @@ class Workflow(BaseModel):
         top_p = llm.pop("top_p")
         frequency_penalty = llm.pop("frequency_penalty")
         presence_penalty = llm.pop("presence_penalty")
-        llm = ChatOpenAI(
-            model=llm_model,
-            model_kwargs=llm,
-            streaming=True,
-            temperature=temperature,
-            callbacks=[
-                CostCalcAsyncHandler(llm_model, self.cost_content),
-                IOTraceCallbackHandler(self.io_traces),
-            ],
-            top_p=top_p,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
-        )
+        if llm_model != "Azure-GPT-3.5":
+            llm = AzureChatOpenAI(
+                openai_api_base=AZURE_BASE_URL,
+                openai_api_version=AZURE_API_VERSION,
+                deployment_name=AZURE_DEPLOYMENT_NAME,
+                openai_api_key=AZURE_API_KEY,
+                openai_api_type="azure",
+                streaming=True,
+                callbacks=[
+                    CostCalcAsyncHandler(llm_model, self.cost_content),
+                    IOTraceCallbackHandler(self.io_traces),
+                ],
+                top_p=top_p,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty,
+            )
+        else:
+            llm = ChatOpenAI(
+                model=llm_model,
+                model_kwargs=llm,
+                streaming=True,
+                temperature=temperature,
+                callbacks=[
+                    CostCalcAsyncHandler(llm_model, self.cost_content),
+                    IOTraceCallbackHandler(self.io_traces),
+                ],
+                top_p=top_p,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty,
+            )
         template = _chain.prompt.template
 
         if _chain.prompt.basic_prompt is not None:
