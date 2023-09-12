@@ -66,6 +66,16 @@ spec:
                 secretKeyRef:
                   name: withcontext-backend-env
                   key: GRAPH_SIGNAL_API_KEY
+            - name: UPSTASH_REDIS_REST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: UPSTASH_REDIS_REST_URL
+            - name: UPSTASH_REDIS_REST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: withcontext-backend-env
+                  key: UPSTASH_REDIS_REST_TOKEN
             - name: LOGSNAG_API_KEY
               valueFrom:
                 secretKeyRef:

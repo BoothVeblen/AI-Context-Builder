@@ -125,7 +125,7 @@ class TargetedChain(Chain):
         if self.process == TargetedChainStatus.INIT:
             self.process = TargetedChainStatus.RUNNING
             system_message = prompt_value.to_string()
-        elif self.process == TargetedChainStatus.RUNNING:
+        else:
             system_message = f"{prompt_value.to_string()}\n{self.suffix}{question}\n"
         messages = [SystemMessage(content=system_message)] + bacis_messages
         response = await self.llm.agenerate(
