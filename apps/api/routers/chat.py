@@ -246,7 +246,6 @@ async def get_process_status(session_id: str):
             return {"data": [], "message": "workflow not found", "status": 400}
         process_list = []
         for chain in workflow.context.chains:
-            logger.info(f"chain: {chain}")
             if isinstance(chain, TargetedChain):
                 match chain.process:
                     case TargetedChainStatus.INIT:
