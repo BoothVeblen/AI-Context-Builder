@@ -6,8 +6,7 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import Column, String
 
-from .base import Base, BaseManager
-from models.workflow import Workflow
+from .base import Base
 
 
 class SessionState(BaseModel):

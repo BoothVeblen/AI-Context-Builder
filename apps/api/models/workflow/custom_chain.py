@@ -183,6 +183,9 @@ class EnhanceSequentialChain(SequentialChain):
                     ]:
                         await self._put_tokens_into_queue(outputs[chain.output_key])
                         return self._construct_return_dict()
+                    elif i == len(self.chains) - 1:
+                        await self._handle_final_chain()
+                        return self._construct_return_dict()
             else:
                 if i == len(self.chains) - 1:
                     callbacks.add_handler(
