@@ -20,13 +20,13 @@ export const TYPE_MAP = {
 
 export const SUB_TYPE_MAP = {
   conversation_chain: {
-    title: 'Conversation chain',
+    title: 'Conversation',
   },
   conversational_retrieval_qa_chain: {
     title: 'Conversational Retrieval QA',
   },
   self_checking_chain: {
-    title: 'Self Checking',
+    title: 'Goal-Oriented Conversation',
   },
 }
 
@@ -51,8 +51,8 @@ export const ADD_TASK_BUTTON_CONFIG = [
           },
           {
             subType: 'self_checking_chain',
-            title: 'Self Checking',
-            desc: "Set the objective for the dialogue, and you can check whether the goal is achieved based on the conversation's context.",
+            title: 'Goal-Oriented Conversation',
+            desc: 'Conversation that follows a predetermined format or set of rules to achieve specific goals or objectives. The structure helps keep the conversation focused on the intended outcomes and prevents digressions or irrelevant discussions. This type of dialogue is often used in problem-solving sessions, decision-making processes, and consensus-building efforts.',
           },
         ],
       },

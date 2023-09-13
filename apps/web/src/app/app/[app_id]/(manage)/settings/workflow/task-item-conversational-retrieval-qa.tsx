@@ -15,6 +15,7 @@ import AddTemplateButton from './add-template-button'
 import {
   BASIC_PROMPT_TEMPLATES,
   MAX_MAX_TOKENS,
+  SUB_TYPE_MAP,
   SYSTEM_PROMPT_TEMPLATES,
   TASK_DEFAULT_VALUE_MAP,
 } from './const'
@@ -122,7 +123,9 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
     <div className="h-full w-[380px] shrink-0 overflow-auto border-l border-slate-200 scrollbar-none">
       <div className="space-y-6 p-6 pb-[280px]">
         <div className="space-y-[10px]">
-          <h2 className="text-lg font-semibold">Conversational Retrieval QA</h2>
+          <h2 className="text-lg font-semibold">
+            {SUB_TYPE_MAP['conversational_retrieval_qa_chain'].title}
+          </h2>
           {keyLabel && <Badge variant="secondary">key: {keyLabel}</Badge>}
         </div>
 

@@ -19,6 +19,7 @@ import {
 import AddTemplateButton from './add-template-button'
 import {
   MAX_MAX_TOKENS,
+  SUB_TYPE_MAP,
   SYSTEM_PROMPT_TEMPLATES,
   TASK_DEFAULT_VALUE_MAP,
 } from './const'
@@ -136,7 +137,9 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
     <div className="h-full w-[380px] shrink-0 overflow-auto border-l border-slate-200 scrollbar-none">
       <div className="space-y-6 p-6 pb-[280px]">
         <div className="space-y-[10px]">
-          <h2 className="text-lg font-semibold">Self Checking</h2>
+          <h2 className="text-lg font-semibold">
+            {SUB_TYPE_MAP['self_checking_chain'].title}
+          </h2>
           {keyLabel && <Badge variant="secondary">key: {keyLabel}</Badge>}
         </div>
         <div className="space-y-6">
