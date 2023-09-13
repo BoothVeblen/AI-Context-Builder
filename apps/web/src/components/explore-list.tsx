@@ -29,6 +29,10 @@ const DEFAULT_VALUE = [
     href: '/explore/sd',
     title: 'Search Document',
   },
+  {
+    href: '/explore/in',
+    title: 'Interviewer',
+  },
 ]
 
 export default function ExploreList() {
