@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react'
 
 import { Toaster } from '@/components/ui/toaster'
 import Provider from '@/components/provider'
+import ClientProvider from '@/components/provider-client'
 import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata = {
@@ -26,7 +27,7 @@ export default async function RootLayout({
       <html lang="en" className="h-full" suppressHydrationWarning>
         <body className="h-full">
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            {children}
+            <ClientProvider>{children}</ClientProvider>
             <Toaster />
             <Analytics />
           </ThemeProvider>

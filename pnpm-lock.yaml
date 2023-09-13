@@ -80,6 +80,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.1
         version: 3.2.1(react@18.2.0)
+      '@ebay/nice-modal-react':
+        specifier: ^1.2.10
+        version: 1.2.10(react-dom@18.2.0)(react@18.2.0)
       '@google-cloud/storage':
         specifier: ^6.12.0
         version: 6.12.0(encoding@0.1.13)
@@ -920,6 +923,16 @@ packages:
   /@drizzle-team/studio@0.0.5:
     resolution: {integrity: sha512-ps5qF0tMxWRVu+V5gvCRrQNqlY92aTnIKdq27gm9LZMSdaKYZt6AVvSK1dlUMzs6Rt0Jm80b+eWct6xShBKhIw==}
     dev: true
+
+  /@ebay/nice-modal-react@1.2.10(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-qNp8vQo5kPRwB9bHlkh8lcwH/0KFWpp58X/b9KaLB/gNlJ3W24nCT2l/qBBSnWgV7NEIq25uLowaPS2mbfpZiw==}
+    peerDependencies:
+      react: '>16.8.0'
+      react-dom: '>16.8.0'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
 
   /@esbuild-kit/core-utils@3.1.0:
     resolution: {integrity: sha512-Uuk8RpCg/7fdHSceR1M6XbSZFSuMrxcePFuGgyvsBn+u339dk5OeL4jv2EojwTN2st/unJGsVm4qHWjWNmJ/tw==}
