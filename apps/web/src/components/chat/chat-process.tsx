@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Wrench } from 'lucide-react'
+import { Loader2Icon, Wrench } from 'lucide-react'
 import useSWR from 'swr'
 
 import { cn, fetcher } from '@/lib/utils'
@@ -22,12 +22,11 @@ const ChatProcess = ({ workflow }: IProps) => {
   const { session } = useChatContext()
   const { api_session_id } = session
 
-  const { data } = useSWR<ProcessTaskFromAPI[]>(
+  const { data, isValidating } = useSWR<ProcessTaskFromAPI[]>(
     `/api/chat/process?api_session_id=${api_session_id}`,
     fetcher,
     {
       revalidateOnMount: true,
-      refreshInterval: 10 * 1000,
     }
   )
 
@@ -56,8 +55,11 @@ const ChatProcess = ({ workflow }: IProps) => {
 
   return (
     <div>
-      <div className="p-6 text-base font-medium uppercase text-slate-500">
-        Process
+      <div className="flex items-center p-6 text-base font-medium uppercase text-slate-500">
+        <div>Process</div>
+        {isValidating ? (
+          <Loader2Icon className="ml-2 h-4 w-4 animate-spin" />
+        ) : null}
       </div>
       <div className="flex flex-col gap-2 pl-4 pr-1">
         {workflowWithStatus?.map((item) => (
