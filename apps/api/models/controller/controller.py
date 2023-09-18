@@ -445,6 +445,7 @@ class SessionStateManager(BaseManager):
                 self.save_chain_status(
                     session_id, chain.output_keys[0], chain.process, chain.max_retries
                 )
+        self.save_chain_memory(session_id, workflow.io_traces)
 
     def get_workflow(self, session_id, model):
         if model is None:
@@ -460,6 +461,13 @@ class SessionStateManager(BaseManager):
                 if tup is not None:
                     chain.process = tup[0]
                     chain.max_retries = tup[1]
+        # get chain memory
+        # memory example: {"tool_%d_dialog": [{"input": "human input", "output": "tool output"}]}
+        workflow.current_memory = {}
+        for chain in workflow.context.chains:
+            workflow.current_memory[chain.dialog_key] = self.get_chain_memory(
+                session_id, chain.output_keys[0]
+            )
         return workflow
 
     def delete_session_state_cache_via_model(self, model_id):
@@ -498,6 +506,35 @@ class SessionStateManager(BaseManager):
             current_status = json.loads(current_status)
             return current_status.get(output_key)
         return None
+
+    def get_chain_urn(self, session_id, output_key):
+        return f"{session_id}-{output_key}"
+
+    def save_chain_memory(self, session_id: str, contents: list):
+        def get_human_input(content):
+            if "Human:" in content["input"]:
+                return content["input"].split("Human:")[1].strip()
+            return ""
+
+        for content in contents:
+            current_chain_memory = self.get_chain_memory(
+                session_id, content["chain_key"]
+            )
+            current_chain_memory.append(
+                {"input": get_human_input(content), "output": content["output"]}
+            )
+            self.redis.set(
+                self.get_chain_urn(session_id, content["chain_key"]),
+                json.dumps(current_chain_memory),
+            )
+
+    def get_chain_memory(self, session_id: str, output_key: str):
+        current_chain_memory = self.redis.get(
+            self.get_chain_urn(session_id, output_key)
+        )
+        if current_chain_memory:
+            return json.loads(current_chain_memory)
+        return []
 
 
 session_state_manager = SessionStateManager()

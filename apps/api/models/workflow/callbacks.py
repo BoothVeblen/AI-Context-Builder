@@ -107,8 +107,9 @@ class TokenCostProcess(BaseModel):
 
 
 class IOTraceCallbackHandler(AsyncCallbackHandler):
-    def __init__(self, lis: []) -> None:
+    def __init__(self, lis: [], chain_output_key) -> None:
         self.content = lis
+        self.chain_output_key = chain_output_key
 
     async def on_llm_start(
         self,
@@ -133,7 +134,11 @@ class IOTraceCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> Coroutine[Any, Any, None]:
         self.content.append(
-            {"input": self.tem_input, "output": response.generations[0][0].text}
+            {
+                "input": self.tem_input,
+                "output": response.generations[0][0].text,
+                "chain_key": self.chain_output_key,
+            }
         )
 
 

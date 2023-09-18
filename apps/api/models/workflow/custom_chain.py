@@ -26,7 +26,7 @@ from langchain.chains import (
 from langchain.chains.base import Chain
 from langchain.prompts.base import BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
-from langchain.schema import SystemMessage, HumanMessage
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from loguru import logger
 from pydantic import Extra, root_validator, Field
 import inspect
@@ -66,6 +66,7 @@ class TargetedChain(Chain):
     max_retries: int = 0
     process: str = TargetedChainStatus.INIT
     suffix: str = "The content you want to output first is:"
+    dialog_key: str = "dialog"
 
     class Config:
         extra = Extra.forbid
@@ -176,6 +177,12 @@ class EnhanceSequentialChain(SequentialChain):
                     outputs = await chain.acall(
                         self.known_values, return_only_outputs=True, callbacks=callbacks
                     )
+                    outputs[chain.dialog_key] += "\n" + get_buffer_string(
+                        [
+                            HumanMessage(content=inputs["question"]),
+                            AIMessage(content=outputs[chain.output_key]),
+                        ],
+                    )
                     self.known_values.update(outputs)
                     if chain.process not in [
                         TargetedChainStatus.FINISHED,
@@ -193,6 +200,17 @@ class EnhanceSequentialChain(SequentialChain):
                     )
                 outputs = await chain.acall(
                     self.known_values, return_only_outputs=True, callbacks=callbacks
+                )
+                pre_dialog = inputs.get(chain.dialog_key, "")
+                outputs[chain.dialog_key] = (
+                    pre_dialog
+                    + "\n"
+                    + get_buffer_string(
+                        [
+                            HumanMessage(content=inputs["question"]),
+                            AIMessage(content=outputs[chain.output_key]),
+                        ],
+                    )
                 )
                 self.known_values.update(outputs)
         return self._construct_return_dict()
@@ -248,6 +266,7 @@ class EnhanceConversationChain(Chain):
     prompt: BasePromptTemplate
     llm: ChatOpenAI
     output_key: str = "text"
+    dialog_key: str = "dialog"
 
     def _call(
         self,
@@ -274,7 +293,6 @@ class EnhanceConversationChain(Chain):
         ):
             inputs["chat_history"] = [inputs["chat_history"]]
         messages = inputs.get("chat_history", [])
-        inputs.pop("chat_history", None)
         prompt_value = self.prompt.format_prompt(**inputs)
         messages = [SystemMessage(content=prompt_value.to_string())] + messages
         response = await self.llm.agenerate(
@@ -289,6 +307,7 @@ class EnhanceConversationalRetrievalChain(Chain):
     llm: ChatOpenAI
     output_key: str = "text"
     retriever: SelfQueryRetriever
+    dialog_key: str = "dialog"
 
     @property
     def input_keys(self) -> List[str]:

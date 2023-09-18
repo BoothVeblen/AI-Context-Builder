@@ -15,20 +15,20 @@ from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.output import LLMResult
 from pydantic import Extra, Field
 
-tool_output_pattern = re.compile(r"\[\{tool-\d+\.output\}\]")
-tool_output_brackets_pattern = re.compile(r"\[\{(\btool-\d+\-output\b)\}\]")
+tool_pattern = re.compile(r"\[\{tool-\d+\.(output|dialog)\}\]")
+tool_brackets_pattern = re.compile(r"\[\{(\btool-\d+\-(output|dialog)\b)\}\]")
 
 
 def replace_dot_with_dash_for_tool_pattern(text):
     def repl(match):
         return match.group(0).replace(".", "-")
 
-    return tool_output_pattern.sub(repl, text)
+    return tool_pattern.sub(repl, text)
 
 
 def extract_tool_patterns_from_brackets(text):
-    matches = tool_output_brackets_pattern.findall(text)
-    return matches
+    matches = tool_brackets_pattern.findall(text)
+    return [match[0] for match in matches]
 
 
 class PatchedConversationalRetrievalChain(ConversationalRetrievalChain):
