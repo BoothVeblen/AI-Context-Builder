@@ -4,12 +4,12 @@ import { Mention, MentionsInput } from 'react-mentions'
 import { safeParse } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import styles from '@/components/mention-textarea.module.css'
 import { PdfImage } from '@/components/upload/component'
 
 import { SUB_TYPE_MAP } from '../(manage)/settings/workflow/const'
 import { WorkflowItem } from '../(manage)/settings/workflow/type'
 import { formatRetrieverType } from '../(manage)/settings/workflow/utils'
-import styles from './mention-input.module.css'
 import { DatasetProps } from './page'
 import { useWorkflowContext } from './store'
 
