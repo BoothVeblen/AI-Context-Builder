@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2, PhoneCallIcon, PhoneIcon } from 'lucide-react'
 import { useIsClient } from 'usehooks-ts'
@@ -15,19 +15,27 @@ import {
 import { User } from '@/db/users/schema'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-import Text from '../ui/text'
-import ChatActions from './chat-actions'
-import { useChatContext } from './chat-context'
-import ChatFeedbackButtons from './feedback/chat-feedback-buttons'
-import { Markdown } from './markdown/markdown'
-import { ChatUser, Message } from './types'
+import Text from '../../ui/text'
+import ChatAction from '../chat-action'
+import { useChatContext } from '../chat-context'
+import ChatFeedbackButtons from '../feedback/chat-feedback-buttons'
+import { Markdown } from '../markdown/markdown'
+import { ChatUser, Message } from '../types'
+import ChatAnnotation from './chat-annotation'
+import { IChatCardProps } from './chat-card'
 
-interface IProps {
-  message?: Message
-  error?: string
-  model_avatar?: string
-  user_avatar?: string
-  isEnd?: boolean
+interface Props extends IChatCardProps {
+  actions?: React.ReactNode
+  footer?: React.ReactNode
+}
+
+function formatUser(user?: ChatUser | null) {
+  if (user == null) return {}
+  return {
+    firstName: user.first_name,
+    lastName: user.last_name,
+    imageUrl: user.image_url,
+  }
 }
 
 const AlertErrorIcon = ({ className }: { className: string }) => (
@@ -70,15 +78,6 @@ const AlertErrorIcon = ({ className }: { className: string }) => (
     </defs>
   </svg>
 )
-
-function formatUser(user?: ChatUser | null) {
-  if (user == null) return {}
-  return {
-    firstName: user.first_name,
-    lastName: user.last_name,
-    imageUrl: user.image_url,
-  }
-}
 
 function EventMessage({ data }: { data: any }) {
   let icon
@@ -126,30 +125,25 @@ function EventMessage({ data }: { data: any }) {
   return <Markdown className="text-black">{message}</Markdown>
 }
 
-const ChatCard = (props: IProps) => {
-  const { message, error = '', isEnd } = props
-  const { app, mode, isLoading, user: chatUser } = useChatContext()
+const ChatCardLayout = (prop: Props) => {
+  const { isEnd, error, message, actions, footer } = prop
+  const { app, mode, user: chatUser } = useChatContext()
   const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
-  const isUser = message?.role === 'user'
+  const isUser = message.role === 'user'
   const showError = isEnd && error && !isUser
 
   const { user: currentUser } = useUser()
 
   const user = mode === 'debug' ? currentUser : formatUser(chatUser)
 
-  const color = getAvatarBgColor(appId || '')
   const username = [user?.firstName || '', user?.lastName || '']
     .join(' ')
     .trim()
   const icon = isUser ? user?.imageUrl : appIcon
   const name = (isUser ? username : appName) || ''
-
-  const isClient = useIsClient()
+  const color = getAvatarBgColor(appId || '')
 
   const renderContent = useMemo(() => {
-    if (!message) {
-      return null
-    }
     const { type } = message
     if (type === 'event') {
       return <EventMessage data={message} />
@@ -190,9 +184,9 @@ const ChatCard = (props: IProps) => {
         <div className={cn('flex flex-col')}>
           <div className="mb-5 flex items-center gap-1">
             <Text variant="body2">{isUser ? 'Me' : appName}</Text>
-            {isClient && message?.createdAt && (
+            {message.createdAt && (
               <Text variant="caption">
-                {formatTime(new Date(message?.createdAt))}
+                {formatTime(new Date(message.createdAt))}
               </Text>
             )}
           </div>
@@ -207,17 +201,10 @@ const ChatCard = (props: IProps) => {
               )}
             >
               {renderContent}
-              {mode !== 'debug' &&
-                !isUser &&
-                message &&
-                message.type !== 'event' &&
-                // last message finished loading
-                // or any other messages
-                ((isEnd && !isLoading) || !isEnd) && (
-                  <ChatActions>
-                    <ChatFeedbackButtons message={message} />
-                  </ChatActions>
-                )}
+              <div className="absolute bottom-full left-full flex -translate-x-14 translate-y-4">
+                {actions}
+              </div>
+              {footer}
             </div>
           </div>
         </div>
@@ -226,4 +213,4 @@ const ChatCard = (props: IProps) => {
   )
 }
 
-export default ChatCard
+export default ChatCardLayout

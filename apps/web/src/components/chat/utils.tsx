@@ -28,6 +28,7 @@ export const chatMessagesFormatter = (m: Message) =>
       },
       raw: m.raw,
     },
+    annotation: m.annotation,
   }) as ChatMessage
 
 export const eventMessagesFormatter = (m: Message) =>

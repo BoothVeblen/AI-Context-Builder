@@ -39,6 +39,7 @@ export interface ChatMessage extends BaseMessage, RawMessage {
     }
     raw?: any
   }
+  annotation?: string
 }
 
 export type Message = ChatMessage | EventMessage

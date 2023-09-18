@@ -102,9 +102,9 @@ export const MonitoringTable = ({ preloaded }: Props) => {
       },
       {
         accessorKey: 'total',
-        header: () => <div className="pr-12 text-right">Message Count</div>,
+        header: () => <div className="text-right">Message Count</div>,
         cell: ({ row }) => {
-          return <div className="pr-12 text-right">{row.getValue('total')}</div>
+          return <div className="text-right">{row.getValue('total')}</div>
         },
       },
       {
@@ -191,11 +191,19 @@ export const MonitoringTable = ({ preloaded }: Props) => {
           },
           {
             value: 'userfeedback',
-            label: 'User Feedback',
+            label: `User Feedback (${data?.feedbacks ?? 0} items)`,
           },
           {
             value: 'nofeedback',
             label: 'No Feedback',
+          },
+          {
+            value: 'annotated',
+            label: `Annotated Improvements (${data?.annotations ?? 0} items)`,
+          },
+          {
+            value: 'notannotated',
+            label: 'Not Annotated',
           },
         ],
       },
@@ -205,7 +213,7 @@ export const MonitoringTable = ({ preloaded }: Props) => {
         placeholder: 'Search',
       },
     ],
-    []
+    [data?.annotations, data?.feedbacks]
   )
 
   const handleFilterChange = useCallback(
@@ -269,7 +277,7 @@ export const MonitoringTable = ({ preloaded }: Props) => {
               />
             </SheetClose>
           </SheetHeader>
-          <div className="px-6">
+          <div className="px-6 pr-8">
             {selectedSessionId && (
               <ChatListWithData mode="history" sessionId={selectedSessionId} />
             )}

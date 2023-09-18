@@ -4,7 +4,7 @@ import { Ref } from 'react'
 
 import { cn } from '@/lib/utils'
 
-import ChatCard from './chat-card'
+import ChatCard from './card/chat-card'
 import { useChatContext } from './chat-context'
 import { ChatFeedbackContextProvider } from './feedback/chat-feedback-context'
 import ChatFeedbackDialog from './feedback/chat-feedback-dialog'
@@ -25,7 +25,7 @@ const ChatList = ({ messages, scrollRef, setAutoScroll, error }: IProps) => {
   return (
     <div
       className={cn(
-        'flex flex-1 flex-col gap-12 overflow-auto px-6 pb-24 pt-6 scrollbar-none',
+        'flex flex-1 flex-col gap-12 overflow-auto pb-24 pl-6 pr-18 pt-6 scrollbar-none',
         isDebug && 'px-0'
       )}
       ref={scrollRef}

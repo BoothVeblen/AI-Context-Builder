@@ -6,6 +6,8 @@ import { and, asc, desc, eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 
+import { AppsTable } from '../apps/schema'
+import { SessionsTable } from '../sessions/schema'
 import { Message, MessagesTable, NewMessage } from './schema'
 
 export async function getMessages(sessionId: string) {
@@ -113,6 +115,41 @@ export async function addFeedback({
     const value = {
       feedback,
       feedback_content: content,
+    }
+
+    await db
+      .update(MessagesTable)
+      .set(value)
+      .where(eq(MessagesTable.short_id, messageId))
+  } catch (error: any) {
+    return {
+      error: error.message,
+    }
+  }
+}
+
+export async function addAnnotation({
+  messageId,
+  annotation,
+}: {
+  messageId: string
+  annotation: string
+}) {
+  try {
+    const [found] = await db
+      .select()
+      .from(AppsTable)
+      .innerJoin(SessionsTable, eq(AppsTable.short_id, SessionsTable.app_id))
+      .innerJoin(
+        MessagesTable,
+        eq(SessionsTable.short_id, MessagesTable.session_id)
+      )
+      .where(eq(MessagesTable.short_id, messageId))
+
+    if (!found) throw new Error('Message not found')
+
+    const value = {
+      annotation,
     }
 
     await db

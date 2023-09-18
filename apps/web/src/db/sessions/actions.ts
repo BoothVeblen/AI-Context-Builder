@@ -281,6 +281,10 @@ const messageIdsHasFeedbackQuery = db
   .select({ data: MessagesTable.session_id })
   .from(MessagesTable)
   .where(isNotNull(MessagesTable.feedback))
+const messageIdsHasAnnotationQuery = db
+  .select({ data: MessagesTable.session_id })
+  .from(MessagesTable)
+  .where(isNotNull(MessagesTable.annotation))
 
 const messageIdsSearchQueryBuilder = (search: string) =>
   db
@@ -299,6 +303,11 @@ const messageIdsSearchQueryBuilder = (search: string) =>
 const feedbacks = {
   userfeedback: inArray(SessionsTable.short_id, messageIdsHasFeedbackQuery),
   nofeedback: notInArray(SessionsTable.short_id, messageIdsHasFeedbackQuery),
+  annotated: inArray(SessionsTable.short_id, messageIdsHasAnnotationQuery),
+  notannotated: notInArray(
+    SessionsTable.short_id,
+    messageIdsHasAnnotationQuery
+  ),
   all: null,
 }
 
@@ -355,8 +364,16 @@ export async function getMonitoringData({
     )
 
   const sessionsCountQuery = db
-    .select({ count: sql<number>`count(*)` })
+    .select({
+      feedbacks: sql<number>`count(distinct ${SessionsTable.short_id}) filter (where ${MessagesTable.feedback} is not null)`,
+      annotations: sql<number>`count(distinct ${SessionsTable.short_id}) filter (where ${MessagesTable.annotation} <> '')`,
+      count: sql<number>`count(distinct ${SessionsTable.short_id})`,
+    })
     .from(SessionsTable)
+    .leftJoin(
+      MessagesTable,
+      eq(SessionsTable.short_id, MessagesTable.session_id)
+    )
     .where(and(...sessionFilters))
 
   const appQuery = db
@@ -364,13 +381,11 @@ export async function getMonitoringData({
     .from(AppsTable)
     .where(eq(AppsTable.short_id, appId))
 
-  const start = Date.now()
   const [sessions, [sessionsCount], [app]] = await Promise.all([
     sessionsQuery,
     sessionsCountQuery,
     appQuery,
   ])
-  console.log('getMonitoringData db query time:', Date.now() - start)
 
-  return { sessions, count: sessionsCount.count || 0, app }
+  return { sessions, ...sessionsCount, app }
 }
