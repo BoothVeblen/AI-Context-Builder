@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, StopCircle } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { useEnterSubmit } from '@/hooks/use-enter-submit'
+import useSubmitHandler from '@/hooks/use-submit-handler'
 
 import { Button } from '../ui/button'
 import { Textarea } from '../ui/textarea'
@@ -31,9 +32,10 @@ const ChatInput = ({
 }: InputProps) => {
   const { isLoading, mode } = useChatContext()
   const isDebug = mode === 'debug'
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const { formRef, onKeyDown } = useEnterSubmit()
+  const { shouldSubmit } = useSubmitHandler()
+
   return (
     <div
       className={cn(
@@ -58,13 +60,12 @@ const ChatInput = ({
       <form onSubmit={onSubmit} ref={formRef}>
         <div className="flex justify-between space-x-2">
           <Textarea
-            ref={inputRef}
             className="min-h-[40px]"
             placeholder="Type a message"
             value={input}
             onChange={handleInputChange}
             onKeyDown={(e) => {
-              if (!disabled) {
+              if (!disabled && shouldSubmit(e)) {
                 onKeyDown(e)
               }
             }}

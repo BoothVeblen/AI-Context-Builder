@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { useModal } from '@ebay/nice-modal-react'
 import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -157,31 +158,10 @@ const Chat = (props: ChatProps) => {
     initialEvents,
   })
 
-  const [isOpenCallConfirm, setIsOpenCallConfirm] = useState(false)
   const callLinkRef = useRef('')
   const configStr = useConfigBase64({ appName })
 
   const currentInput = useRef<ChatMessage>()
-  const onAdd = useCallback(
-    (newEventMessage: any) => {
-      if (newEventMessage?.eventType === 'call.created') {
-        callLinkRef.current = `${newEventMessage?.link || ''}${
-          configStr ? `?c=${configStr}` : ''
-        }`
-        setIsOpenCallConfirm(true)
-        return
-      }
-      setEventMessages((prev) => [...prev, newEventMessage])
-    },
-    [setEventMessages, configStr]
-  )
-  useSubscribe({
-    channelId: `session-${sessionId}`,
-    eventName: 'user-chat',
-    onAdd,
-    enabled:
-      mode === 'live' && !!apiSessionId && !!app?.enable_video_interaction,
-  })
 
   const chatMessages = useMemo(() => {
     return [...messages, ...eventMessages].sort(
@@ -225,10 +205,18 @@ const Chat = (props: ChatProps) => {
     messages.length === 0 ||
     ((app?.opening_remarks && messages?.length == 1) as boolean)
 
+  const modal = useModal(VideoCallConfirmDialog)
+  const closeModal = useCallback(() => {
+    modal.hide()
+    setTimeout(() => {
+      modal.remove()
+    }, 200)
+  }, [modal])
+
   const handleAccept = useCallback(() => {
     window.open(callLinkRef.current, '_blank')
-    setIsOpenCallConfirm(false)
-  }, [])
+    closeModal()
+  }, [closeModal])
 
   const { trigger: addEventTrigger } = useSWRMutation(
     `/api/chat/event`,
@@ -238,16 +226,27 @@ const Chat = (props: ChatProps) => {
   const handleDecline = useCallback(() => {
     const message = eventMessageBuilder('call.declined')
     setEventMessages((prev) => [...prev, message])
-    setIsOpenCallConfirm(false)
     addEventTrigger({ session_id: sessionId, event: message })
-  }, [sessionId, addEventTrigger, setEventMessages])
+    closeModal()
+  }, [sessionId, addEventTrigger, setEventMessages, closeModal])
 
   const handleCancel = useCallback(() => {
     const message = eventMessageBuilder('call.canceled')
     setEventMessages((prev) => [...prev, message])
-    setIsOpenCallConfirm(false)
     addEventTrigger({ session_id: sessionId, event: message })
-  }, [sessionId, addEventTrigger, setEventMessages])
+    closeModal()
+  }, [sessionId, addEventTrigger, setEventMessages, closeModal])
+
+  const openModal = useCallback(() => {
+    modal.show({
+      appId: app?.short_id ?? '',
+      appIcon: app?.icon ?? '',
+      appName: app?.name ?? '',
+      onAccept: handleAccept,
+      onDecline: handleDecline,
+      onCancel: handleCancel,
+    })
+  }, [modal, app, handleAccept, handleDecline, handleCancel])
 
   const handleRestart = () => {
     handelStop()
@@ -256,6 +255,27 @@ const Chat = (props: ChatProps) => {
       props?.onRestart?.()
     }
   }
+
+  const onAdd = useCallback(
+    (newEventMessage: any) => {
+      if (newEventMessage?.eventType === 'call.created') {
+        callLinkRef.current = `${newEventMessage?.link || ''}${
+          configStr ? `?c=${configStr}` : ''
+        }`
+        openModal()
+        return
+      }
+      setEventMessages((prev) => [...prev, newEventMessage])
+    },
+    [setEventMessages, configStr, openModal]
+  )
+  useSubscribe({
+    channelId: `session-${sessionId}`,
+    eventName: 'user-chat',
+    onAdd,
+    enabled:
+      mode === 'live' && !!apiSessionId && !!app?.enable_video_interaction,
+  })
 
   return (
     <ChatContextProvider
@@ -305,13 +325,6 @@ const Chat = (props: ChatProps) => {
           </div>
         </div>
       </div>
-      <VideoCallConfirmDialog
-        open={isOpenCallConfirm}
-        onOpenChange={setIsOpenCallConfirm}
-        onAccept={handleAccept}
-        onDecline={handleDecline}
-        onCancel={handleCancel}
-      />
     </ChatContextProvider>
   )
 }
