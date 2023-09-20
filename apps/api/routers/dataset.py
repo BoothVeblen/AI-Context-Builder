@@ -1,3 +1,4 @@
+from fastapi import Query, HTTPException, Path
 import asyncio
 import sys
 from uuid import uuid4
@@ -10,6 +11,7 @@ from models.controller import dataset_manager
 from models.retrieval import Retriever
 from pydantic import BaseModel
 from concurrent.futures import ThreadPoolExecutor
+from fastapi import Query
 
 executor = ThreadPoolExecutor(max_workers=1000)
 
@@ -30,16 +32,6 @@ def get_dataset(id: str):
         if dataset is None:
             raise HTTPException(status_code=404, detail="Dataset not found")
         return {"data": dataset, "message": "success", "status": 200}
-
-
-@router.get("/", tags=["datasets"])
-def get_datasets():
-    with graphsignal.start_trace("get_datasets"):
-        return {
-            "data": dataset_manager.get_datasets(),
-            "message": "success",
-            "status": 200,
-        }
 
 
 def background_create_dataset(dataset: Dataset):
@@ -75,10 +67,24 @@ def background_upsert_dataset(id: str, dataset_info: dict):
 
 
 @router.patch("/{id}", tags=["datasets"])
-async def update_dataset(id: str, dataset: dict):
+async def update_dataset(
+    id: str,
+    dataset: dict,
+    preview: int = Query(0, description="Preview of the dataset"),
+    uid: str = Query(None, description="UID of the document"),
+):
     with graphsignal.start_trace("update_dataset"):
         logger.info(f"dataset updating: {dataset}")
         try:
+            if preview != 0 and uid is not None:
+                dataset_manager.upsert_preview(Dataset(**dataset, id=id), preview, uid)
+                return {"message": "success", "status": 200}
+            documents = dataset.get("documents", [])
+            for doc in documents:
+                uid = doc.get("uid", None)
+                if uid is None:
+                    logger.warning(f"UID not found in document {doc}")
+                dataset_manager.delete_preview_segment(id, uid)
             loop = asyncio.get_event_loop()
             loop.run_in_executor(executor, background_upsert_dataset, id, dataset)
             return {"message": "success", "status": 200}
@@ -103,12 +109,82 @@ def delete_dataset(id: str):
             )
 
 
-@router.post("/{id}/index", tags=["datasets"])
-def query(id: str, index: IndexResponse):
-    try:
-        retrieval = Retriever(index.options, id)
-        query = retrieval.query(index.content, index.index_type)
-        return {"data": {"query": query}, "message": "success", "status": 200}
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="not supported")
+@router.get("/{dataset_id}/document/{uid}", tags=["datasets"])
+def retrieve_document_segments(
+    dataset_id: str,
+    uid: str,
+    offset: int = Query(0, description="Offset for pagination"),
+    limit: int = Query(10, description="Limit for pagination"),
+    query: str = Query(None, description="Query to search for"),
+):
+    with graphsignal.start_trace("get_document_segments"):
+        logger.info(
+            f"Retrieving segments for dataset: {dataset_id}, document: {uid}, offset: {offset}, limit: {limit}, query: {query}"
+        )
+        error_mapping = {
+            "Dataset not found": {
+                "message": "Dataset not found",
+                "status": "404",
+                "data": None,
+            },
+            "UID not found in dataset documents": {
+                "message": "UID not found in dataset documents",
+                "status": "404",
+                "data": None,
+            },
+            "Unexpected data format from Pinecone": {
+                "message": "Unexpected data format from Pinecone",
+                "status": "500",
+                "data": None,
+            },
+        }
+        try:
+            limit, segments = dataset_manager.get_document_segments(
+                dataset_id, uid, offset, limit, query
+            )
+            return {
+                "message": "success",
+                "status": "200",
+                "data": {"totalItems": limit, "segments": segments},
+            }
+        except ValueError as e:
+            return error_mapping.get(
+                str(e),
+                {"message": "Internal Server Error", "status": "500", "data": None},
+            )
+
+
+@router.patch(
+    "/{dataset_id}/document/{uid}/segment/{segment_id:path}", tags=["datasets"]
+)
+def upsert_segment(dataset_id: str, uid: str, segment_id: str, segment: dict):
+    with graphsignal.start_trace("upsert_segment"):
+        logger.info(f"dataset: {dataset_id}, uid: {uid}, segment_id: {segment_id}")
+        if "content" not in segment:
+            return {"message": "content is required", "status": 400}
+        try:
+            dataset_manager.upsert_segment(
+                dataset_id, uid, segment_id, segment["content"]
+            )
+            return {"message": "success", "status": 200}
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(
+                status_code=400, detail="Segment not updated with error: {}".format(e)
+            )
+
+
+@router.post("/{dataset_id}/document/{uid}/segment/", tags=["datasets"])
+def add_segment(dataset_id: str, uid: str, segment: dict):
+    with graphsignal.start_trace("add_segment"):
+        logger.info(f"dataset: {dataset_id}, uid: {uid}")
+        if "content" not in segment:
+            return {"message": "content is required", "status": 400}
+        try:
+            dataset_manager.add_segment(dataset_id, uid, segment["content"])
+            return {"message": "success", "status": 200}
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(
+                status_code=400, detail="Segment not added with error: {}".format(e)
+            )

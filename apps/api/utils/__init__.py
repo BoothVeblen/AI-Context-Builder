@@ -1,2 +1,6 @@
 from .config import *
-from .StorageClient import BaseStorageClient, GoogleCloudStorageClient
+from .StorageClient import (
+    BaseStorageClient,
+    GoogleCloudStorageClient,
+    AnnotatedDataStorageClient,
+)

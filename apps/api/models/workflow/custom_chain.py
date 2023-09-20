@@ -177,11 +177,16 @@ class EnhanceSequentialChain(SequentialChain):
                     outputs = await chain.acall(
                         self.known_values, return_only_outputs=True, callbacks=callbacks
                     )
-                    outputs[chain.dialog_key] += "\n" + get_buffer_string(
-                        [
-                            HumanMessage(content=inputs["question"]),
-                            AIMessage(content=outputs[chain.output_key]),
-                        ],
+                    pre_dialog = inputs.get(chain.dialog_key, "")
+                    outputs[chain.dialog_key] = (
+                        pre_dialog
+                        + "\n"
+                        + get_buffer_string(
+                            [
+                                HumanMessage(content=inputs["question"]),
+                                AIMessage(content=outputs[chain.output_key]),
+                            ],
+                        )
                     )
                     self.known_values.update(outputs)
                     if chain.process not in [
@@ -346,7 +351,6 @@ class EnhanceConversationalRetrievalChain(Chain):
         context = "\n".join([doc.page_content for doc in docs])
         inputs["context"] = context
         prompt_value = self.prompt.format_prompt(**inputs)
-        messages = [SystemMessage(content=prompt_value.to_string())] + messages
         messages = [SystemMessage(content=prompt_value.to_string())] + messages
         response = await self.llm.agenerate(
             messages=[messages],

@@ -23,12 +23,6 @@ def get_model(id: str):
         return {"data": model, "message": "success", "status": 200}
 
 
-@router.get("/", tags=["models"])
-def get_models():
-    with graphsignal.start_trace("get_models"):
-        return {"data": model_manager.get_models(), "message": "success", "status": 200}
-
-
 def background_create_model(model: Model):
     try:
         model_manager.save_model(model)

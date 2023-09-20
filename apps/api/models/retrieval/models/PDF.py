@@ -1,8 +1,9 @@
 import io
 import sys
-from typing import List
+from typing import List, Dict
 
 import pinecone
+from pinecone import Index
 from langchain.callbacks.manager import AsyncCallbackManagerForRetrieverRun
 from langchain.chains.query_constructor.base import AttributeInfo
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -19,6 +20,7 @@ from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pydantic import Field
 from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
+from ..webhook import WebhookHandler
 
 
 def extract_text_from_pdf(contents: io.BytesIO) -> list:
@@ -29,21 +31,6 @@ def extract_text_from_pdf(contents: io.BytesIO) -> list:
     for page in PDFPage.get_pages(contents, caching=True, check_extractable=True):
         page_interpreter.process_page(page)
     text = fake_file_handle.getvalue()
-    pages = text.split("\f")
-
-    # Remove the last line of each page if it's a number or its length is less than 5
-    for i in range(len(pages)):
-        lines = pages[i].split("\n")
-        if len(lines) > 1:  # Ensure there is more than one line
-            last_line = lines[-1]
-            if last_line.isdigit() or len(last_line) < 5:
-                logger.debug(f"Removing last line: {last_line}")
-                lines = lines[:-1]  # Remove the last line
-                pages[i] = "\n".join(lines)
-
-    # Join the pages back together
-    text = "\f".join(pages)
-
     converter.close()
     fake_file_handle.close()
 
@@ -77,14 +64,16 @@ class PatchedSelfQueryRetriever(SelfQueryRetriever):
 
 class PDFRetrieverMixin:
     @classmethod
-    def create_index(self, datasets: List[Dataset]):
-        docs = PDFLoader.load_and_split_documents(datasets)
+    def create_index(cls, dataset: Dataset):
+        docs = PDFLoader.load_and_split_documents([dataset])
 
         embedding = OpenAIEmbeddings()
 
         ids = [doc.metadata["urn"] for doc in docs]
         texts = [doc.page_content for doc in docs]
         metadatas = [doc.metadata for doc in docs]
+        # metadata same for all pages in a document
+        metadata = docs[0].metadata
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         vector_store = Pinecone.from_texts(
             texts=texts,
@@ -94,17 +83,33 @@ class PDFRetrieverMixin:
             ids=ids,
             index_name="context-prod",
         )
+        # TODO efficiency can be optimized
+        meta_ids = []
+        for id in ids:
+            _id = "-".join(id.split("-")[0:2])
+            if _id not in meta_ids:
+                meta_ids.append(_id)
+        for id in meta_ids:
+            cls.upsert_vector(id=id, content="", metadata=metadata)
+
+        webhook_handler = WebhookHandler()
+        for doc in dataset.documents:
+            webhook_handler.update_document_status(
+                dataset.id, doc.uid, doc.content_size, 0
+            )
+
         return vector_store
 
     @classmethod
-    def delete_index(self, dataset: Dataset):
+    def delete_index(cls, dataset: Dataset):
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = pinecone.Index("context-prod")
         ids = []
         for doc in dataset.documents:
             for i in range(doc.page_size):
                 ids.append(f"{dataset.id}-{doc.url}-{i}")
-        if ids == []:
+            ids.append(f"{dataset.id}-{doc.url}")
+        if len(ids) == 1:
             logger.warning(
                 f"Dataset {dataset.id} has no documents when deleting, or page_size bug"
             )
@@ -112,13 +117,13 @@ class PDFRetrieverMixin:
         index.delete(ids=ids, namespace="withcontext")
 
     @classmethod
-    def get_relative_chains(self, dataset: Dataset):
+    def get_relative_chains(cls, dataset: Dataset):
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = pinecone.Index("context-prod")
         if len(dataset.documents) == 0:
             logger.warning(f"Dataset {dataset.id} has no documents when getting chains")
             return []
-        id = f"{dataset.id}-{dataset.documents[0].url}-0"
+        id = f"{dataset.id}-{dataset.documents[0].url}"
         logger.info(f"Getting vector for id{id}")
         vector = (
             index.fetch(namespace="withcontext", ids=[id])
@@ -136,11 +141,11 @@ class PDFRetrieverMixin:
 
     @classmethod
     def add_relative_chain_to_dataset(
-        self, dataset: Dataset, model_id: str, chain_key: str
+        cls, dataset: Dataset, model_id: str, chain_key: str
     ):
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = pinecone.Index("context-prod")
-        known_chains = self.get_relative_chains(dataset)
+        known_chains = cls.get_relative_chains(dataset)
         chain_urn = f"{model_id}-{chain_key}"
         known_chains.append(chain_urn)
         logger.info(f"Adding chain {chain_urn} to dataset {dataset.id}")
@@ -163,14 +168,21 @@ class PDFRetrieverMixin:
                     namespace="withcontext",
                 )
                 logger.info(f"Updated {id} with relative chains {known_chains}")
+            id = f"{dataset.id}-{doc.url}"
+            index.update(
+                id=id,
+                set_metadata={"relative_chains": known_chains},
+                namespace="withcontext",
+            )
+            logger.info(f"Updated {id} with relative chains {known_chains}")
 
     @classmethod
     def delete_relative_chain_from_dataset(
-        self, dataset: Dataset, model_id: str, chain_key: str
+        cls, dataset: Dataset, model_id: str, chain_key: str
     ):
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = pinecone.Index("context-prod")
-        known_chains = self.get_relative_chains(dataset)
+        known_chains = cls.get_relative_chains(dataset)
         chain_urn = f"{model_id}-{chain_key}"
         try:
             known_chains.remove(chain_urn)
@@ -180,12 +192,17 @@ class PDFRetrieverMixin:
         for doc in dataset.documents:
             for i in range(doc.page_size):
                 id = f"{dataset.id}-{doc.url}-{i}"
-
                 index.update(
                     id=id,
                     set_metadata={"relative_chains": known_chains},
                     namespace="withcontext",
                 )
+            id = f"{dataset.id}-{doc.url}"
+            index.update(
+                id=id,
+                set_metadata={"relative_chains": known_chains},
+                namespace="withcontext",
+            )
 
     @classmethod
     def get_retriever(cls, filter: dict = {}) -> Pinecone:
@@ -211,3 +228,30 @@ class PDFRetrieverMixin:
         retriever.search_kwargs = {"filter": filter}
         retriever.search_type = "mmr"
         return retriever
+
+    @classmethod
+    def fetch_vectors(cls, ids: List[str]) -> Dict:
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = Index("context-prod")
+        return (
+            index.fetch(namespace="withcontext", ids=ids).to_dict().get("vectors", {})
+        )
+
+    @classmethod
+    def upsert_vector(cls, id, content, metadata):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = Index("context-prod")
+        embeddings = OpenAIEmbeddings()
+        vector = embeddings.embed_documents([content])[0]
+        index.upsert(vectors=[(id, vector, metadata)], namespace="withcontext")
+
+    @classmethod
+    def delete_vector(cls, id):
+        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+        index = Index("context-prod")
+        index.delete(ids=[id], namespace="withcontext")
+
+    @classmethod
+    def get_metadata(cls, id):
+        vector = cls.fetch_vectors([id])
+        return vector.get(id, {}).get("metadata", {})
