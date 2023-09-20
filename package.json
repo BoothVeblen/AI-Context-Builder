@@ -13,24 +13,24 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@commitlint/cli": "^17.6.7",
-    "@commitlint/config-conventional": "^17.6.7",
+    "@commitlint/cli": "^17.7.1",
+    "@commitlint/config-conventional": "^17.7.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
-    "@tailwindcss/typography": "^0.5.9",
-    "@typescript-eslint/parser": "^6.2.0",
-    "eslint": "8.45.0",
-    "eslint-config-next": "13.4.12",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-config-turbo": "^1.10.12",
-    "eslint-plugin-react": "^7.33.0",
+    "@tailwindcss/typography": "^0.5.10",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "8.49.0",
+    "eslint-config-next": "13.5.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-turbo": "^1.10.14",
+    "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-tailwindcss": "^3.13.0",
     "husky": "^8.0.3",
-    "prettier": "^3.0.0",
-    "tailwind-scrollbar": "^3.0.4",
+    "prettier": "^3.0.3",
+    "tailwind-scrollbar": "^3.0.5",
     "tailwindcss": "3.3.3",
-    "tailwindcss-animate": "^1.0.6",
-    "turbo": "^1.10.12",
-    "typescript": "5.1.6"
+    "tailwindcss-animate": "^1.0.7",
+    "turbo": "^1.10.14",
+    "typescript": "5.2.2"
   },
   "engines": {
     "node": ">=16.17.0"

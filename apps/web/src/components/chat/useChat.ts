@@ -6,7 +6,7 @@ import {
   ChatRequest as RawChatRequest,
   UseChatOptions,
 } from 'ai'
-import { ChatCompletionRequestMessageFunctionCall } from 'openai-edge'
+import { ChatCompletionMessageParam } from 'openai/resources/chat'
 import useSWR, { KeyedMutator } from 'swr'
 
 import { nanoid } from '@/lib/utils'
@@ -201,7 +201,7 @@ const getStreamedResponse = async (
 
   if (streamedResponse.startsWith('{"function_call":')) {
     // Once the stream is complete, the function call is parsed into an object.
-    const parsedFunctionCall: ChatCompletionRequestMessageFunctionCall =
+    const parsedFunctionCall: ChatCompletionMessageParam.FunctionCall =
       JSON.parse(streamedResponse).function_call
 
     responseMessage['function_call'] = parsedFunctionCall

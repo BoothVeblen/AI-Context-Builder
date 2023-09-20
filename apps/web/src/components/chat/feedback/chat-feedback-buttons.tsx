@@ -36,15 +36,17 @@ const ChatFeedbackButtons = (props: Props) => {
 
         mutate<Message[]>(
           ['/api/chat', session_id],
-          messages.map((message: Message) => {
-            if (message.type === 'chat' && message.id === id) {
-              return {
-                ...message,
-                feedback: type,
+          messages
+            .filter((message: Message) => message.type === 'chat') // filter out event messages
+            .map((message: Message) => {
+              if (message.type === 'chat' && message.id === id) {
+                return {
+                  ...message,
+                  feedback: type,
+                }
               }
-            }
-            return message
-          })
+              return message
+            })
         )
 
         toggleFeedback(id, type)
