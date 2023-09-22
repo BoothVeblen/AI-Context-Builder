@@ -244,7 +244,7 @@ export class SlackUtils {
           eq(SlackTeamAppsTable.team_id, this.team_id)
         )
       )
-
+    console.log('linkedApps:', linkedApps)
     const appListBlocks = []
     for (const linkedApp of linkedApps) {
       const sections = [
@@ -286,7 +286,7 @@ export class SlackUtils {
       ]
       appListBlocks.push(...sections)
     }
-
+    console.log('publishHomeViews:', user_id)
     await this.client.views.publish({
       user_id,
       view: {

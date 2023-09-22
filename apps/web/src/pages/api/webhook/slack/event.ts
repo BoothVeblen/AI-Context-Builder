@@ -173,6 +173,6 @@ export default async function handler(
       return
     }
   } catch (error: any) {
-    console.log('error:', error.message)
+    console.error('error:', error.message)
   }
 }
