@@ -64,6 +64,7 @@ class PDFLoader:
                             )
                         )
                 elif document.type == "annotated_data":
+                    document.url = document.uid
                     webhook_handler = AnnotatedDataStorageClient()
                     annotated_data = webhook_handler.load(document.uid)
                     options = PDFRetrivalOption(
