@@ -173,6 +173,6 @@ export default async function handler(
       return
     }
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    console.log('error:', error.message)
   }
 }
