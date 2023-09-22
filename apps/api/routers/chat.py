@@ -157,7 +157,7 @@ async def stream_completions(body: CompletionsRequest):
             link = FaceToAiManager.get_room_link(
                 model.opening_remarks,
                 body.session_id,
-                model_id == "24a683074e7c4c6f881b747296aabbae",
+                model_id,
             )
             webhook_handler = WebhookHandler()
             webhook_handler.create_video_room_link(body.session_id, link)
