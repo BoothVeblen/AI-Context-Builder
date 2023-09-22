@@ -16,7 +16,7 @@ export default async function handler(
       })
     }
 
-    res.status(200).json({ success: true }) // response must be sent within 3 seconds
+    // res.status(200).json({ success: true }) // response must be sent within 3 seconds
 
     const payload = JSON.parse(req.body.payload) || {}
     const type = payload.type
@@ -118,7 +118,10 @@ export default async function handler(
         }
       }
     }
+    console.log('interactivity success')
+    return res.status(200).json({ success: true })
   } catch (error: any) {
+    console.error('interactivity error:', error.message)
     return res.status(500).json({ success: false, error: error.message })
   }
 }
