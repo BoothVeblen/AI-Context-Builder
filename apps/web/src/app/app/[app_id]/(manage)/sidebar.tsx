@@ -45,7 +45,7 @@ const SidebarLink = (props: SidebarLinkProps) => {
 function Sidebar({ children }: PropsWithChildren) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextUrl = searchParams.get('nextUrl')
+  const nextUrl = searchParams?.get('nextUrl')
   const [isPending, startTransition] = useTransition()
 
   function handleGoBack() {

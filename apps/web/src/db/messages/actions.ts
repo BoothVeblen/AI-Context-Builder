@@ -162,3 +162,33 @@ export async function addAnnotation({
     }
   }
 }
+
+export async function getFormattedMessages(sessionId: string) {
+  const sq = await db
+    .select({
+      query: MessagesTable.query,
+      answer: MessagesTable.answer,
+      created_at: MessagesTable.created_at,
+    })
+    .from(MessagesTable)
+    .where(
+      and(
+        eq(MessagesTable.session_id, sessionId),
+        eq(MessagesTable.archived, false)
+      )
+    )
+    .orderBy(desc(MessagesTable.created_at))
+    .limit(10)
+    .as('sq')
+  const messages = await db.select().from(sq).orderBy(asc(sq.created_at))
+
+  const formattedMessages = []
+  for (const message of messages) {
+    if (message.query)
+      formattedMessages.push({ role: 'user', content: message.query })
+    if (message.answer)
+      formattedMessages.push({ role: 'assistant', content: message.answer })
+  }
+
+  return formattedMessages
+}

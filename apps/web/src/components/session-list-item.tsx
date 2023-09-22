@@ -30,8 +30,10 @@ export default function SessionListItem({
 }: ISessionItem) {
   const router = useRouter()
   const params = useParams()
-  const appId = params.app_id
-  const sessionId = params.session_id
+  const { app_id: appId, session_id: sessionId } = useParams() as {
+    app_id: string
+    session_id: string
+  }
   const href = `/app/${appId}/session/${id}`
   const isSelected = sessionId == id
 

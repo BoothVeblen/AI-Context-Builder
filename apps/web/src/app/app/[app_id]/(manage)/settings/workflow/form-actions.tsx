@@ -46,7 +46,9 @@ function deployApp(
 }
 
 function useAutoSave(key: string, value: any) {
-  const { app_id } = useParams()
+  const { app_id } = useParams() as {
+    app_id: string
+  }
   const { trigger } = useSWRMutation(`/api/apps/${app_id}`, editApp)
   const router = useRouter()
 
@@ -103,7 +105,9 @@ function ResetSection() {
 }
 
 function PublishButton() {
-  const { app_id } = useParams()
+  const { app_id } = useParams() as {
+    app_id: string
+  }
   const { trigger, isMutating } = useSWRMutation(
     `/api/apps/${app_id}/deploy`,
     deployApp

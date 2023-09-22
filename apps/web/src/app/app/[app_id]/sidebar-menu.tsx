@@ -49,14 +49,15 @@ function MenuItem({
 }
 
 export default function Menu() {
-  const params = useParams()
+  const { app_id } = useParams() as {
+    app_id: string
+  }
   const pathname = usePathname()
-  const appId = params.app_id
 
   return (
     <ul className="space-y-1 p-2">
       {MENU_ITEMS.map(({ id, name, Icon }) => {
-        const href = `/app/${appId}/${id}`
+        const href = `/app/${app_id}/${id}`
         const isSelected = pathname === href
         return (
           <MenuItem key={id} href={href} isSelected={isSelected}>

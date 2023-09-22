@@ -1,5 +1,8 @@
 import { BASE_URL } from './utils'
 
+const hasValue = (env?: string) =>
+  env !== undefined && env !== null && env !== ''
+
 export const flags = {
   isProd: BASE_URL === 'https://build.withcontext.ai',
   isDev: process.env.NODE_ENV === 'development',
@@ -8,13 +11,14 @@ export const flags = {
     [
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
       process.env.CLERK_SECRET_KEY,
-    ].every((env) => env != undefined && env !== ''),
+    ].every(hasValue),
   isNeon: process.env.DATABASE_URL?.includes('neon.tech') || false,
   enabledWorkflow: true,
-  enabledAIService: process.env.AI_SERVICE_API_BASE_URL != null,
-  enabledPusher: process.env.NEXT_PUBLIC_PUSHER_APP_KEY != null,
+  enabledAIService: hasValue(process.env.AI_SERVICE_API_BASE_URL),
+  enabledPusher: hasValue(process.env.NEXT_PUBLIC_PUSHER_APP_KEY),
   enabledVideoInteraction: true,
   enabledLogSnag:
     BASE_URL === 'https://build.withcontext.ai' &&
-    process.env.LOGSNAG_TOKEN != null,
+    hasValue(process.env.LOGSNAG_TOKEN),
+  enabledSlack: hasValue(process.env.NEXT_PUBLIC_SLACK_CLIENT_ID),
 }

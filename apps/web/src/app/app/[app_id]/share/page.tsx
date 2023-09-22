@@ -3,16 +3,21 @@
 import * as React from 'react'
 import { useParams } from 'next/navigation'
 
+import { flags } from '@/lib/flags'
 import usePageTitle from '@/hooks/use-page-title'
 import useCopyToClipboard from '@/hooks/useCopyToClipboard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Text from '@/components/ui/text'
 
+import Slack from './slack'
+
 export const runtime = 'edge'
 
 const ShareApp = () => {
-  const { app_id } = useParams()
+  const { app_id } = useParams() as {
+    app_id: string
+  }
   const [copyBtnText, setCopyBtnText] = React.useState('Copy')
   const { copy } = useCopyToClipboard()
 
@@ -44,26 +49,14 @@ const ShareApp = () => {
       </div>
       <div className="m-full h-px bg-slate-100" />
       <div className="p-4 lg:pl-[155px] lg:pt-[100px]">
-        {/* <div className="mb-6 gap-2">
-          <Text>embed this App in</Text>
-          <div className="mt-2 flex w-full gap-4">
-            <Button variant="outline" className="h-12 w-12 rounded-full p-0">
-              <WebIcon />
-            </Button>
-            <Button variant="outline" className="h-12 w-12 rounded-full p-0">
-              <VersionIcon />
-            </Button>
-            <Button variant="outline" className="h-12 w-12 rounded-full p-0">
-              <NotionIcon />
-            </Button>
-            <Button variant="outline" className="h-12 w-12 rounded-full p-0">
-              <FacingIcon />
-            </Button>
-            <Button variant="outline" className="h-12 w-12 rounded-full p-0">
-              <InsIcon />
-            </Button>
+        {flags.enabledSlack && (
+          <div className="mb-6 gap-2">
+            <Text>Use this App in</Text>
+            <div className="mt-2 flex gap-4">
+              <Slack appId={app_id} />
+            </div>
           </div>
-        </div> */}
+        )}
         <div className="gap-2">
           <Text>Copy link</Text>
           <div className="mt-2 flex gap-2">

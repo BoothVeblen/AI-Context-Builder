@@ -18,6 +18,7 @@ export async function OpenAIStream({
       completion: string,
       metadata: Record<string, any>
     ) => Promise<void> | void
+    onToken?: (token: string) => Promise<void> | void
   }
   data: Record<string, unknown>
 }) {
@@ -66,6 +67,7 @@ export async function OpenAIStream({
               await callback.onCompletion(completion, metadata ?? {})
             }
             controller.close()
+            if (waitingId) clearInterval(waitingId)
             return
           }
           try {
@@ -79,6 +81,10 @@ export async function OpenAIStream({
             const queue = encoder.encode(text)
             controller.enqueue(queue)
             counter++
+
+            if (callback?.onToken) {
+              await callback.onToken(text)
+            }
 
             if (!initialed) {
               initialed = true

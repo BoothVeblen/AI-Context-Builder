@@ -23,7 +23,7 @@ export default function Sidebar({ appId, appName }: IProps) {
       <BaseSideBar.Link
         href={{
           pathname: `/app/${appId}/settings/basics`,
-          search: searchParams.toString(),
+          search: searchParams?.toString(),
         }}
         name="Basics"
         desc="Some basic configurations of the App."
@@ -32,7 +32,7 @@ export default function Sidebar({ appId, appName }: IProps) {
         <BaseSideBar.Link
           href={{
             pathname: `/app/${appId}/settings/workflow`,
-            search: searchParams.toString(),
+            search: searchParams?.toString(),
           }}
           name="Workflow"
           desc="Workflow related configurations of the App."
