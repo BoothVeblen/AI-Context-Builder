@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SLACK_REDIRECT_URI } from '@/lib/const'
 import { createSlackClient, SlackUtils } from '@/lib/slack'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const query = req.nextUrl.searchParams
