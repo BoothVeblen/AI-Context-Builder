@@ -118,10 +118,9 @@ export default async function handler(
         }
       }
     }
-    console.log('interactivity success')
     return res.status(200).json({ success: true })
   } catch (error: any) {
-    console.error('interactivity error:', error.message)
+    console.error('error:', error.message)
     return res.status(500).json({ success: false, error: error.message })
   }
 }
