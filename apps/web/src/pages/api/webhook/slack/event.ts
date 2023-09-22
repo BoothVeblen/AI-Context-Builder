@@ -22,7 +22,7 @@ export default async function handler(
     const { body } = req
     if (body.challenge) return res.status(200).json(body)
 
-    res.status(200).json(body) // response immediately to avoid retry from slack
+    // res.status(200).json(body) // response immediately to avoid retry from slack
 
     const isUserMessage =
       body.event?.type === 'message' &&
@@ -153,7 +153,7 @@ export default async function handler(
         data: {},
       })
 
-      return
+      return res.status(200).json(body)
     }
 
     if (body.event?.type === 'app_home_opened') {
@@ -170,9 +170,10 @@ export default async function handler(
       const slack = new SlackUtils()
       await slack.initialize({ app_id, team_id })
       await slack.publishHomeViews({ user_id, channel_id })
-      return
+      return res.status(200).json(body)
     }
   } catch (error: any) {
     console.error('error:', error.message)
+    return res.status(500).json({ error: error.message })
   }
 }
