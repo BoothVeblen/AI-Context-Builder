@@ -47,7 +47,10 @@ export default NiceModal.create(
 
     return (
       <AlertDialog open={modal.visible}>
-        <AlertDialogContent className="gap-6 sm:max-w-[268px]">
+        <AlertDialogContent
+          className="gap-6 sm:max-w-[268px]"
+          data-testid="video-call-confirm-dialog"
+        >
           <AlertDialogHeader className="space-y-4">
             <AlertDialogTitle>
               <div className="flex items-center space-x-4">
@@ -79,6 +82,7 @@ export default NiceModal.create(
             <Button
               className="bg-green-600 hover:bg-green-600/90 focus-visible:ring-green-600"
               onClick={onAccept}
+              data-testid="accept-video-call"
             >
               <PhoneCallIcon className="mr-2 h-4 w-4" />
               Accept
@@ -86,6 +90,7 @@ export default NiceModal.create(
             <Button
               className="bg-red-600 hover:bg-red-600/90 focus-visible:ring-red-600"
               onClick={onDecline}
+              data-testid="decline-video-call"
             >
               <PhoneIcon className="mr-2 h-4 w-4" />
               Decline

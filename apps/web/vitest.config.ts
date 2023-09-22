@@ -6,8 +6,13 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   test: {
+    setupFiles: './scripts/setup-tests.ts',
     environment: 'jsdom',
     include: ['**/*.test.tsx'],
+    coverage: {
+      provider: 'istanbul',
+      reporter: ['html', 'lcov'],
+    },
   },
   resolve: {
     alias: [{ find: '@', replacement: resolve(__dirname, './src') }],

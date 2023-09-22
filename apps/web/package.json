@@ -11,6 +11,7 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache",
     "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx,mdx}\" --cache",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "db:push": "drizzle-kit push:pg --config drizzle.config.ts"
   },
@@ -106,11 +107,14 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.38.0",
+    "@testing-library/jest-dom": "^6.1.2",
     "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@playwright/test": "^1.38.0",
     "@types/lodash": "^4.14.198",
     "@types/react-mentions": "^4.1.8",
     "@types/react-syntax-highlighter": "^15.5.7",
+    "@vitest/coverage-istanbul": "^0.34.3",
     "@vitejs/plugin-react": "^4.0.4",
     "dotenv": "^16.3.1",
     "drizzle-kit": "^0.19.13",
