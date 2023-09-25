@@ -366,8 +366,7 @@ class DatasetManager(BaseManager):
         if doc_type == None:
             raise ValueError("UID not found in dataset documents")
         text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-            separator=" ",
-            chunk_size=splitter.get("chunk_size", 1000),
+            chunk_size=splitter.get("chunk_size", 100),
             chunk_overlap=splitter.get("chunk_overlap", 0),
         )
         if doc_type == "pdf":

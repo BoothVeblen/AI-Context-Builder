@@ -46,7 +46,6 @@ class PDFLoader:
                         )
                     )
                     text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                        separator=" ",
                         chunk_size=options.splitter.chunk_size,
                         chunk_overlap=options.splitter.chunk_overlap,
                     )
@@ -74,7 +73,6 @@ class PDFLoader:
                         )
                     )
                     text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                        separator=" ",
                         chunk_size=options.splitter.chunk_size,
                         chunk_overlap=options.splitter.chunk_overlap,
                     )
@@ -86,7 +84,7 @@ class PDFLoader:
                             },
                         )
                     )
-                    document.content_size = sys.getsizeof(annotated_data)
+                    document.content_size = len(annotated_data)
                 else:
                     logger.error(f"Document type {document.type} not supported")
                     raise Exception("Document type not supported")
