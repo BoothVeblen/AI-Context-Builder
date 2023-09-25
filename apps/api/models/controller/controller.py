@@ -296,13 +296,17 @@ class DatasetManager(BaseManager):
         )
         docs = asyncio.run(retriever.aget_relevant_documents(query))
         segments = []
+        segments_id = []
         for _doc in docs:
+            if _doc.metadata["urn"] in segments_id:
+                continue
             segments.append(
                 {
                     "segment_id": _doc.metadata["urn"],
                     "content": _doc.page_content,
                 }
             )
+            segments_id.append(_doc.metadata["urn"])
         return len(segments), segments
 
     def add_segment(self, dataset_id, uid, content):
