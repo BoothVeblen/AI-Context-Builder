@@ -31,10 +31,12 @@ export default async function handler(
 
       const action_id = payload.actions?.[0]?.action_id
       if (action_id === 'create_session') {
+        console.log('create_session')
         const user_id = payload.user?.id
         const { context_user_id } = await slack.addOrUpdateUser({
           user_id,
         })
+        console.log('got user id:', context_user_id)
         const action_value = payload.actions?.[0]?.value
         const { channel_id, context_app_id } = JSON.parse(action_value) || {}
         const { app, session } = await slack.createSession(
