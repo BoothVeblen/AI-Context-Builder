@@ -1,25 +1,35 @@
-import { AvatarFallback } from '@radix-ui/react-avatar'
 import { ReactNode } from 'react-markdown/lib/ast-to-react'
 
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
 interface IProps {
   children?: ReactNode
   content?: string
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  show?: boolean
 }
 
-export function HoverTooltip({ children, content }: IProps) {
+export function HoverTooltip({
+  children,
+  content,
+  side = 'top',
+  show = true,
+}: IProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="right" className="max-md:hidden sm:hidden lg:block">
-        <p className="font-normal">{content}</p>
-      </TooltipContent>
+      {show && (
+        <TooltipContent
+          side={side}
+          className="max-md:hidden sm:hidden lg:block"
+        >
+          <p className="font-normal">{content}</p>
+        </TooltipContent>
+      )}
     </Tooltip>
   )
 }

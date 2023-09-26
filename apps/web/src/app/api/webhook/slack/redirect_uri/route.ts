@@ -49,20 +49,16 @@ export async function GET(req: NextRequest) {
       team_icon: teamInfo.team.icon?.image_132 || '',
       access_token,
       scope: accessInfo.scope,
+      archived: false,
     }
-    const slack_team = await slack.addOrUpdateTeam(team)
+    await slack.addOrUpdateTeam(team)
 
     const user = {
       user_id: accessInfo.authed_user?.id ?? '',
     }
-    const slack_user = await slack.addOrUpdateUser(user)
+    await slack.addOrUpdateUser(user)
 
-    const data = {
-      slack_team,
-      slack_user,
-    }
-    // TODO: redirect to success page
-    return NextResponse.json({ success: true, data })
+    return NextResponse.redirect(new URL('/success', req.url))
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message })
   }

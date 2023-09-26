@@ -77,6 +77,7 @@ export class SlackUtils {
     team_icon,
     access_token,
     scope,
+    archived,
   }: Omit<NewSlackTeam, 'short_id' | 'app_id' | 'team_id'>) {
     const [found] = await db
       .select()
@@ -96,6 +97,7 @@ export class SlackUtils {
           team_icon,
           access_token: access_token || this.#access_token,
           scope,
+          archived,
         })
         .where(eq(SlackTeamsTable.short_id, found.short_id))
         .returning()
@@ -112,6 +114,7 @@ export class SlackUtils {
           team_icon,
           access_token: access_token || this.#access_token,
           scope,
+          archived,
         })
         .returning()
       return newSlackTeam

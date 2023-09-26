@@ -1,6 +1,5 @@
 import * as React from 'react'
-import NiceModal, { useModal } from '@ebay/nice-modal-react'
-import { SlackIcon } from 'lucide-react'
+import { InfoIcon, PlusIcon } from 'lucide-react'
 import useSWR, { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -8,21 +7,10 @@ import { SLACK_AUTHORIZE_URL } from '@/lib/const'
 import { fetcher } from '@/lib/utils'
 import { SlackTeamApp } from '@/db/slack_team_apps/schema'
 import { SlackTeam } from '@/db/slack_teams/schema'
-import useNiceModal from '@/hooks/use-nice-modal'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { useToast } from '@/components/ui/use-toast'
+import { HoverTooltip } from '@/components/hover-tooltip'
 
 function TeamCard({
   icon,
@@ -31,6 +19,7 @@ function TeamCard({
   checked,
   onCheckedChange,
   disabled = false,
+  onRemove,
 }: {
   icon: string
   name: string
@@ -38,19 +27,44 @@ function TeamCard({
   checked: boolean
   onCheckedChange: (checked: boolean) => void
   disabled?: boolean
+  onRemove: () => void
 }) {
   return (
-    <div className="flex items-center space-x-4 rounded-md border p-4">
-      <img alt="slack team icon" src={icon} className="h-8 w-8 rounded" />
-      <div className="flex-1 space-y-1">
-        <p className="text-sm font-medium leading-none">{name}</p>
-        <p className="text-sm text-muted-foreground">{url}</p>
+    <div className="group flex w-[540px] items-center justify-between">
+      <div className="flex w-[408px] items-center gap-4 rounded-md border p-4">
+        <img alt="slack team icon" src={icon} className="h-10 w-10 rounded" />
+        <div className="flex-1 gap-1">
+          <p className="text-sm font-medium leading-none">{name}</p>
+          <a
+            href={url}
+            target="_blank"
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            {url}
+          </a>
+        </div>
+        {disabled ? (
+          <HoverTooltip content="Only the administrator of this workspace has the privilege to share.">
+            <InfoIcon className=" text-red-500" />
+          </HoverTooltip>
+        ) : (
+          <Switch
+            defaultChecked={checked}
+            onCheckedChange={onCheckedChange}
+            disabled={disabled}
+          />
+        )}
       </div>
-      <Switch
-        defaultChecked={checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-      />
+      {!disabled && (
+        <Button
+          variant="ghost"
+          className="hidden group-hover:block"
+          onClick={onRemove}
+          disabled={disabled}
+        >
+          Disconnect
+        </Button>
+      )}
     </div>
   )
 }
@@ -74,23 +88,40 @@ function linkTeamToApp(
   })
 }
 
-interface ISlackDialogProps {
+function removeTeam(
+  url: string,
+  {
+    arg,
+  }: {
+    arg: {
+      app_id: string
+      team_id: string
+    }
+  }
+) {
+  return fetcher(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+  })
+}
+
+interface IProps {
   context_app_id: string
 }
 
-const SlackDialog = NiceModal.create(
-  ({ context_app_id }: ISlackDialogProps) => {
-    const { modal, onOpenChange } = useNiceModal()
+export default function Slack({ context_app_id }: IProps) {
+  const { mutate } = useSWRConfig()
+  const { toast } = useToast()
 
-    const { mutate } = useSWRConfig()
+  const { data: teamList = [], isLoading: isLoadingTeamList } = useSWR<
+    Partial<SlackTeam>[]
+  >('/api/me/slack/teams', fetcher, {
+    revalidateOnFocus: true,
+    keepPreviousData: true,
+  })
 
-    const { data: teamList = [] } = useSWR<Partial<SlackTeam>[]>(
-      '/api/me/slack/teams',
-      fetcher,
-      { revalidateOnFocus: true, keepPreviousData: true }
-    )
-
-    const { data: linkedTeamList = [] } = useSWR<Partial<SlackTeamApp>[]>(
+  const { data: linkedTeamList = [], isLoading: isLoadingLinkedTeamList } =
+    useSWR<Partial<SlackTeamApp>[]>(
       `/api/slack/linked-teams/${context_app_id}`,
       fetcher,
       {
@@ -99,108 +130,104 @@ const SlackDialog = NiceModal.create(
       }
     )
 
-    const { trigger: linkTeamToAppTrigger } = useSWRMutation(
-      `/api/slack/link-team-to-app`,
-      linkTeamToApp
-    )
+  const { trigger: triggerLinkTeamToApp } = useSWRMutation(
+    `/api/slack/link-team-to-app`,
+    linkTeamToApp
+  )
 
-    const checkIsLinked = React.useCallback(
-      (app_id: string, team_id: string) =>
-        linkedTeamList.some(
-          (linkedTeam) =>
-            linkedTeam.app_id === app_id && linkedTeam.team_id === team_id
-        ),
-      [linkedTeamList]
-    )
+  const { trigger: triggerRemoveTeam, isMutating: isMutatingRemoveTeam } =
+    useSWRMutation(`/api/slack/remove-team`, removeTeam)
 
-    const checkedChangeHandler = React.useCallback(
-      (app_id: string, team_id: string, context_app_id: string) =>
-        async (checked: boolean) => {
-          await linkTeamToAppTrigger({
-            app_id,
-            team_id,
-            context_app_id,
-            unlink: !checked,
-          })
-          await mutate(`/api/slack/linked-teams/${context_app_id}`)
-        },
-      [linkTeamToAppTrigger, mutate]
-    )
+  const checkIsLinked = React.useCallback(
+    (app_id: string, team_id: string) =>
+      linkedTeamList.some(
+        (linkedTeam) =>
+          linkedTeam.app_id === app_id && linkedTeam.team_id === team_id
+      ),
+    [linkedTeamList]
+  )
 
-    return (
-      <Dialog open={modal.visible} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Slack</DialogTitle>
-            <DialogDescription>
-              Allow team members to chat with this app
-            </DialogDescription>
-          </DialogHeader>
+  const checkedChangeHandler = React.useCallback(
+    (app_id: string, team_id: string, context_app_id: string) =>
+      async (checked: boolean) => {
+        await triggerLinkTeamToApp({
+          app_id,
+          team_id,
+          context_app_id,
+          unlink: !checked,
+        })
+        await mutate(`/api/slack/linked-teams/${context_app_id}`)
+      },
+    [triggerLinkTeamToApp, mutate]
+  )
 
-          <div className="flex">
-            <a href={SLACK_AUTHORIZE_URL} target="_blank">
-              <img
-                alt="Add to Slack"
-                height="40"
-                width="139"
-                src="https://platform.slack-edge.com/img/add_to_slack.png"
-                srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-              />
-            </a>
-          </div>
+  const removeTeamHandler = React.useCallback(
+    (app_id: string, team_id: string) => async () => {
+      await triggerRemoveTeam({
+        app_id,
+        team_id,
+      })
+      await mutate(`/api/me/slack/teams`)
+      toast({ description: 'The workspace has been disconnected' })
+    },
+    [triggerRemoveTeam, mutate, toast]
+  )
 
-          {teamList.length > 0 && (
-            <div className="space-y-2">
-              {teamList.map(
-                ({ app_id, team_id, team_name, team_url, team_icon }: any) => {
-                  const checked = checkIsLinked(app_id, team_id)
-                  return (
-                    <TeamCard
-                      key={`${app_id}-${team_id}-${
-                        checked ? 'checked' : 'unchecked'
-                      }`}
-                      icon={team_icon}
-                      name={team_name}
-                      url={team_url}
-                      checked={checked}
-                      onCheckedChange={checkedChangeHandler(
-                        app_id,
-                        team_id,
-                        context_app_id
-                      )}
-                    />
-                  )
-                }
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    )
-  }
-)
-
-interface IProps {
-  appId: string
-}
-
-export default function Slack({ appId }: IProps) {
-  const modal = useModal(SlackDialog)
+  const isLoading = isLoadingTeamList || isLoadingLinkedTeamList
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => modal.show({ context_app_id: appId })}
+    <div>
+      {teamList.length > 0 && !isLoading && (
+        <div className="space-y-2">
+          {teamList.map(
+            ({
+              app_id,
+              team_id,
+              team_name,
+              team_url,
+              team_icon,
+              is_admin,
+            }: any) => {
+              const checked = checkIsLinked(app_id, team_id)
+              const disabled = !is_admin
+              return (
+                <TeamCard
+                  key={`${app_id}-${team_id}-${
+                    checked ? 'checked' : 'unchecked'
+                  }`}
+                  icon={team_icon}
+                  name={team_name}
+                  url={team_url}
+                  checked={checked}
+                  onCheckedChange={checkedChangeHandler(
+                    app_id,
+                    team_id,
+                    context_app_id
+                  )}
+                  onRemove={removeTeamHandler(app_id, team_id)}
+                  disabled={disabled}
+                />
+              )
+            }
+          )}
+        </div>
+      )}
+      <div className="mt-2">
+        <a
+          href={SLACK_AUTHORIZE_URL}
+          target="_blank"
+          className="flex w-[408px] cursor-pointer items-center space-x-4 rounded-md border p-4"
         >
-          <SlackIcon />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs">Slack</p>
-      </TooltipContent>
-    </Tooltip>
+          <div className="flex h-10 w-10 items-center justify-center rounded border border-slate-200">
+            <PlusIcon className="h-6 w-6" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <p className="text-sm font-medium leading-none">
+              Share to a Slack Workspace
+            </p>
+          </div>
+        </a>
+      </div>
+    </div>
   )
 }

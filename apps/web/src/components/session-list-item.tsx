@@ -66,7 +66,7 @@ export default function SessionListItem({
         >
           <MessageCircleIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{name}</span>
-          <HoverTooltip content="Delete Chat">
+          <HoverTooltip content="Delete Chat" side="right">
             {!isOnlyOneSession && isSelected && (
               <button
                 className="absolute right-2 rounded-full bg-slate-200 p-1 text-center hover:bg-white"
