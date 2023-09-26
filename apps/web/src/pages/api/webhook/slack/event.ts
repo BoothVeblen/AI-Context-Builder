@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+import { logsnag } from '@/lib/logsnag'
 import { OpenAIStream } from '@/lib/openai-stream'
 import { SlackUtils } from '@/lib/slack'
 import { nanoid } from '@/lib/utils'
@@ -49,7 +50,7 @@ export default async function handler(
         text: '_Thinking..._',
       })
 
-      await slack.addOrUpdateUser(
+      const slack_user = await slack.addOrUpdateUser(
         {
           user_id,
         },
@@ -73,12 +74,46 @@ export default async function handler(
 
       let completion = ''
       const messageId = nanoid()
+
+      const requestId = nanoid()
+      await logsnag?.track({
+        user_id: slack_user.context_user_id,
+        channel: 'chat',
+        event: 'Chat Request (Slack)',
+        icon: '➡️',
+        description: `Send a chat request at Slack`,
+        tags: {
+          'request-id': requestId,
+          'slack-app-id': app_id,
+          'slack-team-id': team_id,
+          'session-id': session_id,
+        },
+      })
+
       const requestTimestamp = Date.now()
 
       await OpenAIStream({
         baseUrl,
         payload,
         callback: {
+          async onStart() {
+            const responseTimestamp = Date.now()
+            const latencyMs = responseTimestamp - requestTimestamp
+            await logsnag?.track({
+              user_id: slack_user.context_user_id,
+              channel: 'chat',
+              event: 'Chat Response (Slack)',
+              icon: '⬅️',
+              description: `Got a response within ${latencyMs}ms`,
+              tags: {
+                'request-id': requestId,
+                'slack-app-id': app_id,
+                'slack-team-id': team_id,
+                'session-id': session_id,
+                'latency-ms': latencyMs,
+              },
+            })
+          },
           async onToken(text) {
             completion = completion + text
             await slack.updateMessage({

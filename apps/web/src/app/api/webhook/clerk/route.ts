@@ -50,11 +50,8 @@ async function createUser(data: UserJSON) {
       user_id: newUser.short_id,
       properties: {
         ...(newUser.email ? { email: newUser.email } : {}),
-        ...(newUser.last_name ? { last_name: newUser.last_name } : {}),
-        ...(newUser.first_name ? { first_name: newUser.first_name } : {}),
-        ...(newUser.created_at
-          ? { created_at: newUser.created_at.toUTCString() }
-          : {}),
+        ...(newUser.last_name ? { 'last-name': newUser.last_name } : {}),
+        ...(newUser.first_name ? { 'first-name': newUser.first_name } : {}),
       },
     })
     await logsnag?.track({
