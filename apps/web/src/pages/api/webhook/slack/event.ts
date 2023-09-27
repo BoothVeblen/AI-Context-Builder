@@ -5,6 +5,7 @@ import { OpenAIStream } from '@/lib/openai-stream'
 import { SlackUtils } from '@/lib/slack'
 import { nanoid } from '@/lib/utils'
 import { addMessage, getFormattedMessages } from '@/db/messages/actions'
+import { removeTeam } from '@/db/slack_teams/actions'
 
 const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
 
@@ -207,6 +208,19 @@ export default async function handler(
       await slack.publishHomeViews({ user_id, channel_id })
       return res.status(200).json(body)
     }
+
+    if (body.event?.type === 'app_uninstalled') {
+      const payload = body as any
+      if (!payload.event) throw new Error('payload.event is undefined')
+      const app_id = payload.api_app_id
+      const team_id = payload.team_id
+      if (!app_id) throw new Error('api_app_id is undefined')
+      if (!team_id) throw new Error('team_id is undefined')
+      await removeTeam(app_id, team_id)
+      return res.status(200).json(body)
+    }
+
+    return res.status(200).json(body)
   } catch (error: any) {
     console.error('error:', error.message)
     return res.status(500).json({ error: error.message })

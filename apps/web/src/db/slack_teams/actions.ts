@@ -49,11 +49,6 @@ export async function getMyTeamList() {
 
 export async function removeTeam(app_id: string, team_id: string) {
   try {
-    const { userId } = auth()
-    if (!userId) {
-      throw new Error('Not authenticated')
-    }
-
     await db
       .update(SlackTeamsTable)
       .set({ archived: true })
