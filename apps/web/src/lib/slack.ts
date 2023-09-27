@@ -136,16 +136,21 @@ export class SlackUtils {
     const [found] = await db
       .select()
       .from(SlackUsersTable)
+      .leftJoin(
+        UsersTable,
+        eq(UsersTable.short_id, SlackUsersTable.context_user_id)
+      )
       .where(
         and(
           eq(SlackUsersTable.app_id, this.app_id),
           eq(SlackUsersTable.team_id, this.team_id),
           eq(SlackUsersTable.user_id, user_id),
-          eq(SlackUsersTable.archived, false)
+          eq(SlackUsersTable.archived, false),
+          eq(UsersTable.archived, false)
         )
       )
     if (found) {
-      if (!options.shouldUpdate) return found
+      if (!options.shouldUpdate) return found.slack_users
 
       const user = await this.getUserInfo(user_id)
       const [updatedSlackUser] = await db
