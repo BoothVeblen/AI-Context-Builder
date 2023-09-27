@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { InfoIcon, PlusIcon } from 'lucide-react'
+import { PlusIcon } from 'lucide-react'
 import useSWR, { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -10,7 +10,6 @@ import { SlackTeam } from '@/db/slack_teams/schema'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/components/ui/use-toast'
-import { HoverTooltip } from '@/components/hover-tooltip'
 
 function TeamCard({
   icon,
@@ -18,7 +17,6 @@ function TeamCard({
   url,
   checked,
   onCheckedChange,
-  disabled = false,
   onRemove,
 }: {
   icon: string
@@ -26,7 +24,6 @@ function TeamCard({
   url: string
   checked: boolean
   onCheckedChange: (checked: boolean) => void
-  disabled?: boolean
   onRemove: () => void
 }) {
   return (
@@ -43,28 +40,15 @@ function TeamCard({
             {url}
           </a>
         </div>
-        {disabled ? (
-          <HoverTooltip content="Only the administrator of this workspace has the privilege to share.">
-            <InfoIcon className=" text-red-500" />
-          </HoverTooltip>
-        ) : (
-          <Switch
-            defaultChecked={checked}
-            onCheckedChange={onCheckedChange}
-            disabled={disabled}
-          />
-        )}
+        <Switch defaultChecked={checked} onCheckedChange={onCheckedChange} />
       </div>
-      {!disabled && (
-        <Button
-          variant="ghost"
-          className="hidden group-hover:block"
-          onClick={onRemove}
-          disabled={disabled}
-        >
-          Disconnect
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        className="hidden group-hover:block"
+        onClick={onRemove}
+      >
+        Disconnect
+      </Button>
     </div>
   )
 }
@@ -135,8 +119,10 @@ export default function Slack({ context_app_id }: IProps) {
     linkTeamToApp
   )
 
-  const { trigger: triggerRemoveTeam, isMutating: isMutatingRemoveTeam } =
-    useSWRMutation(`/api/slack/remove-team`, removeTeam)
+  const { trigger: triggerRemoveTeam } = useSWRMutation(
+    `/api/slack/remove-team`,
+    removeTeam
+  )
 
   const checkIsLinked = React.useCallback(
     (app_id: string, team_id: string) =>
@@ -180,16 +166,8 @@ export default function Slack({ context_app_id }: IProps) {
       {teamList.length > 0 && !isLoading && (
         <div className="space-y-2">
           {teamList.map(
-            ({
-              app_id,
-              team_id,
-              team_name,
-              team_url,
-              team_icon,
-              is_admin,
-            }: any) => {
+            ({ app_id, team_id, team_name, team_url, team_icon }: any) => {
               const checked = checkIsLinked(app_id, team_id)
-              const disabled = !is_admin
               return (
                 <TeamCard
                   key={`${app_id}-${team_id}-${
@@ -205,7 +183,6 @@ export default function Slack({ context_app_id }: IProps) {
                     context_app_id
                   )}
                   onRemove={removeTeamHandler(app_id, team_id)}
-                  disabled={disabled}
                 />
               )
             }

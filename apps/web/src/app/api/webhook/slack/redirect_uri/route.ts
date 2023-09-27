@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SLACK_REDIRECT_URI } from '@/lib/const'
 import { logsnag } from '@/lib/logsnag'
 import { createSlackClient, SlackUtils } from '@/lib/slack'
+import { encodeQueryData } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,6 +60,15 @@ export async function GET(req: NextRequest) {
     }
     const slack_user = await slack.addOrUpdateUser(user)
 
+    if (slack_user.is_admin === false) {
+      const status = 'error'
+      const title = 'Failed'
+      const desc = `Only the administrator of this workspace has the privilege to share.`
+      return NextResponse.redirect(
+        new URL(`/result?${encodeQueryData({ status, title, desc })}`, req.url)
+      )
+    }
+
     await logsnag?.track({
       user_id: slack_user.context_user_id,
       channel: 'share',
@@ -71,7 +81,12 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    return NextResponse.redirect(new URL('/success', req.url))
+    const status = 'success'
+    const title = 'Success'
+    const desc = `You can close this page`
+    return NextResponse.redirect(
+      new URL(`/result?${encodeQueryData({ status, title, desc })}`, req.url)
+    )
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message })
   }

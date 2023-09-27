@@ -184,7 +184,6 @@ export class SlackUtils {
           .returning()
         return newSlackUser
       } else {
-        console.log('start to create user manually')
         const clerkUser = await clerkClient.users.createUser({
           emailAddress: [email],
           firstName: user?.profile?.first_name,
@@ -192,11 +191,13 @@ export class SlackUtils {
           skipPasswordChecks: true,
           skipPasswordRequirement: true,
         })
-        console.log('created user:', clerkUser.emailAddresses[0].emailAddress)
-        await db.insert(UsersTable).values({
-          short_id: clerkUser.id,
-          email,
-        })
+        await db
+          .insert(UsersTable)
+          .values({
+            short_id: clerkUser.id,
+            email,
+          })
+          .onConflictDoNothing({ target: UsersTable.short_id })
         const [newSlackUser] = await db
           .insert(SlackUsersTable)
           .values({

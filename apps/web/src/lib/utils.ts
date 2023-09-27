@@ -105,3 +105,10 @@ export function formatSeconds(seconds: number) {
 export function clamp(num: number, min?: number, max?: number) {
   return Math.min(Math.max(num, min ?? -Infinity), max ?? Infinity)
 }
+
+export function encodeQueryData(data: Record<string, string | number>) {
+  const ret = []
+  for (const d in data)
+    ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]))
+  return ret.join('&')
+}

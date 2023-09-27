@@ -22,7 +22,6 @@ export async function getMyTeamList() {
         team_name: SlackTeamsTable.team_name,
         team_url: SlackTeamsTable.team_url,
         team_icon: SlackTeamsTable.team_icon,
-        is_admin: SlackUsersTable.is_admin,
       })
       .from(SlackUsersTable)
       .leftJoin(
@@ -35,6 +34,7 @@ export async function getMyTeamList() {
       .where(
         and(
           eq(SlackUsersTable.context_user_id, userId),
+          eq(SlackUsersTable.is_admin, true),
           eq(SlackUsersTable.archived, false),
           eq(SlackTeamsTable.archived, false)
         )

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { UserJSON } from '@clerk/nextjs/dist/types/server'
 import { eq } from 'drizzle-orm'
+import { omit } from 'lodash'
 
 import { db } from '@/lib/drizzle-edge'
 
@@ -12,7 +13,14 @@ const CLERK_API_BASE_URL = 'https://api.clerk.com/v1'
 
 export async function addUser(user: NewUser) {
   try {
-    const response = await db.insert(UsersTable).values(user).returning()
+    const response = await db
+      .insert(UsersTable)
+      .values(user)
+      .onConflictDoUpdate({
+        target: UsersTable.short_id,
+        set: omit(user, 'short_id'),
+      })
+      .returning()
     return { response }
   } catch (error: any) {
     return {
