@@ -149,6 +149,8 @@ export class SlackUtils {
           eq(UsersTable.archived, false)
         )
       )
+      .orderBy(desc(SlackUsersTable.created_at))
+      .limit(1)
     if (found) {
       if (!options.shouldUpdate) return found.slack_users
 
