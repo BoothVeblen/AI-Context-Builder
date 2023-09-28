@@ -5,6 +5,7 @@ import { and, asc, desc, eq } from 'drizzle-orm'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
+import { createPool } from '@/lib/drizzle-pool'
 
 import { AppsTable } from '../apps/schema'
 import { SessionsTable } from '../sessions/schema'
@@ -16,6 +17,8 @@ export async function getMessages(sessionId: string) {
     if (!userId) {
       throw new Error('Not authenticated')
     }
+
+    const { pool, db } = createPool()
 
     const sq = db
       .select({
@@ -41,8 +44,13 @@ export async function getMessages(sessionId: string) {
       .orderBy(desc(MessagesTable.created_at))
       .limit(100) // FIXME: pagination
       .as('sq')
-    return db.select().from(sq).orderBy(asc(sq.created_at))
+    const data = await db.select().from(sq).orderBy(asc(sq.created_at))
+
+    pool.end()
+
+    return data
   } catch (error) {
+    console.log('getMessages error:', error)
     redirect('/')
   }
 }
