@@ -219,8 +219,6 @@ export default async function handler(
       await removeTeam(app_id, team_id)
       return res.status(200).json(body)
     }
-
-    return res.status(200).json(body)
   } catch (error: any) {
     console.error('error:', error.message)
     return res.status(500).json({ error: error.message })
