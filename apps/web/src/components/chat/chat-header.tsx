@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-import { useChatContext } from './chat-context'
+import { useChat } from './useChat'
 
 interface IconBoxProps {
   children: React.ReactNode
@@ -40,7 +40,7 @@ const ChatHeader = ({
   showProcess,
   setShowProcess,
 }: IProps) => {
-  const { session, mode } = useChatContext()
+  const { session, mode } = useChat()
   const { name } = session
 
   return (

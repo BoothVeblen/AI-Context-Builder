@@ -39,13 +39,24 @@ describe('Chat', () => {
             const stream = new ReadableStream({
               start: async (controller) => {
                 const encoder = new TextEncoder()
+                if (i >= mockMessages.length) {
+                  i = 0
+                }
                 const mockMessage = mockMessages[i++]
-                mockMessage.forEach((m) =>
-                  controller.enqueue(encoder.encode(m))
+                await Promise.all(
+                  mockMessage.map(
+                    (m, i) =>
+                      new Promise<void>((res) => {
+                        setTimeout(() => {
+                          try {
+                            controller.enqueue(encoder.encode(m))
+                          } catch {}
+                          res()
+                        }, i * 500)
+                      })
+                  )
                 )
-                setTimeout(() => {
-                  controller.close()
-                }, 1000)
+                controller.close()
               },
             })
             res(new Response(stream))
@@ -162,9 +173,16 @@ describe('Chat', () => {
     await waitFor(() => {
       expect(queryByTestId('stop')!).toBeInTheDocument()
     })
-    await waitFor(() => {
-      expect(component.queryByText('helloworldthisisatest')).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(
+          component.queryByText('helloworldthisisatest')
+        ).toBeInTheDocument()
+      },
+      {
+        timeout: 10000,
+      }
+    )
 
     await waitFor(() => {
       const regen = component.queryByText('Regenerate response')!
@@ -285,5 +303,143 @@ describe('Chat', () => {
       expect(dialog).not.toBeInTheDocument()
       expect(component.getAllByText('Call Canceled')).toBeTruthy()
     })
+  })
+
+  test('stop when generating', async () => {
+    const component = render(
+      commonTestWrapper(
+        <Chat
+          workflow={[]}
+          app={{
+            name: 'chat-app',
+            short_id: 'YhTq4Xx29aDZ',
+            icon: '',
+            enable_video_interaction: false,
+            opening_remarks: 'yo',
+          }}
+          mode="live"
+          session={{
+            api_session_id: '21486acbbd393f8a6131a9009d6aae4d',
+            short_id: 'srQuAKvgZR7W',
+            name: 'test-chat-session',
+          }}
+          initialMessages={[
+            {
+              id: '1',
+              content: 'hello1',
+              role: 'user',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:00'),
+            },
+            {
+              id: '2',
+              content: 'hello2',
+              role: 'assistant',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:01'),
+            },
+            {
+              id: '3',
+              content: 'hello3',
+              role: 'user',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:02'),
+            },
+            {
+              id: '4',
+              content: 'hello4',
+              role: 'assistant',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:03'),
+            },
+          ]}
+        />
+      )
+    )
+
+    const sendButton = component.queryByTestId('send')!
+    const input = component.queryByTestId('input')!
+
+    await user.click(input)
+
+    await user.keyboard('hello, to test the textarea keypress')
+
+    await user.click(sendButton)
+
+    await waitFor(async () => {
+      expect(component.queryByText('hello')).toBeInTheDocument()
+      await user.click(component.queryByTestId('stop')!)
+      expect(component.queryByText('hello')).toBeInTheDocument()
+      expect(
+        component.queryByText('hello, to test the textarea keypress')
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('stop before generating', async () => {
+    const component = render(
+      commonTestWrapper(
+        <Chat
+          workflow={[]}
+          app={{
+            name: 'chat-app',
+            short_id: 'YhTq4Xx29aDZ',
+            icon: '',
+            enable_video_interaction: false,
+            opening_remarks: 'yo',
+          }}
+          mode="live"
+          session={{
+            api_session_id: '21486acbbd393f8a6131a9009d6aae4d',
+            short_id: 'srQuAKvgZR7W',
+            name: 'test-chat-session',
+          }}
+          initialMessages={[
+            {
+              id: '1',
+              content: 'hello1',
+              role: 'user',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:00'),
+            },
+            {
+              id: '2',
+              content: 'hello2',
+              role: 'assistant',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:01'),
+            },
+            {
+              id: '3',
+              content: 'hello3',
+              role: 'user',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:02'),
+            },
+            {
+              id: '4',
+              content: 'hello4',
+              role: 'assistant',
+              type: 'chat',
+              createdAt: new Date('2023-01-01 00:00:03'),
+            },
+          ]}
+        />
+      )
+    )
+
+    const sendButton = component.queryByTestId('send')!
+    const input = component.queryByTestId('input')!
+
+    await user.click(input)
+
+    await user.keyboard('testing stop before generating')
+
+    await user.click(sendButton)
+
+    await user.click(component.queryByTestId('stop')!)
+    expect(
+      component.queryByText('testing stop before generating')
+    ).toBeInTheDocument()
   })
 })

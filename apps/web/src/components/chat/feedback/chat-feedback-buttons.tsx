@@ -6,8 +6,8 @@ import { mutate } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import ChatAction, { actionCommonButtonProps } from '../chat-action'
-import { useChatContext } from '../chat-context'
 import { ChatMessage, Message } from '../types'
+import { useChat } from '../useChat'
 import { useChatFeedbackContext } from './chat-feedback-context'
 import submitFeedback from './service'
 import { ChatFeedbackType } from './types'
@@ -18,8 +18,8 @@ type Props = {
 
 const ChatFeedbackButtons = (props: Props) => {
   const { message } = props
-  const { id, feedback, meta } = message
-  const { session } = useChatContext()
+  const { id, feedback } = message
+  const { session } = useChat()
   const { short_id: session_id } = session || {}
 
   const { toggleFeedback, messages } = useChatFeedbackContext()

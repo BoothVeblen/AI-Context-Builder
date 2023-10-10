@@ -1,7 +1,7 @@
 'use client'
 
-import { useChatContext } from '../chat-context'
 import { Message } from '../types'
+import { useChat } from '../useChat'
 import ChatCardDebug from './chat-card-debug'
 import ChatCardHistory from './chat-card-history'
 import ChatCardLive from './chat-card-live'
@@ -13,7 +13,7 @@ export interface IChatCardProps {
 }
 
 const ChatCard = (props: IChatCardProps) => {
-  const { mode } = useChatContext()
+  const { mode } = useChat()
 
   switch (mode) {
     case 'live': {

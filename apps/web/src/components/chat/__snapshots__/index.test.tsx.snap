@@ -390,7 +390,7 @@ exports[`Chat > send message and regenerate 1`] = `
             class="relative flex w-full flex-col gap-4 px-6 pb-4"
           >
             <div
-              class="absolute top-[-60px] flex w-full items-center justify-center"
+              class="flex w-full flex-col items-center justify-start"
             >
               <button
                 class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 bg-white"

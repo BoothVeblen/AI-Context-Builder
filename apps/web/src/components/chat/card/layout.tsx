@@ -1,9 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2, PhoneCallIcon, PhoneIcon } from 'lucide-react'
-import { useIsClient } from 'usehooks-ts'
 
 import {
   cn,
@@ -12,16 +11,12 @@ import {
   getAvatarBgColor,
   getFirstLetter,
 } from '@/lib/utils'
-import { User } from '@/db/users/schema'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Text from '../../ui/text'
-import ChatAction from '../chat-action'
-import { useChatContext } from '../chat-context'
-import ChatFeedbackButtons from '../feedback/chat-feedback-buttons'
 import { Markdown } from '../markdown/markdown'
 import { ChatUser, Message } from '../types'
-import ChatAnnotation from './chat-annotation'
+import { useChat } from '../useChat'
 import { IChatCardProps } from './chat-card'
 
 interface Props extends IChatCardProps {
@@ -48,27 +43,27 @@ const AlertErrorIcon = ({ className }: { className: string }) => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <circle cx="9" cy="9" r="9" fill="#EF4444" />
-    <g clip-path="url(#clip0_1056_7239)">
+    <g clipPath="url(#clip0_1056_7239)">
       <path
         d="M9.00016 15.6667C12.6821 15.6667 15.6668 12.6819 15.6668 9.00004C15.6668 5.31814 12.6821 2.33337 9.00016 2.33337C5.31826 2.33337 2.3335 5.31814 2.3335 9.00004C2.3335 12.6819 5.31826 15.6667 9.00016 15.6667Z"
         stroke="white"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M9 6.33337V9.00004"
         stroke="white"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M9 11.6666H9.00667"
         stroke="white"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </g>
     <defs>
@@ -127,7 +122,7 @@ function EventMessage({ data }: { data: any }) {
 
 const ChatCardLayout = (prop: Props) => {
   const { isEnd, error, message, actions, footer } = prop
-  const { app, mode, user: chatUser } = useChatContext()
+  const { app, mode, user: chatUser } = useChat()
   const { short_id: appId, icon: appIcon, name: appName } = app ?? {}
   const isUser = message.role === 'user'
   const showError = isEnd && error && !isUser
@@ -149,11 +144,14 @@ const ChatCardLayout = (prop: Props) => {
       return <EventMessage data={message} />
     }
     const { content } = message
+    if (showError) {
+      return <Markdown isUser={isUser}>{error}</Markdown>
+    }
     if (!content) {
       return <Loader2 className="h-3 w-3 animate-spin" />
     }
     return <Markdown isUser={isUser}>{content}</Markdown>
-  }, [isUser, message])
+  }, [isUser, message, showError, error])
 
   return (
     <div className="flex flex-col ">
@@ -201,9 +199,11 @@ const ChatCardLayout = (prop: Props) => {
               )}
             >
               {renderContent}
-              <div className="absolute bottom-full left-full flex -translate-x-14 translate-y-4">
-                {actions}
-              </div>
+              {!showError && (
+                <div className="absolute bottom-full left-full flex -translate-x-14 translate-y-4">
+                  {actions}
+                </div>
+              )}
               {footer}
             </div>
           </div>
