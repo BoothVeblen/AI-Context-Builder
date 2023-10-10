@@ -1,17 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { Redis } from '@upstash/redis'
-import { and, eq } from 'drizzle-orm'
+import { NextRequest } from 'next/server'
+import { Message } from 'ai'
 
 import { auth, currentUserEmail } from '@/lib/auth'
-import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { logsnag } from '@/lib/logsnag'
 import { OpenAIStream } from '@/lib/openai-stream'
 import { nanoid } from '@/lib/utils'
-import { addMessage, editMessage } from '@/db/messages/actions'
-import { MessagesTable } from '@/db/messages/schema'
-
-const redis = Redis.fromEnv()
+import { addMessage, editMessage, removeMessage } from '@/db/messages/actions'
 
 export const runtime = 'edge'
 // TODO: move to pdx1 (us-west-2) where db is located
@@ -21,54 +16,7 @@ export const dynamic = 'force-dynamic'
 
 const baseUrl = `${process.env.AI_SERVICE_API_BASE_URL}/v1`
 
-type MessageDTO =
-  | {
-      role: 'user'
-      content: string
-    }
-  | {
-      id: string
-      role: 'assistant'
-      content: string
-    }
-
-export async function POST(req: NextRequest, res: NextResponse) {
-  // if (process.env.NODE_ENV === 'development' && process.env.MOCK_CHAT) {
-  //   const s = new ReadableStream({
-  //     async start(controller) {
-  //       await Promise.all(
-  //         [
-  //           `[DATA]${JSON.stringify({ id: nanoid() })}[DATAEND]`,
-  //           'hello ',
-  //           'how ',
-  //           'are ',
-  //           'you?',
-  //         ].map(
-  //           (chunk, i) =>
-  //             new Promise<void>((resolve) => {
-  //               setTimeout(
-  //                 () => {
-  //                   try {
-  //                     controller.enqueue(chunk)
-  //                   } catch {}
-  //                   resolve()
-  //                 },
-  //                 (i + 1) * 1000
-  //               )
-  //             })
-  //         )
-  //       )
-  //       // ? mock error
-  //       // controller.enqueue(
-  //       //   `\n[DATA]${JSON.stringify({ error: 'custom erro' })}[DATAEND]`
-  //       // )
-  //       try {
-  //         controller.close()
-  //       } catch {}
-  //     },
-  //   })
-  //   return new Response(s)
-  // }
+export async function POST(req: NextRequest) {
   const { userId } = auth()
   if (!userId) {
     throw new Error('Not authenticated')
@@ -79,66 +27,15 @@ export async function POST(req: NextRequest, res: NextResponse) {
   const appId = body.appId as string
   const sessionId = body.sessionId as string
   const apiSessionId = body.apiSessionId as string
-  // const messages = body.messages as Message[]
-  const query = body.query as string
-  const reloadMessageId = body.reloadId as string
-
-  const redisKey = `web:session:${sessionId}`
-
-  let messageDTO = await redis.get<MessageDTO[]>(redisKey)
-
-  if (!messageDTO || messageDTO.length === 0) {
-    const rawMessages = await db
-      .select({
-        query: MessagesTable.query,
-        content: MessagesTable.answer,
-        id: MessagesTable.short_id,
-      })
-      .from(MessagesTable)
-      .where(
-        and(
-          eq(MessagesTable.session_id, sessionId),
-          eq(MessagesTable.type, 'chat')
-        )
-      )
-
-    messageDTO = rawMessages
-      .map((message) => {
-        return [
-          {
-            role: 'user',
-            content: message.query,
-          },
-          {
-            id: message.id,
-            role: 'assistant',
-            content: message.content,
-          },
-        ]
-      })
-      .flat() as MessageDTO[]
-  }
-
-  if (reloadMessageId) {
-    if (messageDTO.length > 0) {
-      const lastMessage = messageDTO[messageDTO.length - 1]
-      if (
-        lastMessage.role === 'assistant' &&
-        lastMessage.id === reloadMessageId
-      ) {
-        messageDTO = messageDTO.slice(0, -1)
-      }
-    }
-  } else {
-    messageDTO = messageDTO.concat({
-      role: 'user',
-      content: query,
-    })
-  }
+  const messages = body.messages as Message[]
+  const reloadMessageId = body.reload_message_id as string
 
   const payload = {
     session_id: apiSessionId,
-    messages: messageDTO,
+    messages: messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
   }
 
   const requestId = nanoid()
@@ -147,13 +44,13 @@ export async function POST(req: NextRequest, res: NextResponse) {
     channel: 'chat',
     event: 'Chat Request',
     icon: '➡️',
-    description: `${email} send a request with ${messageDTO.length} messages`,
+    description: `${email} send a request with ${messages.length} messages`,
     tags: {
       'request-id': requestId,
       'user-id': userId,
       'app-id': appId || 'unknown',
       'session-id': sessionId,
-      'message-count': messageDTO.length,
+      'message-count': messages.length,
       'is-prod': flags.isProd,
     },
   })
@@ -188,10 +85,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       async onCompletion(completion, metadata) {
         const responseTimestamp = Date.now()
         const latency = responseTimestamp - requestTimestamp
-        if (!messageDTO) {
-          return
-        }
-        const [userMessage] = messageDTO
+        const [userMessage] = messages
           .filter((m) => m.role === 'user')
           .slice(-1)
         const newMessage = {
@@ -208,22 +102,11 @@ export async function POST(req: NextRequest, res: NextResponse) {
           }),
           ...(metadata?.raw && { raw: metadata.raw }),
         }
-        // do not add empty response to redis
-        if (completion) {
-          messageDTO.push({
-            id: messageId,
-            role: 'assistant',
-            content: completion,
-          })
-        }
         if (reloadMessageId) {
           await editMessage(messageId, newMessage)
         } else {
           await addMessage(newMessage)
         }
-        await redis.set(redisKey, messageDTO, {
-          ex: 60 * 60 * 24,
-        })
       },
     },
     data: {

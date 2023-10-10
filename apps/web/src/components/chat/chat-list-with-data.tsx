@@ -39,7 +39,13 @@ export default function ChatListWithData({ mode, sessionId }: IProps) {
   const isLoading = isLoadingSessionData || isLoadingMessagesData
 
   return (
-    <ChatContextProvider mode={mode} app={app} user={user} session={session!}>
+    <ChatContextProvider
+      mode={mode}
+      app={app}
+      user={user}
+      session={session!}
+      isLoading={isLoading}
+    >
       {isLoading ? (
         <div className="mt-32 flex justify-center">
           <Loader2Icon className="h-8 w-8 animate-spin" />

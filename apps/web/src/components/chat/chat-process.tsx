@@ -11,15 +11,15 @@ import {
 } from '@/components/ui/tooltip'
 import { SUB_TYPE_MAP } from '@/app/app/[app_id]/(manage)/settings/workflow/const'
 
+import { useChatContext } from './chat-context'
 import { ProcessTask, ProcessTaskFromAPI } from './types'
-import { useChat } from './useChat'
 
 interface IProps {
   workflow: ProcessTask[]
 }
 
 const ChatProcess = ({ workflow }: IProps) => {
-  const { session } = useChat()
+  const { session } = useChatContext()
   const { api_session_id } = session
 
   const { data, isValidating } = useSWR<ProcessTaskFromAPI[]>(
