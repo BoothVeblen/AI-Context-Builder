@@ -51,7 +51,7 @@ class PDFLoader:
                     )
                     pdf_content = storage_client.load(document.url)
                     text = PDFLoader.extract_text_from_pdf(pdf_content)
-                    document.content_size = sys.getsizeof(text)
+                    document.content_size = len(text)
                     pages = text.split("\f")
                     for page in pages:
                         _doc.append(
@@ -99,25 +99,39 @@ class PDFLoader:
                 logger.info(
                     f"got documents: {len(_doc)} while loading dataset {dataset.id}"
                 )
+                document.content_size = 0
+                for segment in _doc:
+                    document.content_size += len(segment.page_content)
                 doc += _doc
         return doc
 
     @staticmethod
-    def extract_text_from_pdf(contents: io.BytesIO) -> list:
+    def extract_text_from_pdf(
+        contents: io.BytesIO, preview_size: int = float("inf")
+    ) -> list:
         resource_manager = PDFResourceManager()
         fake_file_handle = io.StringIO()
         converter = TextConverter(
             resource_manager, fake_file_handle, laparams=LAParams()
         )
         page_interpreter = PDFPageInterpreter(resource_manager, converter)
+        # Limit the number of processed pages to preview_size
+        total_text = ""
+        non_empty_pages_count = 0
         for page in PDFPage.get_pages(contents, caching=True, check_extractable=True):
             page_interpreter.process_page(page)
-        text = fake_file_handle.getvalue()
-
+            text = fake_file_handle.getvalue()
+            fake_file_handle.truncate(0)
+            fake_file_handle.seek(0)
+            if text.strip():
+                total_text += text
+                non_empty_pages_count += 1
+                if non_empty_pages_count >= preview_size:
+                    break
+        total_text = total_text.strip()
         converter.close()
         fake_file_handle.close()
-
-        return text
+        return total_text
 
     @staticmethod
     def get_document_page_size(document: DocumentModel) -> int:

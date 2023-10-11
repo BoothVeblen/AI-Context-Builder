@@ -139,13 +139,13 @@ def retrieve_document_segments(
             },
         }
         try:
-            limit, segments = dataset_manager.get_document_segments(
+            segment_count, segments = dataset_manager.get_document_segments(
                 dataset_id, uid, offset, limit, query
             )
             return {
                 "message": "success",
                 "status": "200",
-                "data": {"totalItems": limit, "segments": segments},
+                "data": {"totalItems": segment_count, "segments": segments},
             }
         except ValueError as e:
             return error_mapping.get(
