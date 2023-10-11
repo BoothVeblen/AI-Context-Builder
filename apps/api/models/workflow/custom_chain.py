@@ -12,10 +12,12 @@ from typing import (
 )
 from enum import Enum
 import time
+from uuid import UUID
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForChainRun,
     CallbackManagerForChainRun,
+    AsyncCallbackManagerForLLMRun,
 )
 from langchain.chains import (
     ConversationChain,
@@ -26,12 +28,13 @@ from langchain.chains import (
 from langchain.chains.base import Chain
 from langchain.prompts.base import BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
+from langchain.schema import BaseMessage, SystemMessage, HumanMessage, AIMessage
 from loguru import logger
 from pydantic import Extra, root_validator, Field
 import inspect
 from langchain.schema.messages import get_buffer_string
 
+from models.prompt_manager.compress import PromptCompressor
 from langchain.chat_models import ChatOpenAI
 from langchain.retrievers import SelfQueryRetriever
 
@@ -50,6 +53,24 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     async def on_chain_end(self, response: Any, **kwargs: Any) -> None:
         self.done.set()
 
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        pass
+
+    async def on_llm_error(
+        self, error: Exception | KeyboardInterrupt, **kwargs: Any
+    ) -> None:
+        return await super().on_llm_error(error, **kwargs)
+
 
 class TargetedChainStatus(str, Enum):
     INIT = "initialized"
@@ -67,6 +88,7 @@ class TargetedChain(Chain):
     process: str = TargetedChainStatus.INIT
     suffix: str = "The content you want to output first is:"
     dialog_key: str = "dialog"
+    target: str = "target"
 
     class Config:
         extra = Extra.forbid
@@ -92,12 +114,14 @@ class TargetedChain(Chain):
         inputs: Dict[str, Any],
         run_manager: AsyncCallbackManagerForChainRun | None = None,
     ) -> Coroutine[Any, Any, Dict[str, Any]]:
-        if inputs.get("chat_history", None) is not None and isinstance(
-            inputs["chat_history"], str
+        if inputs.get(self.dialog_key, None) is not None and isinstance(
+            inputs[self.dialog_key], str
         ):
-            inputs["chat_history"] = [inputs["chat_history"]]
-        bacis_messages = inputs.get("chat_history", [])
-        inputs.pop("chat_history", None)
+            inputs[self.dialog_key] = [inputs[self.dialog_key]]
+        basic_messages = inputs.get(self.dialog_key, [])
+        human_input = inputs.get("question", "")
+        basic_messages += [HumanMessage(content=human_input)]
+        # inputs.pop("chat_history", None)
 
         question = ""
         if self.process == TargetedChainStatus.RUNNING:
@@ -105,7 +129,7 @@ class TargetedChain(Chain):
             messages = [SystemMessage(content=prompt_value.to_string())] + [
                 HumanMessage(
                     content=get_buffer_string(
-                        bacis_messages, human_prefix="User", ai_prefix="AI"
+                        basic_messages, human_prefix="User", ai_prefix="AI"
                     )
                 )
             ]
@@ -128,12 +152,39 @@ class TargetedChain(Chain):
             system_message = prompt_value.to_string()
         else:
             system_message = f"{prompt_value.to_string()}\n{self.suffix}{question}\n"
-        messages = [SystemMessage(content=system_message)] + bacis_messages
+        messages = [SystemMessage(content=system_message)] + basic_messages
         response = await self.llm.agenerate(
             messages=[messages],
             callbacks=run_manager.get_child() if run_manager else None,
         )
         return {self.output_key: response.generations[0][0].text}
+
+    async def get_output(
+        self,
+        pre_dialog: str,
+        human_input: str,
+        llm_output: str,
+    ):
+        if self.process == TargetedChainStatus.RUNNING:
+            return ""
+        dialog = (
+            pre_dialog
+            + "\n"
+            + get_buffer_string(
+                [
+                    HumanMessage(content=human_input),
+                    AIMessage(content=llm_output),
+                ],
+            )
+        )
+        pre_prompt = "The goal is" + self.target + "\n"
+        suffix_prompt = "Please output the target based on this conversation."
+        run_manager = AsyncCallbackManagerForChainRun.get_noop_manager()
+        response = await self.llm.agenerate(
+            messages=[[HumanMessage(content=pre_prompt + dialog + suffix_prompt)]],
+            callbacks=run_manager.get_child(),
+        )
+        return response.generations[0][0].text
 
 
 class EnhanceSequentialChain(SequentialChain):
@@ -141,6 +192,7 @@ class EnhanceSequentialChain(SequentialChain):
     done: asyncio.Event
     known_values: Dict[str, Any] = Field(default_factory=dict)
     state_dependent_chains = [TargetedChain]
+    current_chain: int = 0
 
     class Config:
         extra = Extra.allow
@@ -161,54 +213,59 @@ class EnhanceSequentialChain(SequentialChain):
         self.known_values.update(inputs)
         _run_manager = run_manager or AsyncCallbackManagerForChainRun.get_noop_manager()
         callbacks = _run_manager.get_child()
-        for i, chain in enumerate(self.chains):
+        while self.current_chain < len(self.chains):
+            chain = self.chains[self.current_chain]
             if type(chain) in self.state_dependent_chains:
                 if (
                     chain.process == TargetedChainStatus.FINISHED
                     or chain.process == TargetedChainStatus.ERROR
                 ):
-                    if i == len(self.chains) - 1:
-                        await self._handle_final_chain()
-                        return self._construct_return_dict()
-                    logger.info(f"Skipping chain {i} as it is already {chain.process}")
+                    self.current_chain += 1
                     continue
-
                 else:
                     outputs = await chain.acall(
                         self.known_values, return_only_outputs=True, callbacks=callbacks
                     )
-                    pre_dialog = inputs.get(chain.dialog_key, "")
+                    pre_dialog = inputs.get(chain.dialog_key, [])
+                    current_output = outputs[chain.output_key]
                     outputs[chain.dialog_key] = (
-                        pre_dialog
+                        get_buffer_string(pre_dialog)
                         + "\n"
                         + get_buffer_string(
                             [
                                 HumanMessage(content=inputs["question"]),
-                                AIMessage(content=outputs[chain.output_key]),
+                                AIMessage(content=current_output),
                             ],
                         )
+                    )
+                    outputs[chain.output_key] = await chain.get_output(
+                        get_buffer_string(pre_dialog),
+                        inputs["question"],
+                        current_output,
                     )
                     self.known_values.update(outputs)
                     if chain.process not in [
                         TargetedChainStatus.FINISHED,
                         TargetedChainStatus.ERROR,
                     ]:
-                        await self._put_tokens_into_queue(outputs[chain.output_key])
+                        await self._put_tokens_into_queue(current_output)
                         return self._construct_return_dict()
-                    elif i == len(self.chains) - 1:
+                    elif self.current_chain == len(self.chains) - 1:
                         await self._handle_final_chain()
                         return self._construct_return_dict()
+                    else:
+                        self.current_chain += 1
             else:
-                if i == len(self.chains) - 1:
+                if self.current_chain == len(self.chains) - 1:
                     callbacks.add_handler(
                         CustomAsyncIteratorCallbackHandler(self.queue, self.done)
                     )
                 outputs = await chain.acall(
                     self.known_values, return_only_outputs=True, callbacks=callbacks
                 )
-                pre_dialog = inputs.get(chain.dialog_key, "")
+                pre_dialog = inputs.get(chain.dialog_key, [])
                 outputs[chain.dialog_key] = (
-                    pre_dialog
+                    get_buffer_string(pre_dialog)
                     + "\n"
                     + get_buffer_string(
                         [
@@ -218,6 +275,11 @@ class EnhanceSequentialChain(SequentialChain):
                     )
                 )
                 self.known_values.update(outputs)
+                if self.current_chain == len(self.chains) - 1:
+                    self.current_chain = 0
+                    return self._construct_return_dict()
+                else:
+                    self.current_chain += 1
         return self._construct_return_dict()
 
     async def _handle_final_chain(self):
@@ -297,9 +359,9 @@ class EnhanceConversationChain(Chain):
             inputs["chat_history"], str
         ):
             inputs["chat_history"] = [inputs["chat_history"]]
-        messages = inputs.get("chat_history", [])
-        prompt_value = self.prompt.format_prompt(**inputs)
-        messages = [SystemMessage(content=prompt_value.to_string())] + messages
+        messages = await PromptCompressor.get_compressed_messages(
+            prompt_template=self.prompt, inputs=inputs, model=self.llm.model_name
+        )
         response = await self.llm.agenerate(
             messages=[messages],
             callbacks=run_manager.get_child() if run_manager else None,
@@ -339,19 +401,19 @@ class EnhanceConversationalRetrievalChain(Chain):
         ):
             inputs["chat_history"] = [inputs["chat_history"]]
         messages = inputs.get("chat_history", [])
-        inputs.pop("chat_history", None)
         question = inputs.get("question", None)
         if question is None:
             raise ValueError("Question is required")
-        inputs.pop("question", None)
 
         docs = await self.retriever.aget_relevant_documents(
             question, callbacks=run_manager.get_child()
         )
         context = "\n".join([doc.page_content for doc in docs])
         inputs["context"] = context
-        prompt_value = self.prompt.format_prompt(**inputs)
-        messages = [SystemMessage(content=prompt_value.to_string())] + messages
+
+        messages = await PromptCompressor.get_compressed_messages(
+            self.prompt, inputs, self.llm.model_name
+        )
         response = await self.llm.agenerate(
             messages=[messages],
             callbacks=run_manager.get_child() if run_manager else None,

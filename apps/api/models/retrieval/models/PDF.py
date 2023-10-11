@@ -234,9 +234,9 @@ class PDFRetrieverMixin:
     def fetch_vectors(cls, ids: List[str]) -> Dict:
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = Index("context-prod")
-        return (
-            index.fetch(namespace="withcontext", ids=ids).to_dict().get("vectors", {})
-        )
+        result = index.fetch(namespace="withcontext", ids=ids).to_dict().get("vectors", {})
+        valid_vectors = {k: v for k, v in result.items() if v}
+        return valid_vectors
 
     @classmethod
     def upsert_vector(cls, id, content, metadata):

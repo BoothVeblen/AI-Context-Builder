@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 from sqlalchemy import JSON, Column, String
@@ -13,6 +13,7 @@ class Document(BaseModel):
     page_size: int = Field(default_factory=int)
     split_option: Optional[dict] = Field(default_factory=dict)
     content_size: int = Field(default=0)
+    hundredth_ids: List[int] = Field(default_factory=list)
 
 
 class Dataset(BaseModel):

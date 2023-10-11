@@ -15,6 +15,8 @@ from models.retrieval.webhook import WebhookHandler as DocumentWebhookHandler
 from utils.config import UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL
 import redis
 import json
+import copy
+from models.prompt_manager.manager import PromptManagerMixin
 
 
 class RelativeManager(BaseManager):
@@ -173,12 +175,12 @@ class DatasetManager(BaseManager):
                     parts = chain.split("-", 1)
                     Retriever.add_relative_chain_to_dataset(dataset, parts[0], parts[1])
                 handler.update_dataset_status(dataset_id, 0)
-                dataset_dict = dataset.dict()
-                self.redis.set(urn, json.dumps(dataset_dict))
-                logger.info(
-                    f"Updating dataset {dataset_id} in cache, dataset: {dataset_dict}"
-                )
-                self._update_dataset(dataset_id, dataset_dict)
+                dataset_dict_for_redis = copy.deepcopy(dataset.dict())
+                for document in dataset_dict_for_redis['documents']:
+                    document['hundredth_ids'] = [i for i in range(99, document['page_size'], 100)]
+                self.redis.set(urn, json.dumps(dataset_dict_for_redis))
+                logger.info(f"Updating dataset {dataset_id} in cache, dataset: {dataset_dict_for_redis}")
+                self._update_dataset(dataset_id, dataset.dict())
                 return
         self._update_dataset(dataset_id, update_data)
 
@@ -256,6 +258,13 @@ class DatasetManager(BaseManager):
             if document.uid == uid:
                 matching_url = document.url
                 segment_size = document.page_size
+                if hasattr(document, 'hundredth_ids'):
+                    hundredth_ids = document.hundredth_ids
+                else:
+                    hundredth_ids = [i for i in range(99, segment_size, 100)]
+                    document.hundredth_ids = hundredth_ids
+                    urn = self.get_dataset_urn(dataset_id)
+                    self.redis.set(urn, json.dumps(dataset.dict()))
                 break
         if not matching_url:
             raise ValueError("UID not found in dataset documents")
@@ -334,6 +343,7 @@ class DatasetManager(BaseManager):
             return int(segment.split("-")[-1])
 
         dataset = self.get_datasets(dataset_id)[0]
+        matching_url = None
         for doc in dataset.documents:
             if doc.uid == uid:
                 current_page_size = get_page_size_via_segment_id(segment_id)
@@ -415,7 +425,10 @@ class DatasetManager(BaseManager):
         else:
             raise ValueError("Document type not supported")
         _docs = text_splitter.split_documents(_docs)
-        preview_list = [{"segment_id": "fake", "content": doc.page_content} for doc in _docs[:preview_size]]
+        preview_list = [
+            {"segment_id": "fake", "content": doc.page_content}
+            for doc in _docs[:preview_size]
+        ]
         self.redis.set(f"preview:{dataset.id}-{document_uid}", json.dumps(preview_list))
         logger.info(f"Upsert preview for dataset {dataset.id}, document {document_uid}")
 
@@ -566,7 +579,7 @@ class ModelManager(BaseManager):
 model_manager = ModelManager()
 
 
-class SessionStateManager(BaseManager):
+class SessionStateManager(BaseManager, PromptManagerMixin):
     def __init__(self) -> None:
         super().__init__()
         self.table = self.get_table("session_state")
@@ -637,7 +650,13 @@ class SessionStateManager(BaseManager):
                 self.save_chain_status(
                     session_id, chain.output_keys[0], chain.process, chain.max_retries
                 )
+                self.save_chain_output(
+                    session_id,
+                    chain.output_keys[0],
+                    workflow.context.known_values[chain.output_keys[0]],
+                )
         self.save_chain_memory(session_id, workflow.io_traces)
+        self.save_workflow_step(session_id, workflow.context.current_chain)
 
     def get_workflow(self, session_id, model):
         if model is None:
@@ -653,6 +672,10 @@ class SessionStateManager(BaseManager):
                 if tup is not None:
                     chain.process = tup[0]
                     chain.max_retries = tup[1]
+                output = self.get_chain_output(session_id, chain.output_keys[0])
+                if output is None:
+                    output = ""
+                workflow.outputs[chain.output_keys[0]] = output
         # get chain memory
         # memory example: {"tool_%d_dialog": [{"input": "human input", "output": "tool output"}]}
         workflow.current_memory = {}
@@ -660,6 +683,8 @@ class SessionStateManager(BaseManager):
             workflow.current_memory[chain.dialog_key] = self.get_chain_memory(
                 session_id, chain.output_keys[0]
             )
+        # get workflow step
+        workflow.context.current_chain = self.get_workflow_step(session_id)
         return workflow
 
     def delete_session_state_cache_via_model(self, model_id):
@@ -699,34 +724,14 @@ class SessionStateManager(BaseManager):
             return current_status.get(output_key)
         return None
 
-    def get_chain_urn(self, session_id, output_key):
-        return f"{session_id}-{output_key}"
+    def get_workflow_step(self, session_id):
+        current_step = self.redis.get(f"workflow_step:{session_id}")
+        if current_step is None:
+            return 0
+        return int(current_step)
 
-    def save_chain_memory(self, session_id: str, contents: list):
-        def get_human_input(content):
-            if "Human:" in content["input"]:
-                return content["input"].split("Human:")[1].strip()
-            return ""
-
-        for content in contents:
-            current_chain_memory = self.get_chain_memory(
-                session_id, content["chain_key"]
-            )
-            current_chain_memory.append(
-                {"input": get_human_input(content), "output": content["output"]}
-            )
-            self.redis.set(
-                self.get_chain_urn(session_id, content["chain_key"]),
-                json.dumps(current_chain_memory),
-            )
-
-    def get_chain_memory(self, session_id: str, output_key: str):
-        current_chain_memory = self.redis.get(
-            self.get_chain_urn(session_id, output_key)
-        )
-        if current_chain_memory:
-            return json.loads(current_chain_memory)
-        return []
+    def save_workflow_step(self, session_id, current_step):
+        self.redis.set(f"workflow_step:{session_id}", current_step)
 
 
 session_state_manager = SessionStateManager()

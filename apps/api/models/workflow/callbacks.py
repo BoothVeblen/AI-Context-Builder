@@ -1,7 +1,8 @@
 import asyncio
 from asyncio import Task, sleep
-from typing import Any, Coroutine, Dict, List, Optional, cast
+from typing import Any, Coroutine, Dict, List, Optional, Union, cast
 from uuid import UUID
+from langchain.schema.messages import BaseMessage
 from langchain.schema.output import LLMResult
 
 
@@ -141,6 +142,22 @@ class IOTraceCallbackHandler(AsyncCallbackHandler):
             }
         )
 
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        # system message and user input
+        self.tem_input = (
+            f"System: {messages[0][0].content}\nHuman: {messages[0][1].content}"
+        )
+
 
 class CostCalcAsyncHandler(AsyncCallbackHandler):
     model: str = ""
@@ -165,8 +182,23 @@ class CostCalcAsyncHandler(AsyncCallbackHandler):
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         self.token_cost_process.sum_successful_requests(1)
 
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        pass
+
 
 class SequentialChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
+    error_flags: List[Exception | KeyboardInterrupt] = Field(default=[])
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -201,6 +233,30 @@ class SequentialChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         """Run when chain ends running."""
         pass
 
+    async def on_chain_error(
+        self,
+        error: Exception | KeyboardInterrupt,
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        pass
+
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        pass
+
 
 class ChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     index: int = Field(default=0)
@@ -222,12 +278,26 @@ class ChainAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         return await super().on_llm_new_token(token, **kwargs)
 
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        pass
+
 
 class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     current_number: int = Field(default=0)
     sending_number: bool = Field(default=True)
+    error_flags: List[Exception | KeyboardInterrupt] = Field(default=[])
 
-    def __init__(self) -> None:
+    def __init__(self, error_flags) -> None:
         self.timer_task: Task = None
         super().__init__()
         if self.timer_task:
@@ -235,6 +305,7 @@ class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.done.clear()
         self.current_number = 0
         self.timer_task = asyncio.create_task(self._send_number())
+        self.error_flags = error_flags
 
     async def _send_number(self):
         # do this since frontend will close over the connection if no data is sent for 30 seconds
@@ -264,3 +335,23 @@ class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_chain_end(self, response: LLMResult, **kwargs: Any):
         await super().on_chain_end(response, **kwargs)
+
+    async def on_llm_error(
+        self, error: Exception | KeyboardInterrupt, **kwargs: Any
+    ) -> None:
+        self.error_flags.append(error)
+        return await super().on_llm_error(error, **kwargs)
+
+    async def on_chain_error(
+        self,
+        error: Exception | KeyboardInterrupt,
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self.error_flags.append(error)
+        return await super().on_chain_error(
+            error, run_id=run_id, parent_run_id=parent_run_id, tags=tags, **kwargs
+        )

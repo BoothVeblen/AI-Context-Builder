@@ -53,51 +53,59 @@ def wrap_token(
     return f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=model_id, choices=[Choices(index=0, delta={'content': token})]).dict())}\n\n"
 
 
+def wrap_error(error: str):
+    if error.startswith("This model's maximum context length"):
+        return "The message you submitted was too long, please reload the conversation and submit something shorter."
+    elif error.startswith("You exceed your current quota"):
+        return "API key exceeds the usage limit."
+    else:
+        return error
+
+
 async def send_message(
     messages_contents: List[MessagesContent],
     session_id: str,
     filt=False,
     start_time=None,
 ) -> AsyncIterable[str]:
+    messages = []
+    for message_content in messages_contents:
+        if message_content.role == "user":
+            messages.append(HumanMessage(content=message_content.content))
+        elif message_content.role == "system":
+            messages.append(SystemMessage(content=message_content.content))
+        elif message_content.role == "assistant":
+            messages.append(AIMessage(content=message_content.content))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid role: {message_content.role}"
+            )
+
+    model_id = session_state_manager.get_model_id(session_id)
+    models = model_manager.get_models(model_id)
+    if not models:
+        raise HTTPException(
+            status_code=400, detail=f"Model {model_id} not found in model manager"
+        )
+    if len(models) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Model {model_id} has {len(models)} models in model manager",
+        )
+    model = models[0]
+    workflow = session_state_manager.get_workflow(session_id, model)
+
+    async def wrap_done(fn: Awaitable, event: asyncio.Event):
+        try:
+            await fn
+
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        finally:
+            event.set()
+
     try:
-        messages = []
-        for message_content in messages_contents:
-            if message_content.role == "user":
-                messages.append(HumanMessage(content=message_content.content))
-            elif message_content.role == "system":
-                messages.append(SystemMessage(content=message_content.content))
-            elif message_content.role == "assistant":
-                messages.append(AIMessage(content=message_content.content))
-            else:
-                raise HTTPException(
-                    status_code=400, detail=f"Invalid role: {message_content.role}"
-                )
-
-        model_id = session_state_manager.get_model_id(session_id)
-        models = model_manager.get_models(model_id)
-        if not models:
-            raise HTTPException(
-                status_code=400, detail=f"Model {model_id} not found in model manager"
-            )
-        if len(models) > 1:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Model {model_id} has {len(models)} models in model manager",
-            )
-        model = models[0]
-        logger.info(f"model while chat: {model}")
-        workflow = session_state_manager.get_workflow(session_id, model)
-
-        async def wrap_done(fn: Awaitable, event: asyncio.Event):
-            try:
-                await fn
-
-            except Exception as e:
-                logger.exception(e)
-                raise e
-            finally:
-                event.set()
-
         task = asyncio.create_task(
             wrap_done(workflow.agenerate(messages), workflow.context.done)
         )
@@ -123,22 +131,26 @@ async def send_message(
                     )
                 )
             yield wrap_token(token, model_id, session_id, filt=filt)
-
-        if not filt:
-            yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, finish_reason='stop', delta={})]).dict())}\n\n"
-            info = {
-                "metadata": {
-                    "token": {"total_tokens": workflow.cost_content.total_tokens},
-                    "raw": workflow.io_traces,
-                }
-            }
-            yield f"data: {json.dumps(info)}\n\n"
-        yield "data: [DONE]\n\n"
-        session_state_manager.save_workflow_status(session_id, workflow)
         await task
     except Exception as e:
-        logger.exception(e)
-        raise HTTPException(status_code=500, detail=str(e))
+        pass
+
+    if not filt:
+        yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, finish_reason='stop', delta={})]).dict())}\n\n"
+        info = {
+            "metadata": {
+                "token": {"total_tokens": workflow.cost_content.total_tokens},
+                "raw": workflow.io_traces,
+            }
+        }
+        yield f"data: {json.dumps(info)}\n\n"
+        if workflow.error_flags:
+            info = {
+                "metadata": {"error": wrap_error(str(workflow.error_flags[0].args[0]))}
+            }
+            yield f"data: {json.dumps(info)}\n\n"
+    yield "data: [DONE]\n\n"
+    session_state_manager.save_workflow_status(session_id, workflow)
 
 
 async def send_done_message():
