@@ -31,7 +31,7 @@ const NavList = [
   },
   {
     title: 'My Space',
-    icon: <Box color="#EA580C" />,
+    icon: <Box className="text-orange-600" />,
     link: '/apps',
     scopes: ['/apps', '/datasets'],
   },

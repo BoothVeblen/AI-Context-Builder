@@ -1,4 +1,4 @@
-import { XIcon } from 'lucide-react'
+import { Database, XIcon } from 'lucide-react'
 import { Mention, MentionsInput } from 'react-mentions'
 
 import { safeParse } from '@/lib/utils'
@@ -122,7 +122,7 @@ function DatasetItem({ datasets }: { datasets?: DatasetProps[] }) {
             className="flex items-center rounded-md border p-3"
             key={item?.dataset_id}
           >
-            {item?.icon === 'pdf' && <PdfImage className="mr-2 h-6" />}
+            <Database size={24} className="shrink-0 text-orange-600" />
             <div className="truncate text-sm">{item?.name}</div>
           </div>
         )

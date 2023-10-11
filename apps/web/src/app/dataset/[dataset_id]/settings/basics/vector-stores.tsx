@@ -8,24 +8,20 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { SessionProps } from '@/app/dataset/type'
 
-import SearchSelect from './search-select'
-import { SessionProps } from './splitter'
+import SearchSelect from '../documents/search-select'
 
 const types = [
   { label: 'Pinecone', value: 'pinecone' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
-const VectorStores = ({ form, sectionRef }: SessionProps) => {
+const VectorStores = ({ form }: SessionProps) => {
   return (
-    <section
-      id="stores"
-      className="w-full border-b-[1px] py-6"
-      ref={sectionRef}
-    >
+    <section id="stores" className="w-full py-6">
       <div className="mb-6 text-2xl font-semibold leading-8">Vector Stores</div>
-      <div className="mb-6	text-sm font-normal leading-6 text-slate-600">
+      <div className="mb-6 text-sm font-normal leading-6 text-slate-600">
         One of the most common ways to store and search over unstructured data
         is to embed it and store the resulting embedding vectors, and then at
         query time to embed the unstructured query and retrieve the embedding

@@ -27,16 +27,10 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-import { SchemaProps } from '../dataset/[dataset_id]/settings/setting-page'
-import { FormSchema } from '../dataset/[dataset_id]/settings/utils'
+import { FormSchema, SchemaProps } from '../dataset/type'
 
 const defaultValues = {
   name: '',
-  loaderType: 'pdf',
-  splitType: 'character',
-  files: [],
-  chunkSize: 1000,
-  chunkOverlap: 0,
   embeddingType: 'openAI',
   storeType: 'pinecone',
   collectionName: '',
@@ -72,7 +66,7 @@ const CreateDialog = () => {
       const json = await trigger(data)
       setOpen(false)
       router.refresh()
-      router.push(`/dataset/${json?.datasetId}`)
+      router.push(`/dataset/${json?.datasetId}/settings/documents`)
     } catch (error) {}
   }
 

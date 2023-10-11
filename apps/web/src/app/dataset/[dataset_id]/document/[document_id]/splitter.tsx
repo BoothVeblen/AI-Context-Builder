@@ -1,8 +1,5 @@
 'use client'
 
-import { RefObject } from 'react'
-import { UseFormReturn } from 'react-hook-form'
-
 import {
   FormControl,
   FormField,
@@ -11,31 +8,19 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { FileProps } from '@/components/upload/utils'
+import { SessionProps } from '@/app/dataset/type'
 
-import SearchSelect from './search-select'
+import SearchSelect from '../../settings/documents/search-select'
 
-export interface SessionProps {
-  form: UseFormReturn<any>
-  files?: FileProps[]
-  sectionRef: RefObject<HTMLElement>
-}
 const types = [
-  { label: 'Character TextSplitter', value: 'character' },
+  { label: 'Character Text Splitter', value: 'character' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
 
-const TextSplits = ({ form, sectionRef }: SessionProps) => {
+const TextSplits = ({ form }: SessionProps) => {
   return (
-    <section
-      id="splitters"
-      className="w-full border-b-[1px] py-6"
-      ref={sectionRef}
-    >
-      <div className="mb-6 text-2xl font-semibold leading-8">
-        Text Splitters
-      </div>
-      <div className="mb-6	text-sm font-normal leading-6 text-slate-600">
+    <section id="splitters" className="w-full py-6">
+      <div className="mb-6 text-sm font-normal leading-6 text-slate-600">
         When you want to deal with long pieces of text, it is necessary to split
         up that text into chunks. As simple as this sounds, there is a lot of
         potential complexity here. Ideally, you want to keep the semantically

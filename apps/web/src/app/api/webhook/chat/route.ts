@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 
 import { db } from '@/lib/drizzle-edge'
 import { logsnag } from '@/lib/logsnag'
 import { initPusher } from '@/lib/pusher-server'
 import { formatSeconds } from '@/lib/utils'
+import { AppsTable } from '@/db/apps/schema'
 import { DatasetsTable } from '@/db/datasets/schema'
+import { DocumentsTable } from '@/db/documents/schema'
 import { addMessage } from '@/db/messages/actions'
+import { MessagesTable } from '@/db/messages/schema'
 import { formatEventMessage } from '@/db/messages/utils'
 import { SessionsTable } from '@/db/sessions/schema'
 import { UsersTable } from '@/db/users/schema'
+import { DataProps } from '@/app/dataset/type'
 
 async function getSession(api_session_id: string) {
   const [session] = await db
@@ -52,6 +56,14 @@ export async function POST(req: NextRequest) {
       case 'dataset.updated': {
         await updateDataset(event.data)
         break
+      }
+      case 'document.update': {
+        await updateDocument(event.data)
+        break
+      }
+      case 'annotations.get': {
+        const data = await getAnnotations(event.data)
+        return NextResponse.json({ success: true, data })
       }
       default: {
         throw new Error(`Unknown event type: ${event.type}`)
@@ -153,4 +165,48 @@ async function updateDataset(data: any) {
     .update(DatasetsTable)
     .set({ status })
     .where(eq(DatasetsTable.api_dataset_id, api_dataset_id))
+}
+
+async function getAnnotations(data: { api_model_ids: string[] }) {
+  const { api_model_ids = [] } = data
+  const result = await db
+    .select({
+      Human: MessagesTable.query,
+      AI: MessagesTable.answer,
+      Annotation: MessagesTable.annotation,
+    })
+    .from(MessagesTable)
+    .leftJoin(
+      SessionsTable,
+      eq(SessionsTable.short_id, MessagesTable.session_id)
+    )
+    .leftJoin(AppsTable, eq(AppsTable.short_id, SessionsTable.app_id))
+    .where(
+      and(
+        inArray(AppsTable.api_model_id, api_model_ids),
+        isNotNull(MessagesTable.annotation)
+      )
+    )
+    .groupBy(MessagesTable.id, SessionsTable.id, AppsTable.id)
+  return result
+}
+
+async function updateDocument(data: any) {
+  const { api_dataset_id, document_status, document_id, document_characters } =
+    data
+  const [dataset_id] = await db
+    .select({ dataset_id: DatasetsTable.short_id })
+    .from(DatasetsTable)
+    .where(eq(DatasetsTable.api_dataset_id, api_dataset_id))
+
+  await db
+    .update(DocumentsTable)
+    .set({ status: document_status, characters: document_characters })
+    .where(
+      and(
+        eq(DocumentsTable.uid, document_id),
+        eq(DocumentsTable.dataset_id, dataset_id?.dataset_id)
+      )
+    )
+  return dataset_id
 }

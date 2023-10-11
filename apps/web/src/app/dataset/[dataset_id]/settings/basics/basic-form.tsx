@@ -1,14 +1,15 @@
-import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isEqual } from 'lodash'
+import { isEqual, omit } from 'lodash'
 import { useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
 import { useDebounce } from 'usehooks-ts'
 import { z } from 'zod'
 
 import { fetcher } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -18,23 +19,16 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { FileProps } from '@/components/upload/utils'
+import { SchemaProps } from '@/app/dataset/type'
 
-import DocumentLoader, { stringUrlToFile } from './document-loader'
-import { SchemaProps } from './setting-page'
-import TextSplits from './splitter'
+import { FormSchema } from '../../../type'
 import TextEmbedding from './text-embedding'
-import { FormSchema } from './utils'
 import VectorStores from './vector-stores'
 
-interface IProps {
+export interface FormProps {
   datasetId?: string
-  showMore?: boolean
-  files?: FileProps[]
-  defaultValues: SchemaProps
-  setShowMore?: (s: boolean) => void
-  scrollRef: RefObject<HTMLDivElement>
-  sectionRefs: RefObject<HTMLDivElement>[]
+  name?: string
+  config?: any
   setUploading?: (s: boolean) => void
 }
 
@@ -42,7 +36,11 @@ type Params = SchemaProps
 
 function editDataset(
   url: string,
-  { arg }: { arg: { name: string; config: Omit<Params, 'name'> } }
+  {
+    arg,
+  }: {
+    arg: { name: string; config: Omit<Params, 'name'> }
+  }
 ) {
   return fetcher(url, {
     method: 'PATCH',
@@ -50,29 +48,18 @@ function editDataset(
   })
 }
 
-const DatasetForm = ({
-  datasetId,
-  defaultValues,
-  setShowMore,
-  showMore,
-  scrollRef,
-  sectionRefs,
-  files,
-  setUploading,
-}: IProps) => {
-  const uploadFiles = useMemo(() => {
-    return files
-      ? files.reduce((m: FileProps[], item: FileProps) => {
-          const file = stringUrlToFile(item)
-          m?.push(file)
-          return m
-        }, [])
-      : []
-  }, [files])
-
-  const [data, setData] = useState<FileProps[]>(uploadFiles)
+const BasicsForm = ({ datasetId, config, name }: FormProps) => {
+  const defaultValues = useMemo(() => {
+    const basicsConfig = omit(config, [
+      'files',
+      'splitType',
+      'chunkSize',
+      'chunkOverlap',
+      'loaderType',
+    ])
+    return { name, ...basicsConfig } as SchemaProps
+  }, [name, config])
   const [values, setValues] = useState<SchemaProps>(defaultValues)
-
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     values,
@@ -103,18 +90,11 @@ const DatasetForm = ({
   }, [JSON.stringify(debouncedFormValue)])
 
   return (
-    <div
-      className="h-full w-full overflow-auto px-14 pb-[100px] pt-12"
-      ref={scrollRef}
-    >
+    <div className="hidden h-full w-full overflow-auto px-14 pb-[100px] pt-12 lg:block">
       <div className="sm:w-full md:max-w-[600px]">
         <Form {...form}>
           <form className="w-full">
-            <section
-              id="dataset-name"
-              ref={sectionRefs[0]}
-              className="border-b-[1px] py-6"
-            >
+            <section id="dataset-name" className="border-b py-6">
               <div className="mb-6 text-2xl font-semibold leading-8">
                 Dataset Name
               </div>
@@ -134,36 +114,12 @@ const DatasetForm = ({
                 )}
               />
             </section>
-            <DocumentLoader
-              form={form}
-              sectionRef={sectionRefs[1]}
-              data={data}
-              setData={setData}
-              setUploading={setUploading}
-            />
-            {showMore ? (
-              <>
-                <TextSplits form={form} sectionRef={sectionRefs[2]} />
-                <TextEmbedding form={form} sectionRef={sectionRefs[3]} />
-                <VectorStores form={form} sectionRef={sectionRefs[4]} />
-              </>
-            ) : (
-              <div className="flex w-full justify-center py-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowMore?.(true)
-                  }}
-                >
-                  Show more options
-                </Button>
-              </div>
-            )}
+            <TextEmbedding form={form} />
+            <VectorStores form={form} />
           </form>
         </Form>
       </div>
     </div>
   )
 }
-export default DatasetForm
+export default BasicsForm

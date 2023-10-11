@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Upload as UploadIcon } from 'lucide-react'
+import { Camera, UploadCloud, Upload as UploadIcon } from 'lucide-react'
 import RcUpload from 'rc-upload'
 import type { UploadProps as RcUploadProps } from 'rc-upload'
 import { flushSync } from 'react-dom'
@@ -371,11 +371,11 @@ const Upload = (props: UploadProps) => {
       return (
         <div
           className="
-         rounded-md border p-10 transition delay-150 ease-in-out hover:shadow-md"
+         flex h-20 w-[440px] items-center justify-center gap-4 rounded-lg border border-dashed bg-slate-50 text-base transition delay-150 ease-in-out hover:shadow-md"
         >
-          Upload Files
-          <div>
-            Drag and drop your PDF here or <span>Browse.</span>
+          <UploadCloud />
+          <div className="flex gap-1">
+            Drag and drop file, or<span className="font-semibold">Browse</span>
           </div>
         </div>
       )
@@ -386,6 +386,7 @@ const Upload = (props: UploadProps) => {
   const showUploadIcon = React.useMemo(() => {
     const file = mergedFileList?.[0]
     const showImage = listType === 'image' && mergedFileList?.length !== 0
+    const showOnePdf = listType === 'update-pdf' && type === 'drag'
     return showImage && showFileList ? (
       <ImageFile
         key={file?.url || file?.uid}
@@ -393,6 +394,15 @@ const Upload = (props: UploadProps) => {
         onRemove={handleRemove}
         className={cn('h-16 w-16', className)}
         listProps={listProps}
+      />
+    ) : showOnePdf ? (
+      <PDFFile
+        {...props}
+        file={file}
+        onDownload={handleDownload}
+        onRemove={handleRemove}
+        listProps={listProps}
+        key={file?.uid}
       />
     ) : (
       <RcUpload {...rcUploadProps} ref={upload}>
@@ -402,22 +412,26 @@ const Upload = (props: UploadProps) => {
   }, [
     mergedFileList,
     listType,
+    type,
+    showFileList,
+    handleRemove,
     className,
     listProps,
+    props,
+    handleDownload,
     rcUploadProps,
-    props?.children,
     defaultButton,
-    handleRemove,
-    showFileList,
   ])
 
   return (
     <div>
       <div
         className={cn(
-          'flex  cursor-pointer flex-col  items-start justify-start',
+          'flex cursor-pointer flex-col items-start justify-start',
           listType === 'image' ? 'gap-0' : 'gap-2',
-          listType === 'pdf' ? 'h-full w-full' : 'h-16 w-16',
+          listType === 'pdf' || listType === 'update-pdf'
+            ? 'h-full w-full'
+            : 'h-16 w-16',
           className
         )}
         onClick={onFileDrop}
@@ -435,7 +449,7 @@ const Upload = (props: UploadProps) => {
                 const percent = process?.filter(
                   (item) => item?.uid === file?.uid
                 )?.[0]?.percent
-                return listType === 'pdf' ? (
+                return listType !== 'images-list' ? (
                   <PDFFile
                     {...props}
                     file={file}

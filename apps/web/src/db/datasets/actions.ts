@@ -1,15 +1,14 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
-import axios from 'axios'
 import { and, desc, eq, sql } from 'drizzle-orm'
-import { isEqual, omit } from 'lodash'
+import { omit } from 'lodash'
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { nanoid } from '@/lib/utils'
-import { FileProps } from '@/components/upload/utils'
+import { DocumentParamsType } from '@/app/dataset/type'
 
 import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { DatasetsTable, NewDataset } from './schema'
@@ -23,15 +22,16 @@ export async function addDataset(
 
   let api_dataset_id = null
   if (flags.enabledAIService) {
-    const { data: res } = await axios.post(
+    const res = await fetch(
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets`,
       {
-        name,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({ name }),
       }
-    )
-    if (res.status !== 200) {
-      return null
-    }
+    ).then((res) => res.json())
     api_dataset_id = res?.data?.id
   }
 
@@ -88,61 +88,54 @@ export async function getDataset(datasetId: string) {
     if (!item) {
       throw new Error('Dataset not found')
     }
-
     return item
   } catch (error) {
     redirect('/')
   }
 }
 
-export async function editDataset(
+export async function editDatasetBasics(
   datasetId: string,
   newValue: Partial<NewDataset>
 ) {
   const { userId } = auth()
   if (!userId) return Promise.resolve([])
-  const { name, config } = newValue
-
-  let api_dataset_id = null
-  if (flags.enabledAIService) {
-    const dataset = await getDataset(datasetId)
-    api_dataset_id = dataset?.api_dataset_id
-    if (!api_dataset_id) return Promise.resolve([])
-
-    const oldFiles = (dataset?.config as any)?.files
-    const newFiles = (config as any)?.files
-    const update = !isEqual(oldFiles, newFiles)
-    if (update) {
-      const documents = newFiles?.reduce(
-        (m: Record<string, any>[], item: FileProps) => {
-          const cur = omit(item, 'name')
-          m.push(cur)
-          return m
-        },
-        []
-      )
-      const editParams = { documents }
-      let { data: res } = await axios.patch(
-        `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`,
-        editParams
-      )
-      if (res.status !== 200) {
-        return
-      }
-    }
-  }
-
   const response = await db
     .update(DatasetsTable)
-    .set({ name, config, updated_at: new Date() })
+    .set({ ...newValue, updated_at: new Date() })
     .where(
       and(
         eq(DatasetsTable.short_id, datasetId),
         eq(DatasetsTable.created_by, userId)
       )
     )
-
   return response
+}
+
+export async function editDatasetDocument(
+  datasetId: string,
+  files: DocumentParamsType[]
+) {
+  const { userId } = auth()
+  if (!userId) return Promise.resolve([])
+  let api_dataset_id
+  if (flags.enabledAIService) {
+    const dataset = await getDataset(datasetId)
+    api_dataset_id = dataset?.api_dataset_id
+    if (!api_dataset_id) return Promise.resolve([])
+    const res = await fetch(
+      `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'PATCH',
+        body: JSON.stringify({ documents: files }),
+      }
+    ).then((res) => res.json())
+    return Promise.resolve(res)
+  }
+  return Promise.resolve([])
 }
 
 export async function removeDataset(datasetId: string) {
@@ -155,12 +148,15 @@ export async function removeDataset(datasetId: string) {
     api_dataset_id = dataset?.api_dataset_id
     if (!api_dataset_id) return Promise.resolve([])
 
-    const { data: res } = await axios.delete(
-      `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`
-    )
-    if (res?.status !== 200) {
-      return Promise.resolve([])
-    }
+    await fetch(
+      `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'DELETE',
+      }
+    ).then((res) => res.json())
   }
 
   const response = await db

@@ -43,7 +43,10 @@ export default function ConfirmDialog({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            onClick={handleConfirm}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleConfirm()
+            }}
             disabled={isLoading}
           >
             {isLoading ? loadingText : confirmText}

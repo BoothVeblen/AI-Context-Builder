@@ -55,6 +55,7 @@ function Sidebar({ children }: PropsWithChildren) {
       } else {
         router.back()
       }
+      router.refresh()
     })
   }
 

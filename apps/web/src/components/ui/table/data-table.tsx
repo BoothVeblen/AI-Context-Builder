@@ -1,5 +1,6 @@
 'use client'
 
+import { ReactNode } from 'react'
 import { flexRender, Table as TableType } from '@tanstack/react-table'
 import { Loader2 } from 'lucide-react'
 
@@ -16,12 +17,16 @@ interface DataTableProps<TData> {
   table: TableType<TData>
   isLoading?: boolean
   onRowClick?: (row: TData) => () => void
+  noDataChildren?: ReactNode
+  colSpan?: number
 }
 
 export function DataTable<TData>({
   table,
   isLoading,
   onRowClick,
+  noDataChildren,
+  colSpan,
 }: DataTableProps<TData>) {
   return (
     <div className="relative rounded-md border">
@@ -53,6 +58,7 @@ export function DataTable<TData>({
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
+                className="group/cell cursor-pointer"
                 key={row.id}
                 onClick={onRowClick?.(row.original)}
                 data-state={row.getIsSelected() && 'selected'}
@@ -66,11 +72,8 @@ export function DataTable<TData>({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={table.getAllColumns.length}
-                className="h-24 text-center"
-              >
-                No results.
+              <TableCell colSpan={colSpan || 0} className="h-24 text-center">
+                {noDataChildren || 'No results.'}
               </TableCell>
             </TableRow>
           )}

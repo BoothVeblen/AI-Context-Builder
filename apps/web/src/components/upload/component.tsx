@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useRef, useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { Download, Eye, Loader2, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -68,7 +68,11 @@ export const PdfImage = ({
   id?: string
   className?: string
 }) => (
-  <img src="/pdf.png" alt="pdf" className={cn('w-[25px h-[32px]', className)} />
+  <img
+    src="/pdf.png"
+    alt="pdf"
+    className={cn('flex h-[32px] w-[32px]', className)}
+  />
 )
 
 export const PDFFile = (props: FileItemProps) => {
@@ -85,19 +89,23 @@ export const PDFFile = (props: FileItemProps) => {
   const process = props?.progress as number
   return (
     <div
-      className={`relative ${file?.status === 'uploading' ? 'bg-gray-50	' : ''}`}
+      className={cn(
+        'relative w-full',
+        file?.status === 'uploading' ? 'bg-gray-50' : ''
+      )}
       key={file?.uid}
     >
       <div
-        className={`relative z-10 flex h-full w-full rounded-md border py-4 pl-6 pr-4 ${
+        className={cn(
+          'relative z-10 flex h-full w-full rounded-md border p-4',
           file?.status === 'error' ? 'border-[#ff4d4f]' : ''
-        }`}
+        )}
       >
         <div className="flex w-full items-center justify-between gap-2">
-          <div className={`flex-b flex w-[90%] items-center gap-2 `}>
+          <div className="flex-b flex w-[90%] items-center gap-2">
             <PdfImage />
             <div className="flex w-full flex-col gap-1">
-              <div className={`line-clamp-1 break-all ${fileNameStyle}`}>
+              <div className={cn('line-clamp-1 break-all', fileNameStyle)}>
                 {file?.name}
               </div>
               {file?.status === 'uploading' && (
@@ -107,25 +115,24 @@ export const PDFFile = (props: FileItemProps) => {
           </div>
           {showIcon?.show && (
             <div className="flex gap-2">
-              {(file?.status === 'success' || file?.status === 'done') &&
-                file?.url && (
-                  <>
-                    {showIcon?.showDownloadIcon !== false && (
-                      <IconBox onClick={() => props?.onDownload!(file)}>
-                        {showIcon?.downloadIcon || (
-                          <Download size={16} strokeWidth={3} color="#000" />
-                        )}
-                      </IconBox>
-                    )}
-                    {showIcon?.showPreviewIcon !== false && (
-                      <IconBox onClick={() => preview(file)}>
-                        {showIcon?.previewIcon || (
-                          <Eye size={16} strokeWidth={3} />
-                        )}
-                      </IconBox>
-                    )}
-                  </>
-                )}
+              {file?.url && (
+                <>
+                  {showIcon?.showDownloadIcon !== false && (
+                    <IconBox onClick={() => props?.onDownload!(file)}>
+                      {showIcon?.downloadIcon || (
+                        <Download size={16} strokeWidth={3} color="#000" />
+                      )}
+                    </IconBox>
+                  )}
+                  {showIcon?.showPreviewIcon !== false && (
+                    <IconBox onClick={() => preview(file)}>
+                      {showIcon?.previewIcon || (
+                        <Eye size={16} strokeWidth={3} />
+                      )}
+                    </IconBox>
+                  )}
+                </>
+              )}
               <IconBox
                 onClick={(e: React.SyntheticEvent) => {
                   e.stopPropagation()
@@ -153,7 +160,7 @@ export const ImageFile = (props: FileItemProps) => {
   const { className, file, listProps, onRemove } = props
   const showIcon = checkShowIcon(listProps || false)
   const [open, setOpen] = useState<boolean>(false)
-  const previw = (event: React.SyntheticEvent) => {
+  const preview = (event: React.SyntheticEvent) => {
     event.stopPropagation()
     if (props?.onPreview) {
       props?.onPreview(file)
@@ -172,7 +179,7 @@ export const ImageFile = (props: FileItemProps) => {
         )}
         key={file?.uid || file?.url}
       >
-        <div className={`relative flex h-full w-full items-center`}>
+        <div className="relative flex h-full w-full items-center">
           {file?.status == 'uploading' ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1">
               {props?.locale?.uploading}
@@ -195,9 +202,10 @@ export const ImageFile = (props: FileItemProps) => {
               e.preventDefault()
               onRemove?.(file)
             }}
-            className={`z-1 h-6 w-6 rounded-full border  p-1 ${
+            className={cn(
+              'z-1 absolute right-1 top-1 h-6 w-6 rounded-full border p-1',
               file?.status === 'uploading' ? 'bg-white' : 'bg-sky-50'
-            } absolute right-1 top-1`}
+            )}
           >
             {showIcon?.removeIcon || <X size={18} strokeWidth={3} />}
           </Toggle>
@@ -216,7 +224,7 @@ export const ImageFile = (props: FileItemProps) => {
               sizes="(max-width: 500px)"
               width={500}
               height={500}
-              alt="oreview image"
+              alt="preview image"
             />
           </DialogContent>
         </Dialog>
