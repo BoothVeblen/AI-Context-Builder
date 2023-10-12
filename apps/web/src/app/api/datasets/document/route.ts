@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest) {
     const index = documents?.findIndex((item: FileProps) => item?.uid === uid)
     data[index] = {
       uid,
-      url: currentDocuments[0]?.url,
+      url: currentDocuments[0]?.url || '',
       type: currentDocuments[0]?.type,
       split_option: splitConfig,
     }
