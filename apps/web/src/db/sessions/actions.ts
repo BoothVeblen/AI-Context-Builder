@@ -237,7 +237,6 @@ export async function getSession(sessionId: string, appId?: string) {
       .where(
         and(
           eq(SessionsTable.short_id, sessionId),
-          eq(SessionsTable.created_by, userId),
           eq(SessionsTable.archived, false)
         )
       )
