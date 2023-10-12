@@ -328,6 +328,7 @@ export function ListSelectItem<T extends FieldValues>({
                           // 'value' directly from the onSelect here
                           // const newValue = [...(field.value || []), value]
                           const newValue = [...(field.value || []), item.value]
+                          form.setValue(name, newValue as any)
                         }}
                         data-disabled={
                           field.value?.includes(item.value) || undefined
