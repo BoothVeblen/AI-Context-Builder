@@ -112,3 +112,11 @@ export function encodeQueryData(data: Record<string, string | number>) {
     ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]))
   return ret.join('&')
 }
+
+export const labelFilterBuilder =
+  (options: { label: string; value: string }[]) =>
+  (value: string, search: string): number => {
+    const label = options.find((d) => d.value === value)?.label
+    if (label?.toLowerCase().includes(search.toLowerCase())) return 1
+    return 0
+  }

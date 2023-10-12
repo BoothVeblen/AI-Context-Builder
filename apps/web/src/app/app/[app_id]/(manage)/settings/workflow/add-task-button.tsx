@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { PlusIcon } from 'lucide-react'
 
+import { labelFilterBuilder } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -52,6 +53,16 @@ export default function AddTaskButton() {
       <DropdownMenuContent className="w-96" align="start">
         {ADD_TASK_BUTTON_CONFIG.map((item) => {
           const Icon = TYPE_MAP[item.type].icon
+          const options = item.children?.reduce(
+            (acc: { value: string; label: string }[], cur) => {
+              const labels: { value: string; label: string }[] = []
+              cur.children?.forEach((d) => {
+                labels.push({ value: d.subType, label: `${d.title} ${d.desc}` })
+              })
+              return [...acc, ...labels]
+            },
+            []
+          )
           return (
             <DropdownMenuSub key={item.type}>
               <DropdownMenuSubTrigger>
@@ -63,7 +74,7 @@ export default function AddTaskButton() {
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="w-80 p-0">
-                  <Command>
+                  <Command filter={labelFilterBuilder(options)}>
                     <CommandInput placeholder="Search" />
                     <CommandList>
                       <CommandEmpty>No results found.</CommandEmpty>
@@ -71,6 +82,7 @@ export default function AddTaskButton() {
                         <CommandGroup key={group.title} heading={group.title}>
                           {group.children.map((subItem) => (
                             <CommandItem
+                              value={subItem.subType}
                               key={subItem.subType}
                               onSelect={selectHandler(
                                 item.type,

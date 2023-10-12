@@ -11,7 +11,7 @@ import {
 import { FieldValues, Path, PathValue, useFormContext } from 'react-hook-form'
 import { SuggestionDataItem } from 'react-mentions'
 
-import { clamp, cn } from '@/lib/utils'
+import { clamp, cn, labelFilterBuilder } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -37,15 +37,6 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import { MentionTextarea } from '@/components/mention-textarea'
-import { PdfImage } from '@/components/upload/component'
-
-const labelFilterBuilder =
-  (options: { label: string; value: string }[]) =>
-  (value: string, search: string): number => {
-    const label = options.find((d) => d.value === value)?.label
-    if (label?.toLowerCase().includes(search.toLowerCase())) return 1
-    return 0
-  }
 
 interface IInputItem<T> {
   name: Path<T>
