@@ -6,7 +6,6 @@ import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { fetcher, nanoid } from '@/lib/utils'
-import { useChatEvent } from '@/hooks/use-chat-event'
 import usePageTitle from '@/hooks/use-page-title'
 import useSubscribe from '@/hooks/use-subscribe'
 import { useScrollToBottom } from '@/hooks/useScrollToBottom'
@@ -67,12 +66,13 @@ interface BaseChatProps {
   mode: ChatMode
   initialMessages?: ChatMessage[]
   initialEvents?: EventMessage[]
+  api?: string
 }
 
 interface DebugChatProps extends BaseChatProps {
   mode: 'debug'
   isConfigChanged?: boolean
-  setInitialMessages?: (messages: ChatMessage[]) => void
+  saveMessages?: (messages: ChatMessage[]) => void
   onRestart?: () => void
 }
 
@@ -83,7 +83,7 @@ interface LiveChatProps extends BaseChatProps {
 
 export type ChatProps = LiveChatProps | DebugChatProps
 
-const createInputMessage = (input: string) => {
+const createInputMessage = (input: string = '') => {
   const inputMsg: ChatMessage = {
     id: nanoid(),
     content: input,
@@ -94,16 +94,8 @@ const createInputMessage = (input: string) => {
   return inputMsg
 }
 
-const Chat = (props: ChatProps) => {
-  const {
-    app,
-    session,
-    user,
-    mode,
-    initialMessages = [],
-    initialEvents = [],
-  } = props
-  const appId = app?.short_id
+const WrappedChat = (props: ChatProps) => {
+  const { app, session, mode, initialMessages = [] } = props
   const appName = app?.name || ''
   const {
     short_id: sessionId,
@@ -123,39 +115,25 @@ const Chat = (props: ChatProps) => {
   const {
     messages,
     input,
-    isLoading,
-    reload,
     stop,
     error,
     setMessages,
-    handleSubmit,
-    handleInputChange,
+    events,
+    setEvents,
+    submit,
+    reload,
   } = useChat({
     id: sessionId,
-    initialMessages,
-    body: {
-      appId,
-      sessionId,
-      apiSessionId,
-    },
-    sendExtraMessageFields: true,
     onFinish: (message) => {
-      if (isDebug && currentInput?.current) {
-        props?.setInitialMessages?.([
-          ...messages,
-          currentInput.current,
-          message,
-        ])
+      // save message to local storage at debug mode
+      if (isDebug && currentInput?.current && !!message.content) {
+        props?.saveMessages?.([...messages, currentInput.current, message])
       }
+      // check chat process at live mode
       if (mode === 'live') {
         mutate(`/api/chat/process?api_session_id=${apiSessionId}`)
       }
     },
-  })
-
-  const { eventMessages, setEventMessages } = useChatEvent({
-    id: sessionId,
-    initialEvents,
   })
 
   const callLinkRef = useRef('')
@@ -164,21 +142,14 @@ const Chat = (props: ChatProps) => {
   const currentInput = useRef<ChatMessage>()
 
   const chatMessages = useMemo(() => {
-    return [...messages, ...eventMessages].sort(
+    return [...messages, ...events].sort(
       (a, b) => formatToTimestamp(a.createdAt) - formatToTimestamp(b.createdAt)
     )
-  }, [messages, eventMessages])
+  }, [messages, events])
 
-  const set = new Set(input?.split(''))
-  const isEmpty = set?.size === 1 && set.has('\n')
-  const disabled = isEmpty || !input || !input?.trim() || isLoading
-  const handelReload = () => {
-    setAutoScroll(true)
+  const onReload = () => {
     reload()
-  }
-
-  const handelStop = () => {
-    stop()
+    setAutoScroll(true)
   }
 
   const showResend = useMemo(() => messages?.length > 0, [messages])
@@ -191,10 +162,7 @@ const Chat = (props: ChatProps) => {
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    if (disabled) {
-      return
-    }
-    handleSubmit(e)
+    submit(e)
     setAutoScroll(true)
     if (isDebug) {
       currentInput.current = createInputMessage(input)
@@ -225,17 +193,17 @@ const Chat = (props: ChatProps) => {
 
   const handleDecline = useCallback(() => {
     const message = eventMessageBuilder('call.declined')
-    setEventMessages((prev) => [...prev, message])
+    setEvents((prev) => [...prev, message])
     addEventTrigger({ session_id: sessionId, event: message })
     closeModal()
-  }, [sessionId, addEventTrigger, setEventMessages, closeModal])
+  }, [setEvents, addEventTrigger, sessionId, closeModal])
 
   const handleCancel = useCallback(() => {
     const message = eventMessageBuilder('call.canceled')
-    setEventMessages((prev) => [...prev, message])
+    setEvents((prev) => [...prev, message])
     addEventTrigger({ session_id: sessionId, event: message })
     closeModal()
-  }, [sessionId, addEventTrigger, setEventMessages, closeModal])
+  }, [setEvents, addEventTrigger, sessionId, closeModal])
 
   const openModal = useCallback(() => {
     modal.show({
@@ -249,7 +217,7 @@ const Chat = (props: ChatProps) => {
   }, [modal, app, handleAccept, handleDecline, handleCancel])
 
   const handleRestart = () => {
-    handelStop()
+    stop()
     setMessages([])
     if (isDebug) {
       props?.onRestart?.()
@@ -265,9 +233,9 @@ const Chat = (props: ChatProps) => {
         openModal()
         return
       }
-      setEventMessages((prev) => [...prev, newEventMessage])
+      setEvents((prev) => [...prev, newEventMessage])
     },
-    [setEventMessages, configStr, openModal]
+    [setEvents, configStr, openModal]
   )
   useSubscribe({
     channelId: `session-${sessionId}`,
@@ -278,13 +246,7 @@ const Chat = (props: ChatProps) => {
   })
 
   return (
-    <ChatContextProvider
-      app={app}
-      session={session}
-      user={user}
-      mode={mode}
-      isLoading={isLoading}
-    >
+    <>
       <div className="relative h-full w-full">
         {confirmReset && (
           <RestartConfirmPage
@@ -308,13 +270,10 @@ const Chat = (props: ChatProps) => {
                 setAutoScroll={setAutoScroll}
               />
               <ChatInput
-                input={input}
                 onSubmit={onSubmit}
                 showResend={showResend}
-                reload={handelReload}
-                stop={handelStop}
-                handleInputChange={handleInputChange}
-                disabled={disabled}
+                onReload={onReload}
+                onStop={stop}
               />
             </div>
             {mode === 'live' && showProcess && (
@@ -325,6 +284,24 @@ const Chat = (props: ChatProps) => {
           </div>
         </div>
       </div>
+    </>
+  )
+}
+
+const Chat = (props: ChatProps) => {
+  const { app, session, user, mode, initialEvents, initialMessages, api } =
+    props
+  return (
+    <ChatContextProvider
+      app={app}
+      session={session}
+      user={user}
+      mode={mode}
+      initialEvents={initialEvents}
+      initialMessages={initialMessages}
+      api={api}
+    >
+      <WrappedChat {...props} />
     </ChatContextProvider>
   )
 }

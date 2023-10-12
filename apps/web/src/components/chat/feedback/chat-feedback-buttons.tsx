@@ -1,13 +1,12 @@
 'use client'
 
-import { useCallback } from 'react'
+import { startTransition, useCallback } from 'react'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
-import { mutate } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import ChatAction, { actionCommonButtonProps } from '../chat-action'
-import { useChatContext } from '../chat-context'
-import { ChatMessage, Message } from '../types'
+import { ChatMessage } from '../types'
+import { useChat } from '../useChat'
 import { useChatFeedbackContext } from './chat-feedback-context'
 import submitFeedback from './service'
 import { ChatFeedbackType } from './types'
@@ -18,41 +17,30 @@ type Props = {
 
 const ChatFeedbackButtons = (props: Props) => {
   const { message } = props
-  const { id, feedback, meta } = message
-  const { session } = useChatContext()
-  const { short_id: session_id } = session || {}
+  const { id, feedback } = message
+  const { updateMessage } = useChat()
 
-  const { toggleFeedback, messages } = useChatFeedbackContext()
+  const { toggleFeedback } = useChatFeedbackContext()
 
   const { trigger } = useSWRMutation('/api/chat/feedback', submitFeedback)
 
   const handleClick = useCallback(
     (type: ChatFeedbackType) => () => {
       if (id) {
-        trigger({
-          message_id: id,
-          type,
-        })
-
-        mutate<Message[]>(
-          ['/api/chat', session_id],
-          messages
-            .filter((message: Message) => message.type === 'chat') // filter out event messages
-            .map((message: Message) => {
-              if (message.type === 'chat' && message.id === id) {
-                return {
-                  ...message,
-                  feedback: type,
-                }
-              }
-              return message
-            })
-        )
-
         toggleFeedback(id, type)
+        startTransition(() => {
+          trigger({
+            message_id: id,
+            type,
+          })
+
+          updateMessage(id, {
+            feedback: type,
+          })
+        })
       }
     },
-    [id, trigger, session_id, messages, toggleFeedback]
+    [id, trigger, updateMessage, toggleFeedback]
   )
 
   const renderButton = useCallback(

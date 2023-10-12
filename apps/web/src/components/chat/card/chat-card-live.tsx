@@ -1,12 +1,12 @@
 'use client'
 
-import { useChatContext } from '../chat-context'
 import ChatFeedbackButtons from '../feedback/chat-feedback-buttons'
+import { useChat } from '../useChat'
 import { IChatCardProps } from './chat-card'
 import ChatCardLayout from './layout'
 
 const ChatCardLive = (props: IChatCardProps) => {
-  const { isLoading } = useChatContext()
+  const { loading } = useChat()
   const { message, isEnd } = props
   return (
     <ChatCardLayout
@@ -14,7 +14,7 @@ const ChatCardLive = (props: IChatCardProps) => {
       actions={
         message?.type === 'chat' &&
         message?.role !== 'user' &&
-        ((isEnd && !isLoading) || !isEnd) && (
+        ((isEnd && !loading) || !isEnd) && (
           <ChatFeedbackButtons message={message} />
         )
       }

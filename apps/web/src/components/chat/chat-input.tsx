@@ -9,32 +9,29 @@ import useSubmitHandler from '@/hooks/use-submit-handler'
 
 import { Button } from '../ui/button'
 import { Textarea } from '../ui/textarea'
-import { useChatContext } from './chat-context'
+import { useChat } from './useChat'
 
 interface InputProps {
-  input: string
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  reload: () => void
-  stop: () => void
   showResend?: boolean
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  disabled?: boolean
+  onReload: () => void
+  onStop: () => void
 }
 
-const ChatInput = ({
-  input,
-  onSubmit,
-  reload,
-  stop,
-  showResend,
-  handleInputChange,
-  disabled,
-}: InputProps) => {
-  const { isLoading, mode } = useChatContext()
+const ChatInput = ({ onSubmit, showResend, onReload, onStop }: InputProps) => {
+  const { handleInputChange, loading, input, error, mode } = useChat()
   const isDebug = mode === 'debug'
 
   const { formRef, onKeyDown } = useEnterSubmit()
   const { shouldSubmit } = useSubmitHandler()
+
+  const set = new Set(input?.split(''))
+  const isEmpty = set?.size === 1 && set.has('\n')
+  const disabled = isEmpty || !input || !input?.trim() || loading
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!disabled) onSubmit(e)
+  }
 
   return (
     <div
@@ -43,17 +40,22 @@ const ChatInput = ({
         isDebug ? '' : 'px-6 pb-4'
       )}
     >
-      <div className="absolute top-[-60px] flex w-full items-center justify-center">
-        {showResend && !isLoading && (
-          <Button className="bg-white" onClick={reload} variant="outline">
+      <div className="flex w-full flex-col items-center justify-start">
+        {error && (
+          <div className="pb-4 text-[14px] font-medium">
+            There was an error generating a response
+          </div>
+        )}
+        {(Boolean(error?.message) || (showResend && !loading)) && (
+          <Button className="bg-white" onClick={onReload} variant="outline">
             <RefreshCw size={16} className="mr-2" />
             Regenerate response
           </Button>
         )}
-        {isLoading && (
+        {loading && !error && (
           <Button
             className="bg-white"
-            onClick={stop}
+            onClick={onStop}
             variant="outline"
             data-testid="stop"
           >
@@ -62,28 +64,30 @@ const ChatInput = ({
           </Button>
         )}
       </div>
-      <form onSubmit={onSubmit} ref={formRef}>
-        <div className="flex justify-between space-x-2">
-          <Textarea
-            className="min-h-[40px]"
-            placeholder="Type a message"
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (!disabled && shouldSubmit(e)) {
-                onKeyDown(e)
-              }
-            }}
-            minRows={1}
-            maxRows={8}
-            data-testid="input"
-          />
-          <Button type="submit" disabled={disabled} data-testid="send">
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Send
-          </Button>
-        </div>
-      </form>
+      {!error && (
+        <form onSubmit={handleSubmit} ref={formRef}>
+          <div className="flex justify-between space-x-2">
+            <Textarea
+              className="min-h-[40px]"
+              placeholder="Type a message"
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (!disabled && shouldSubmit(e)) {
+                  onKeyDown(e)
+                }
+              }}
+              minRows={1}
+              maxRows={8}
+              data-testid="input"
+            />
+            <Button type="submit" disabled={disabled} data-testid="send">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   )
 }

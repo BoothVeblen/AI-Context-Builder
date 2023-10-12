@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 
 import { ChatMessage } from '../types'
+import { useChat } from '../useChat'
 
 interface Props {
   message: ChatMessage
@@ -38,7 +39,8 @@ async function submitAnnotation(
 }
 
 const ChatAnnotation = ({ message, stopAnnotation, annotating }: Props) => {
-  const { trigger, isMutating, data } = useSWRMutation(
+  const { updateMessage } = useChat()
+  const { trigger, isMutating } = useSWRMutation(
     ['/api/chat/annotation', message.id],
     submitAnnotation
   )
@@ -47,11 +49,14 @@ const ChatAnnotation = ({ message, stopAnnotation, annotating }: Props) => {
 
   const entry = useIntersectionObserver(ref, {})
 
-  const annotation = useMemo(() => data || message.annotation, [data, message])
+  const { annotation } = message
 
   const formattedAnnotation = useMemo(
-    () => annotation?.split('\n').map((line, i) => <div key={i}>{line}</div>),
-    [annotation]
+    () =>
+      message.annotation
+        ?.split('\n')
+        .map((line, i) => <div key={i}>{line}</div>),
+    [message.annotation]
   )
 
   const { handleSubmit, register, watch, reset } = useForm({
@@ -61,6 +66,7 @@ const ChatAnnotation = ({ message, stopAnnotation, annotating }: Props) => {
   })
   const onSubmit = async (data: { annotation?: string }) => {
     if (!data.annotation) return
+    updateMessage(message.id, { annotation: data.annotation })
     await trigger({
       annotation: data.annotation,
     })

@@ -38,21 +38,16 @@ export default function ChatListWithData({ mode, sessionId }: IProps) {
     .filter(Boolean) as Message[]
   const isLoading = isLoadingSessionData || isLoadingMessagesData
 
+  if (isLoading) {
+    return (
+      <div className="mt-32 flex justify-center">
+        <Loader2Icon className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
   return (
-    <ChatContextProvider
-      mode={mode}
-      app={app}
-      user={user}
-      session={session!}
-      isLoading={isLoading}
-    >
-      {isLoading ? (
-        <div className="mt-32 flex justify-center">
-          <Loader2Icon className="h-8 w-8 animate-spin" />
-        </div>
-      ) : (
-        <ChatList messages={messages} />
-      )}
+    <ChatContextProvider mode={mode} app={app} user={user} session={session!}>
+      <ChatList messages={messages} />
     </ChatContextProvider>
   )
 }
