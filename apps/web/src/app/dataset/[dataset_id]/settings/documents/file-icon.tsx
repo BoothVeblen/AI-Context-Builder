@@ -1,5 +1,3 @@
-import { AvatarImage } from '@radix-ui/react-avatar'
-
 import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { NewDocument } from '@/db/documents/schema'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,7 +13,7 @@ const FileIcon = ({ data, className, isSegment }: IProps) => {
   const isNotedData = data?.type === 'annotated_data'
   const color = getAvatarBgColor(data?.app_id || '')
   return (
-    <div className="flex max-w-2xl items-center gap-1 truncate">
+    <div className="flex items-center gap-1">
       {!isNotedData ? (
         <PdfImage className={cn('h-4 w-4', className)} />
       ) : (
@@ -39,7 +37,7 @@ const FileIcon = ({ data, className, isSegment }: IProps) => {
           )}
         </Avatar>
       )}
-      <div className={cn(isSegment && 'text-lg font-semibold', 'truncate')}>
+      <div className={cn(isSegment && 'text-lg font-semibold')}>
         {data?.name}
       </div>
     </div>

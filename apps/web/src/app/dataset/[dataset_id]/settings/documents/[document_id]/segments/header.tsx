@@ -36,11 +36,11 @@ const SegmentHeader = ({
   }
   return (
     <div className="flex w-full justify-between pl-14 pr-8">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-1 items-center gap-2">
         <Button
           size="icon"
           variant="outline"
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 shrink-0 p-0"
           onClick={goBack}
           type="button"
           disabled={isPending}

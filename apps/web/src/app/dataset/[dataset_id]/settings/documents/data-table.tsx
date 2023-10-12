@@ -15,8 +15,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { debounce } from 'lodash'
-import { Loader2Icon } from 'lucide-react'
-import { shadesOfPurple } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import useSWR from 'swr'
 
 import { cn, fetcher } from '@/lib/utils'
@@ -25,7 +23,6 @@ import { Input } from '@/components/ui/input'
 import { DataTable } from '@/components/ui/table/data-table'
 import { DataTablePagination } from '@/components/ui/table/pagination'
 import { useToast } from '@/components/ui/use-toast'
-import { DataProps } from '@/app/dataset/type'
 
 import { formateDate, formateNumber, formateStatus } from '../../../utils'
 import DeleteData from './delete-data'
@@ -105,11 +102,7 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
         accessorKey: 'name',
         header: 'Data Name',
         cell: ({ row }) => {
-          return (
-            <div className="truncate">
-              <FileIcon data={row.original} />
-            </div>
-          )
+          return <FileIcon data={row.original} />
         },
       },
       {
@@ -118,9 +111,6 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
         cell: ({ row }) => (
           <div className="flex w-[70px] items-center justify-end">
             {formateNumber(row.original?.characters || 0)}
-            {isValidating && row.original?.status === 1 && (
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin text-black" />
-            )}
           </div>
         ),
       },
@@ -140,9 +130,6 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
           return (
             <div className={cn('flex items-center gap-1 text-left', color)}>
               {text}
-              {isValidating && status === 1 && (
-                <Loader2Icon className="mr-2 h-4 w-4 animate-spin text-black" />
-              )}
             </div>
           )
         },
