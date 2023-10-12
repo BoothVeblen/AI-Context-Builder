@@ -287,14 +287,14 @@ export function ListSelectItem<T extends FieldValues>({
   options,
 }: IListSelectItem<T>) {
   const form = useFormContext<T>()
-
+  const [open, setOpen] = useState(false)
   return (
     <FormField
       control={form.control}
       name={name}
       render={({ field }) => (
         <FormItem>
-          <Popover>
+          <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button>
@@ -329,6 +329,7 @@ export function ListSelectItem<T extends FieldValues>({
                           // const newValue = [...(field.value || []), value]
                           const newValue = [...(field.value || []), item.value]
                           form.setValue(name, newValue as any)
+                          setOpen(false)
                         }}
                         data-disabled={
                           field.value?.includes(item.value) || undefined

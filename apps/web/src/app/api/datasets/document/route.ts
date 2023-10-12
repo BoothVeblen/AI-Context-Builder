@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest) {
     data[index] = {
       uid,
       url: currentDocuments[0]?.url,
-      type: currentDocuments[0]?.loaderType,
+      type: currentDocuments[0]?.type,
       split_option: splitConfig,
     }
   }

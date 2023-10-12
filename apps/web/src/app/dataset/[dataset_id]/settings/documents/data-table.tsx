@@ -77,7 +77,7 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
   const { toast } = useToast()
 
   const [shouldFresh, setShouldFresh] = useState(false)
-  const { data, isValidating, isLoading } = useSWR<any>(
+  const { data, isLoading } = useSWR<any>(
     [{ search: value }, pagination, datasetId],
     getDatasetDocument,
     {
@@ -88,12 +88,10 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
   )
 
   useEffect(() => {
-    const res = data?.documents?.filter(
+    const shouldFresh = data?.documents?.some(
       (item: NewDocument) => item?.status === 1
     )
-    if (res?.length > 0) {
-      setShouldFresh(true)
-    }
+    setShouldFresh(shouldFresh)
   }, [data?.documents])
 
   const columns: ColumnDef<NewDocument>[] = useMemo(
@@ -153,7 +151,7 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
         },
       },
     ],
-    [datasetId, isValidating]
+    [datasetId]
   )
 
   const handleRowClick = useCallback(
