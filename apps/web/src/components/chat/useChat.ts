@@ -9,6 +9,8 @@ import {
 import { createChunkDecoder, nanoid } from 'ai'
 import useSWR from 'swr'
 
+import { MESSAGE_FOR_KEEP_STREAM_CONNECTION } from '@/lib/const'
+
 import { ChatContextType, useChatContext } from './chat-context'
 import { ChatApp, ChatMessage, EventMessage, Message } from './types'
 
@@ -172,6 +174,7 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
         const reader = res.body.getReader()
         const decode = createChunkDecoder()
 
+        let isWaiting = false
         // h/t: vercel divide `[DATA]{"error":"error message"}[DATAEND]` into two chunks
         let chunkGroup = ''
         while (true) {
@@ -200,6 +203,10 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
           if (streamedData.error) {
             _setError(new Error(streamedData.error))
           }
+
+          const shouldWait = chunk === MESSAGE_FOR_KEEP_STREAM_CONNECTION
+          if (isWaiting && !shouldWait) streamedResponse = ''
+          isWaiting = shouldWait
 
           // Update the chat state with the new message tokens.
           streamedResponse += chunk

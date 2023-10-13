@@ -5,3 +5,5 @@ export const SLACK_AUTHORIZE_URL = `https://slack.com/oauth/v2/authorize?client_
 }&scope=app_mentions:read,chat:write,im:history,users:read,users:read.email,team:read&user_scope=&redirect_uri=${encodeURIComponent(
   SLACK_REDIRECT_URI
 )}`
+
+export const MESSAGE_FOR_KEEP_STREAM_CONNECTION = 'waiting...\n'

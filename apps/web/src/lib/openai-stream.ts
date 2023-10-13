@@ -4,6 +4,8 @@ import {
   ReconnectInterval,
 } from 'eventsource-parser'
 
+import { MESSAGE_FOR_KEEP_STREAM_CONNECTION } from './const'
+
 function encodeData(data: Record<string, unknown>) {
   return `[DATA]${JSON.stringify(data)}[DATAEND]`
 }
@@ -49,7 +51,7 @@ export async function OpenAIStream({
     async start(controller) {
       // prevent the stream from closing when the initial response is too long
       const waitingId = setInterval(() => {
-        const queue = encoder.encode('waiting...\n')
+        const queue = encoder.encode(MESSAGE_FOR_KEEP_STREAM_CONNECTION)
         controller.enqueue(queue)
       }, 20 * 1000)
 
