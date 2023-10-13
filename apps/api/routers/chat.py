@@ -59,7 +59,7 @@ def wrap_error(error: str):
     elif error.startswith("You exceed your current quota"):
         return "API key exceeds the usage limit."
     else:
-        return error
+        return "Something went wrong. Please try reloading the conversation."
 
 
 async def send_message(
