@@ -5,6 +5,8 @@ import { getApp } from '@/db/apps/actions'
 import { WorkflowProvider } from './store'
 import TaskList from './task-list'
 
+export const dynamic = 'force-dynamic'
+
 interface IProps {
   params: { app_id: string }
 }
