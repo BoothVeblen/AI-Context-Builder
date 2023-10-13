@@ -35,14 +35,17 @@ interface IProps {
   status: 0 | 1 | 2
   type?: string
   datasetId: string
-  currentUid: MutableRefObject<{ uid: string }>
+  currentId: MutableRefObject<{ shortId: string }>
   shortId: string
   setOpen: (s: boolean) => void
+  handleSynchronize: () => void
 }
 
 function synchrony(
   url: string,
-  { arg }: { arg: { isSynchrony: boolean; dataset_id: string } }
+  {
+    arg,
+  }: { arg: { isSynchrony: boolean; dataset_id: string; document_id: string } }
 ) {
   return fetcher(url, {
     method: 'PATCH',
@@ -52,9 +55,10 @@ function synchrony(
 
 const TableAction = ({
   datasetId,
-  currentUid,
+  currentId,
   shortId,
   setOpen,
+  handleSynchronize,
   status,
   type,
 }: IProps) => {
@@ -66,15 +70,11 @@ const TableAction = ({
   )
 
   const router = useRouter()
-  const editData = useCallback(
-    async (uid: string) => {
-      startTransition(() => {
-        router.push(`/dataset/${datasetId}/document/${uid}`)
-      })
-      router.refresh()
-    },
-    [datasetId, router]
-  )
+  const editData = useCallback(async () => {
+    startTransition(() => {
+      router.push(`/dataset/${datasetId}/document/${currentId.current.shortId}`)
+    })
+  }, [datasetId, currentId.current.shortId])
 
   const { toast } = useToast()
 
@@ -82,12 +82,16 @@ const TableAction = ({
     toast({
       description: 'Synchronizing',
     })
-    await trigger({ isSynchrony: true, dataset_id: datasetId })
+    await trigger({
+      isSynchrony: true,
+      dataset_id: datasetId,
+      document_id: currentId.current.shortId,
+    })
+    handleSynchronize()
     toast({
       description: 'Synchronized',
     })
-    router.refresh()
-  }, [datasetId, shortId])
+  }, [datasetId, currentId.current.shortId])
 
   return (
     <div className="invisible z-10 flex gap-2 group-hover/cell:visible">
@@ -98,12 +102,12 @@ const TableAction = ({
             variant="outline"
             className="h-8 w-8"
             onClick={(e) => {
-              currentUid.current.uid = shortId
               e.stopPropagation()
-              editData(shortId)
+              currentId.current.shortId = shortId
+              editData()
             }}
           >
-            {isPending && currentUid?.current?.uid === shortId ? (
+            {isPending && currentId?.current?.shortId === shortId ? (
               <Loader2Icon className="h-4 w-4 animate-spin" />
             ) : (
               <Settings2 size={18} />
@@ -118,12 +122,12 @@ const TableAction = ({
             variant="outline"
             className="h-8 w-8"
             onClick={(e) => {
-              currentUid.current.uid = shortId
               e.stopPropagation()
+              currentId.current.shortId = shortId
               refreshData()
             }}
           >
-            {isMutating && currentUid?.current?.uid === shortId ? (
+            {isMutating && currentId?.current?.shortId === shortId ? (
               <Loader2Icon className="h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw size={18} />
@@ -139,7 +143,7 @@ const TableAction = ({
           onClick={(e) => {
             e.stopPropagation()
             setOpen(true)
-            currentUid.current.uid = shortId
+            currentId.current.shortId = shortId
           }}
         >
           <Trash size={18} />

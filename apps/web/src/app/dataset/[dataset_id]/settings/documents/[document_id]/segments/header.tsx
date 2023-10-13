@@ -3,14 +3,13 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2Icon, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { LoaderTypeProps } from '@/app/dataset/type'
 
 import FileIcon from '../../file-icon'
 
 interface IProps {
   uid: string
   datasetId: string
-  short_id?: string
+  appId?: string
   icon?: string
   name?: string
   type?: string
@@ -20,7 +19,7 @@ interface IProps {
 const SegmentHeader = ({
   uid,
   addNew,
-  short_id = '',
+  appId: app_id,
   icon,
   datasetId,
   name = '',
@@ -53,7 +52,7 @@ const SegmentHeader = ({
         </Button>
         <FileIcon
           className="h-6 w-6"
-          data={{ name, uid, type, short_id, icon }}
+          data={{ name, uid, type, app_id, icon }}
           isSegment
         />
       </div>

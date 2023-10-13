@@ -14,7 +14,6 @@ import { MessagesTable } from '@/db/messages/schema'
 import { formatEventMessage } from '@/db/messages/utils'
 import { SessionsTable } from '@/db/sessions/schema'
 import { UsersTable } from '@/db/users/schema'
-import { DataProps } from '@/app/dataset/type'
 
 async function getSession(api_session_id: string) {
   const [session] = await db

@@ -53,16 +53,15 @@ export async function POST(req: NextRequest) {
 
 // edit data
 export async function PATCH(req: NextRequest) {
-  const { dataset_id, dataConfig, document_id, isSynchrony, uid } =
+  const { dataset_id, dataConfig, document_id, uid, isSynchrony } =
     await req.json()
 
   const documents = await formateDocumentParams(dataset_id, '')
   let data = documents
+  const { currentDocuments, config, files, splitConfig } =
+    await createDocumentParams(dataConfig)
+  // edit document
   if (!isSynchrony) {
-    // edit document
-    const { currentDocuments, config, files, splitConfig } =
-      await createDocumentParams(dataConfig)
-    const editRes = await editDocument(document_id, currentDocuments, config)
     files[0].uid = uid
     const index = documents?.findIndex((item: FileProps) => item?.uid === uid)
     data[index] = {
@@ -72,6 +71,12 @@ export async function PATCH(req: NextRequest) {
       split_option: splitConfig,
     }
   }
+  const editRes = await editDocument(
+    document_id,
+    currentDocuments,
+    config,
+    isSynchrony
+  )
   const response = (await editDatasetDocument(dataset_id, data)) as any
 
   return NextResponse.json({

@@ -48,8 +48,9 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
   )
 
   const [open, setOpen] = useState(false)
-  const currentUid = useRef({ uid: '' })
+  const currentId = useRef({ shortId: '' })
   const router = useRouter()
+  const [synchronizeNum, setSynchronizeNum] = useState(0)
 
   const [value, setValue] = useState('')
   const [pagination, setPagination] = useState({
@@ -78,7 +79,7 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
 
   const [shouldFresh, setShouldFresh] = useState(false)
   const { data, isLoading } = useSWR<any>(
-    [{ search: value }, pagination, datasetId],
+    [{ search: value }, pagination, datasetId, synchronizeNum],
     getDatasetDocument,
     {
       fallbackData: preload,
@@ -145,7 +146,8 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
               type={type}
               shortId={short_id}
               datasetId={datasetId}
-              currentUid={currentUid}
+              currentId={currentId}
+              handleSynchronize={() => setSynchronizeNum(synchronizeNum + 1)}
             />
           )
         },
@@ -219,7 +221,7 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
       <DataTablePagination table={table} />
       <DeleteData
         datasetId={datasetId}
-        uid={currentUid?.current?.uid}
+        uid={currentId?.current?.shortId}
         open={open}
         setOpen={setOpen}
       />

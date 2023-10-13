@@ -144,26 +144,35 @@ export async function getDocumentDetail(id: string) {
 export async function editDocument(
   short_id: string,
   document: NewDocument[],
-  config: any
+  config: any,
+  isSynchrony?: boolean
 ) {
   try {
     const { userId } = auth()
     if (!userId) return Promise.resolve([])
-    const fileConfig = pick(document[0], [
-      'name',
-      'url',
-      'icon',
-      'type',
-      'app_id',
-    ])
-    const splitConfig = { splitConfig: config }
+    let newConfig
+    if (isSynchrony) {
+      newConfig = { updated_at: new Date(), status: 1 }
+    } else {
+      const fileConfig = pick(document[0], [
+        'name',
+        'url',
+        'icon',
+        'type',
+        'app_id',
+      ])
+      const splitConfig = { splitConfig: config }
+      newConfig = {
+        ...fileConfig,
+        config: splitConfig,
+        updated_at: new Date(),
+        status: 1,
+      }
+    }
     const response = await db
       .update(DocumentsTable)
       .set({
-        updated_at: new Date(),
-        ...fileConfig,
-        config: splitConfig,
-        status: 1,
+        ...newConfig,
       })
       .where(
         and(

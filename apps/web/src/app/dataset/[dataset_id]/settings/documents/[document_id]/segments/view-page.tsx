@@ -18,13 +18,14 @@ import { DataTablePagination } from './pagination'
 import SegmentList from './segment-list'
 
 interface IProps {
-  dataset_id: string
+  datasetId: string
   name?: string
   type?: string
   icon?: string
+  appId?: string
 }
 
-const SegmentPage = ({ dataset_id, name, type, icon }: IProps) => {
+const SegmentPage = ({ datasetId, name, type, icon, appId }: IProps) => {
   const [open, setOpen] = useState(false)
   const [showDeleteAlter, setShowDeleteAlter] = useState(false)
   const [value, setValue] = useState('')
@@ -49,7 +50,7 @@ const SegmentPage = ({ dataset_id, name, type, icon }: IProps) => {
   }
   const searchParams = useSearchParams()
   const uid = searchParams?.get('uid') || ''
-  const queries = { dataset_id, uid, search: value }
+  const queries = { dataset_id: datasetId, uid, search: value }
   const { data, isLoading } = useSWR<any>(
     [queries, pagination, fresh],
     getDatasetDocument,
@@ -75,11 +76,12 @@ const SegmentPage = ({ dataset_id, name, type, icon }: IProps) => {
   return (
     <div className="h-full w-full overflow-auto py-[68px]">
       <SegmentHeader
-        datasetId={dataset_id}
+        datasetId={datasetId}
         uid={uid}
         name={name}
         icon={icon}
         type={type}
+        appId={appId}
         addNew={() => {
           setOpen(true)
           current.current = { content: '', segment_id: '' }
@@ -119,7 +121,7 @@ const SegmentPage = ({ dataset_id, name, type, icon }: IProps) => {
         )}
       </div>
       <DeleteSegment
-        dataset_id={dataset_id}
+        dataset_id={datasetId}
         uid={uid}
         segment_id={current?.current?.segment_id || ''}
         showDeleteAlter={showDeleteAlter}
@@ -130,7 +132,7 @@ const SegmentPage = ({ dataset_id, name, type, icon }: IProps) => {
         content={current?.current?.content || ''}
         open={open}
         segment_id={current?.current?.segment_id || ''}
-        dataset_id={dataset_id}
+        dataset_id={datasetId}
         document_id={uid}
         setOpen={setOpen}
         handelConfirm={() => setFresh((v) => v + 1)}
