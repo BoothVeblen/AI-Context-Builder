@@ -6,6 +6,8 @@ from loguru import logger
 from langchain.prompts import PromptTemplate
 from .utils import MODEL_TO_MAX_TOKEN, RESPONSE_BUFFER_SIZE
 from langchain.schema import SystemMessage, Document, HumanMessage
+from langchain.schema.messages import get_buffer_string
+from utils.base import to_string
 
 
 class PromptCompressor:
@@ -69,23 +71,12 @@ class PromptCompressor:
         except KeyError:
             logger.warning("model not found. Using cl100k_base encoding.")
             encoding = tiktoken.get_encoding("cl100k_base")
+
         return len(encoding.encode(str(content)))
 
     @staticmethod
     async def sumrize_content(content, model, chain_type, max_tokens=500):
         """Return a summary of a string."""
-
-        def to_string(data):
-            if isinstance(data, str):
-                return data
-            elif isinstance(data, bytes):
-                return data.decode()
-            else:
-                raise ValueError(
-                    "Unsupported data type. Expecting str or bytes, got: {}".format(
-                        type(data)
-                    )
-                )
 
         content = to_string(content)
         sumrize_step = 0
@@ -93,9 +84,12 @@ class PromptCompressor:
         while sumrize_step < 5 and current_tokens > max_tokens:
             summarize_chain = load_summarize_chain(OpenAI(), chain_type=chain_type)
             token_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                chunk_size=500, chunk_overlap=0
+                chunk_size=100, chunk_overlap=0, separator="\n"
             )
             documents = token_splitter.split_text(content)
+            documents = [Document(page_content=document) for document in documents]
+                chunk_size=500, chunk_overlap=0
+            )
             documents = await summarize_chain.acombine_docs(documents)
             sumrize_step += 1
             content = documents[0]
@@ -120,7 +114,7 @@ class PromptCompressor:
                     Document(page_content=message.content) for message in messages
                 ]
             splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                chunk_size=500, chunk_overlap=0, separator=" "
+                chunk_size=500, chunk_overlap=0, separator="\n"
             )
             documents = splitter.split_documents(documents)
             documents = await summarize_chain.acombine_docs(documents)
@@ -132,12 +126,20 @@ class PromptCompressor:
                 f"messages are too long to summarize. Returning original messages. messages length: {current_tokens} max_tokens: {max_tokens}"
             )
         if isinstance(messages, list):
-            return "\n".join([message for message in messages])
+            if messages == []:
+                return ""
+            if isinstance(messages[0], str):
+                return "\n".join([message for message in messages])
+            else:
+                return "\n".join([message.content for message in messages])
         return messages
 
     @staticmethod
     async def get_compressed_messages(
-        prompt_template: PromptTemplate, inputs: dict, model: str
+        prompt_template: PromptTemplate,
+        inputs: dict,
+        model: str,
+        chain_dialog_key="chat_history",
     ):
         """Return a compressed list of messages."""
         max_tokens = MODEL_TO_MAX_TOKEN.get(model)
@@ -148,8 +150,18 @@ class PromptCompressor:
         question = inputs.get("question")
         if question is None:
             logger.warning("question is not provided. Returning original messages.")
-        prompt_value = prompt_template.format_prompt(**inputs)
-        history_messages = inputs.get("chat_history", [])
+        filt_inputs = {}
+        for k in inputs:
+            if "dialog" in k and isinstance(inputs[k], list):
+                try:
+                    filt_inputs[k] = get_buffer_string(inputs[k])
+                except:
+                    filt_inputs[k] = inputs[k]
+            else:
+                filt_inputs[k] = inputs[k]
+        prompt_value = prompt_template.format_prompt(**filt_inputs)
+        history_messages = inputs.get(chain_dialog_key, [])
+
         history_messages = history_messages[:-1]
         messages = (
             [SystemMessage(content=prompt_value.to_string())]
@@ -163,7 +175,7 @@ class PromptCompressor:
 
         # compress history
         compressed_message = await PromptCompressor.sumrize_messages(
-            history_messages, model, chain_type="stuff", max_tokens=500
+            history_messages, model, chain_type="map_reduce", max_tokens=500
         )
         compressed_messages = [
             SystemMessage(content=prompt_value.to_string() + compressed_message)
@@ -176,13 +188,13 @@ class PromptCompressor:
 
         # compress variables
         compressed_inputs = {}
-        for key in inputs:
-            if key == "chat_history" or key == "question":
+        for key in filt_inputs:
+            if key == "chat_history" or key == "question" or key == chain_dialog_key:
                 continue
-            if type(inputs[key]) == list:
+            if type(filt_inputs[key]) == list:
                 continue
             compressed_inputs[key] = await PromptCompressor.sumrize_content(
-                inputs[key], model, chain_type="stuff", max_tokens=500
+                filt_inputs[key], model, chain_type="map_reduce", max_tokens=500
             )
         compressed_prompt_value = prompt_template.format_prompt(**compressed_inputs)
         compressed_messages = [

@@ -1,5 +1,5 @@
 import json
-
+from utils.base import to_string
 
 class PromptManagerMixin:
     @staticmethod
@@ -10,7 +10,8 @@ class PromptManagerMixin:
         self.redis.set(self.get_chain_output_urn(session_id, output_key), output)
 
     def get_chain_output(self, session_id: str, output_key: str):
-        return self.redis.get(self.get_chain_output_urn(session_id, output_key))
+        content = self.redis.get(self.get_chain_output_urn(session_id, output_key))
+        return to_string(content)
 
     def get_chain_memory_urn(self, session_id, output_key):
         return f"memory:{session_id}-{output_key}"
@@ -25,9 +26,19 @@ class PromptManagerMixin:
             current_chain_memory = self.get_chain_memory(
                 session_id, content["chain_key"]
             )
-            current_chain_memory.append(
-                {"input": get_human_input(content), "output": content["output"]}
-            )
+            if current_chain_memory == []:
+                current_chain_memory.append(
+                    {"input": get_human_input(content), "output": content["output"]}
+                )
+            else:
+                current_input = current_chain_memory[-1].get("input", "")
+                # filt midium value in self checking chain
+                if current_input == get_human_input(content):
+                    current_chain_memory[-1]["output"] = content["output"]
+                else:
+                    current_chain_memory.append(
+                        {"input": get_human_input(content), "output": content["output"]}
+                    )
             self.redis.set(
                 self.get_chain_memory_urn(session_id, content["chain_key"]),
                 json.dumps(current_chain_memory),

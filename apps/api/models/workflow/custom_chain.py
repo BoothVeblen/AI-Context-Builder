@@ -37,6 +37,7 @@ from langchain.schema.messages import get_buffer_string
 from models.prompt_manager.compress import PromptCompressor
 from langchain.chat_models import ChatOpenAI
 from langchain.retrievers import SelfQueryRetriever
+from utils.base import to_string
 
 
 class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
@@ -121,7 +122,6 @@ class TargetedChain(Chain):
         basic_messages = inputs.get(self.dialog_key, [])
         human_input = inputs.get("question", "")
         basic_messages += [HumanMessage(content=human_input)]
-        # inputs.pop("chat_history", None)
 
         question = ""
         if self.process == TargetedChainStatus.RUNNING:
@@ -137,7 +137,7 @@ class TargetedChain(Chain):
                 messages=[messages],
                 callbacks=run_manager.get_child() if run_manager else None,
             )
-            if response.generations[0][0].text == "Yes":
+            if response.generations[0][0].text.lower() == "yes".lower():
                 self.process = TargetedChainStatus.FINISHED
                 return {self.output_key: response.generations[0][0].text}
             else:
@@ -181,7 +181,13 @@ class TargetedChain(Chain):
         suffix_prompt = "Please output the target based on this conversation."
         run_manager = AsyncCallbackManagerForChainRun.get_noop_manager()
         response = await self.llm.agenerate(
-            messages=[[HumanMessage(content=pre_prompt + dialog + suffix_prompt)]],
+            messages=[
+                [
+                    SystemMessage(content=""),
+                    HumanMessage(content=pre_prompt + dialog + suffix_prompt),
+                ]
+            ],
+
             callbacks=run_manager.get_child(),
         )
         return response.generations[0][0].text
@@ -254,6 +260,8 @@ class EnhanceSequentialChain(SequentialChain):
                         await self._handle_final_chain()
                         return self._construct_return_dict()
                     else:
+                        inputs["question"] = ""
+                        self.known_values["question"] = ""
                         self.current_chain += 1
             else:
                 if self.current_chain == len(self.chains) - 1:
@@ -355,12 +363,15 @@ class EnhanceConversationChain(Chain):
         inputs: Dict[str, Any],
         run_manager: AsyncCallbackManagerForChainRun | None = None,
     ) -> Dict[str, Any]:
-        if inputs.get("chat_history", None) is not None and isinstance(
-            inputs["chat_history"], str
+        if inputs.get(self.dialog_key, None) is not None and isinstance(
+            inputs[self.dialog_key], str
         ):
-            inputs["chat_history"] = [inputs["chat_history"]]
+            inputs[self.dialog_key] = [inputs[self.dialog_key]]
         messages = await PromptCompressor.get_compressed_messages(
-            prompt_template=self.prompt, inputs=inputs, model=self.llm.model_name
+            prompt_template=self.prompt,
+            inputs=inputs,
+            model=self.llm.model_name,
+            chain_dialog_key=self.dialog_key,
         )
         response = await self.llm.agenerate(
             messages=[messages],
@@ -396,11 +407,12 @@ class EnhanceConversationalRetrievalChain(Chain):
         inputs: Dict[str, Any],
         run_manager: AsyncCallbackManagerForChainRun | None = None,
     ) -> Dict[str, Any]:
-        if inputs.get("chat_history", None) is not None and isinstance(
-            inputs["chat_history"], str
+        if inputs.get(self.dialog_key, None) is not None and isinstance(
+            inputs[self.dialog_key], str
         ):
-            inputs["chat_history"] = [inputs["chat_history"]]
-        messages = inputs.get("chat_history", [])
+            inputs[self.dialog_key] = [inputs[self.dialog_key]]
+        messages = inputs.get(self.dialog_key, [])
+
         question = inputs.get("question", None)
         if question is None:
             raise ValueError("Question is required")
@@ -408,7 +420,7 @@ class EnhanceConversationalRetrievalChain(Chain):
         docs = await self.retriever.aget_relevant_documents(
             question, callbacks=run_manager.get_child()
         )
-        context = "\n".join([doc.page_content for doc in docs])
+        context = "\n".join([to_string(doc.page_content) for doc in docs])
         inputs["context"] = context
 
         messages = await PromptCompressor.get_compressed_messages(

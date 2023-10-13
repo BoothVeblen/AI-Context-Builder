@@ -4,7 +4,7 @@ from typing import Any, Coroutine, Dict, List, Optional, Union, cast
 from uuid import UUID
 from langchain.schema.messages import BaseMessage
 from langchain.schema.output import LLMResult
-
+from loguru import logger
 
 import tiktoken
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -123,7 +123,7 @@ class IOTraceCallbackHandler(AsyncCallbackHandler):
         metadata: Dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> Coroutine[Any, Any, None]:
-        self.tem_input = prompts[0]
+        pass
 
     async def on_llm_end(
         self,
@@ -155,8 +155,10 @@ class IOTraceCallbackHandler(AsyncCallbackHandler):
     ) -> Any:
         # system message and user input
         self.tem_input = (
-            f"System: {messages[0][0].content}\nHuman: {messages[0][1].content}"
+            f"System: {messages[0][0].content}\nHuman: {messages[0][-1].content}"
         )
+        logger.info(f"input log in callback: {self.tem_input}")
+
 
 
 class CostCalcAsyncHandler(AsyncCallbackHandler):
