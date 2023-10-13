@@ -561,9 +561,10 @@ export async function getAppsBasedOnIds(ids: string[]) {
       .where(
         and(inArray(AppsTable.short_id, ids), eq(AppsTable.archived, false))
       )
-      .orderBy(desc(AppsTable.created_at))
-
-    return apps
+    const sortedApps = ids
+      .map((id) => apps.find((app) => app.short_id === id))
+      .filter((app) => !!app) as typeof apps
+    return sortedApps
   } catch (error) {
     redirect('/')
   }

@@ -6,33 +6,29 @@ const DEFAULT_VALUE = [
     title: 'All Categories',
   },
   {
-    href: '/explore/la',
-    title: 'Language Assistant',
+    href: '/explore/retrieval',
+    title: 'Q&A of your Data', // 私有数据问答
   },
   {
-    href: '/explore/fc',
-    title: 'Famous Character',
+    href: '/explore/interview',
+    title: 'Mock Interview', // 模拟面试
   },
   {
-    href: '/explore/wr',
-    title: 'Writing',
+    href: '/explore/form',
+    title: 'Intelligent Forms', // 智能表单
   },
   {
-    href: '/explore/ua',
-    title: 'Useful Assistant',
+    href: '/explore/character',
+    title: 'Role Play', // 角色扮演
   },
   {
-    href: '/explore/pr',
-    title: 'Professional',
+    href: '/explore/assistant',
+    title: 'Useful Assistant', // 有用的助手
   },
-  {
-    href: '/explore/sd',
-    title: 'Search Document',
-  },
-  {
-    href: '/explore/in',
-    title: 'Interviewer',
-  },
+  // {
+  //   href: '/explore/training',
+  //   title: 'Enterprise Training', // 企业培训
+  // },
 ]
 
 export default function ExploreList() {
