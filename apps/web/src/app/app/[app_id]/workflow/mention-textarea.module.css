@@ -8,6 +8,12 @@
   overflow-wrap: break-word;
 }
 
+.mentions--multiLine .mentions__highlighter {
+  padding: 0;
+  min-height: 80px;
+  border: 0 !important;
+}
+
 .mentions--multiLine .mentions__input {
   padding: 0;
   border-radius: 8px;
