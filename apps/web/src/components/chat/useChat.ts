@@ -53,7 +53,7 @@ interface StreamData {
 }
 
 const buildUserMessage = (content: string): ChatMessage => ({
-  id: nanoid(),
+  id: `tmp-${nanoid()}`,
   content,
   role: 'user',
   type: 'chat',
@@ -280,6 +280,9 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
       query = messagesRef.current[messagesRef.current.length - 1].content
       reloadId = lastMessage.id
     } else {
+      if (!lastMessage.id.startsWith('tmp-')) {
+        reloadId = lastMessage.id
+      }
       query = lastMessage.content
     }
 
