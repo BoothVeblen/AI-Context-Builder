@@ -83,8 +83,10 @@ const ChatDebug = ({ app }: IProps) => {
 
   const current = chatStore.currentSession()
   const initialMessages: EventMessage[] = React.useMemo(() => {
+    const showRemark = current?.messages?.length === 0
+    const update = current?.eventMessages[0]?.content !== opening_remarks
     if (opening_remarks) {
-      return !current?.eventMessages?.length
+      return update && showRemark
         ? [
             {
               id: nanoid(),
@@ -99,7 +101,7 @@ const ChatDebug = ({ app }: IProps) => {
     } else {
       return []
     }
-  }, [current?.eventMessages, opening_remarks])
+  }, [current?.eventMessages, current?.messages?.length, opening_remarks])
 
   const getMessageHistory = React.useCallback(() => {
     chatStore.selectSession(appId)
@@ -110,7 +112,7 @@ const ChatDebug = ({ app }: IProps) => {
       chatStore.onNewMessage(current?.messages)
       chatStore.onNewEventMessage(initialMessages)
     }
-  }, [appId, chatStore, current?.messages, initialMessages, sessions])
+  }, [appId, current?.messages, initialMessages])
 
   const handleMessage = (messages: ChatMessage[]) => {
     chatStore.onNewMessage(messages)
