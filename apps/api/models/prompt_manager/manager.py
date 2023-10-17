@@ -1,6 +1,7 @@
 import json
 from utils.base import to_string
 
+
 class PromptManagerMixin:
     @staticmethod
     def get_chain_output_urn(session_id: str, output_key: str):
@@ -22,6 +23,7 @@ class PromptManagerMixin:
                 return content["input"].split("Human:")[1].strip()
             return content["input"]
 
+        # [{"input":"xxx", "output":"xxx", "chain_key": "xxx"}, ...]
         for content in contents:
             current_chain_memory = self.get_chain_memory(
                 session_id, content["chain_key"]

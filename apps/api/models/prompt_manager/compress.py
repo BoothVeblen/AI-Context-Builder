@@ -88,8 +88,6 @@ class PromptCompressor:
             )
             documents = token_splitter.split_text(content)
             documents = [Document(page_content=document) for document in documents]
-                chunk_size=500, chunk_overlap=0
-            )
             documents = await summarize_chain.acombine_docs(documents)
             sumrize_step += 1
             content = documents[0]

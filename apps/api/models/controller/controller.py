@@ -177,10 +177,14 @@ class DatasetManager(BaseManager):
                     Retriever.add_relative_chain_to_dataset(dataset, parts[0], parts[1])
                 handler.update_dataset_status(dataset_id, 0)
                 dataset_dict_for_redis = copy.deepcopy(dataset.dict())
-                for document in dataset_dict_for_redis['documents']:
-                    document['hundredth_ids'] = [i for i in range(99, document['page_size'], 100)]
+                for document in dataset_dict_for_redis["documents"]:
+                    document["hundredth_ids"] = [
+                        i for i in range(99, document["page_size"], 100)
+                    ]
                 self.redis.set(urn, json.dumps(dataset_dict_for_redis))
-                logger.info(f"Updating dataset {dataset_id} in cache, dataset: {dataset_dict_for_redis}")
+                logger.info(
+                    f"Updating dataset {dataset_id} in cache, dataset: {dataset_dict_for_redis}"
+                )
                 self._update_dataset(dataset_id, dataset.dict())
                 return
         self._update_dataset(dataset_id, update_data)
@@ -259,7 +263,7 @@ class DatasetManager(BaseManager):
             if document.uid == uid:
                 matching_url = document.url
                 segment_size = document.page_size
-                if hasattr(document, 'hundredth_ids'):
+                if hasattr(document, "hundredth_ids"):
                     hundredth_ids = document.hundredth_ids
                 else:
                     hundredth_ids = [i for i in range(99, segment_size, 100)]
@@ -656,7 +660,7 @@ class SessionStateManager(BaseManager, PromptManagerMixin):
                     chain.output_keys[0],
                     workflow.context.known_values[chain.output_keys[0]],
                 )
-        self.save_chain_memory(session_id, workflow.io_traces)
+        self.save_chain_memory(session_id, workflow.context.current_chain_io)
         self.save_workflow_step(session_id, workflow.context.current_chain)
 
     def get_workflow(self, session_id, model):

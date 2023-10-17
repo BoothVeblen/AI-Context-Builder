@@ -137,7 +137,7 @@ class TargetedChain(Chain):
                 messages=[messages],
                 callbacks=run_manager.get_child() if run_manager else None,
             )
-            if response.generations[0][0].text.lower() == "yes".lower():
+            if response.generations[0][0].text.lower().startswith("yes"):
                 self.process = TargetedChainStatus.FINISHED
                 return {self.output_key: response.generations[0][0].text}
             else:
@@ -162,32 +162,20 @@ class TargetedChain(Chain):
     async def get_output(
         self,
         pre_dialog: str,
-        human_input: str,
-        llm_output: str,
     ):
         if self.process == TargetedChainStatus.RUNNING:
             return ""
-        dialog = (
-            pre_dialog
-            + "\n"
-            + get_buffer_string(
-                [
-                    HumanMessage(content=human_input),
-                    AIMessage(content=llm_output),
-                ],
-            )
-        )
-        pre_prompt = "The goal is" + self.target + "\n"
+
+        pre_prompt = "The goal is " + self.target + "\n"
         suffix_prompt = "Please output the target based on this conversation."
         run_manager = AsyncCallbackManagerForChainRun.get_noop_manager()
         response = await self.llm.agenerate(
             messages=[
                 [
                     SystemMessage(content=""),
-                    HumanMessage(content=pre_prompt + dialog + suffix_prompt),
+                    HumanMessage(content=pre_prompt + pre_dialog + suffix_prompt),
                 ]
             ],
-
             callbacks=run_manager.get_child(),
         )
         return response.generations[0][0].text
@@ -199,6 +187,7 @@ class EnhanceSequentialChain(SequentialChain):
     known_values: Dict[str, Any] = Field(default_factory=dict)
     state_dependent_chains = [TargetedChain]
     current_chain: int = 0
+    current_chain_io: List = []
 
     class Config:
         extra = Extra.allow
@@ -245,11 +234,16 @@ class EnhanceSequentialChain(SequentialChain):
                         )
                     )
                     outputs[chain.output_key] = await chain.get_output(
-                        get_buffer_string(pre_dialog),
-                        inputs["question"],
-                        current_output,
+                        get_buffer_string(pre_dialog)
                     )
                     self.known_values.update(outputs)
+                    self.current_chain_io.append(
+                        {
+                            "input": inputs["question"],
+                            "output": current_output,
+                            "chain_key": chain.output_key,
+                        }
+                    )
                     if chain.process not in [
                         TargetedChainStatus.FINISHED,
                         TargetedChainStatus.ERROR,
@@ -283,6 +277,13 @@ class EnhanceSequentialChain(SequentialChain):
                     )
                 )
                 self.known_values.update(outputs)
+                self.current_chain_io.append(
+                    {
+                        "input": inputs["question"],
+                        "output": outputs[chain.output_key],
+                        "chain_key": chain.output_key,
+                    }
+                )
                 if self.current_chain == len(self.chains) - 1:
                     self.current_chain = 0
                     return self._construct_return_dict()
