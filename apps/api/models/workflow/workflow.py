@@ -97,6 +97,23 @@ class Workflow(BaseModel):
             queue=asyncio.Queue(),
             done=asyncio.Event(),
         )
+        self._set_target_chain_output()
+
+    def _set_target_chain_output(self):
+        input_keys = set()
+        for chain in self.context.chains:
+            try:
+                if isinstance(chain, TargetedChain):
+                    input_keys.update(chain.system_prompt.input_variables)
+                    input_keys.update(chain.check_prompt.input_variables)
+                else:
+                    input_keys.update(chain.prompt.input_variables)
+            except Exception as e:
+                logger.error(f"Error while getting input_variables: {e}")
+        for chain in self.context.chains:
+            if isinstance(chain, TargetedChain):
+                if chain.output_keys[0] not in input_keys:
+                    chain.need_output = False
 
     def get_chain_output_key(self, chain_key):
         return f"{chain_key}-output".replace("-", "_")

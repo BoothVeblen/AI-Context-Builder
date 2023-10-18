@@ -90,6 +90,7 @@ class TargetedChain(Chain):
     suffix: str = "The content you want to output first is:"
     dialog_key: str = "dialog"
     target: str = "target"
+    need_output: bool = True
 
     class Config:
         extra = Extra.forbid
@@ -164,6 +165,9 @@ class TargetedChain(Chain):
         pre_dialog: str,
     ):
         if self.process == TargetedChainStatus.RUNNING:
+            return ""
+
+        if self.need_output is False:
             return ""
 
         pre_prompt = "The goal is " + self.target + "\n"
