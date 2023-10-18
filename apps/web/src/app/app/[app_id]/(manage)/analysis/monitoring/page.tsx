@@ -1,4 +1,4 @@
-import { getMonitoringData, getSessions } from '@/db/sessions/actions'
+import { getMonitoringData } from '@/db/sessions/actions'
 
 import { MonitoringTable } from './table'
 

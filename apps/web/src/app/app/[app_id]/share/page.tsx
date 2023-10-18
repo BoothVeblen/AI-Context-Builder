@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { useParams } from 'next/navigation'
-import { GithubIcon, SlackIcon } from 'lucide-react'
 
 import { flags } from '@/lib/flags'
 import usePageTitle from '@/hooks/use-page-title'

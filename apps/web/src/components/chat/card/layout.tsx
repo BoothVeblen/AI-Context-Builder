@@ -11,11 +11,11 @@ import {
   getAvatarBgColor,
   getFirstLetter,
 } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 import Text from '../../ui/text'
 import { Markdown } from '../markdown/markdown'
-import { ChatUser, Message } from '../types'
+import { ChatUser } from '../types'
 import { useChat } from '../useChat'
 import { IChatCardProps } from './chat-card'
 

@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { UniqueIdentifier } from '@dnd-kit/core'
-import language from 'react-syntax-highlighter/dist/esm/languages/hljs/1c'
 import { useWindowSize } from 'usehooks-ts'
 
 import { Sheet, SheetContent } from '@/components/ui/sheet'

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { clerkClient } from '@clerk/nextjs'
 
 import { logsnag } from '@/lib/logsnag'
-import { editUser } from '@/db/users/actions'
 import { formatUser } from '@/db/users/utils'
 
 export async function GET() {

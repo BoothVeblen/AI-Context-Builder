@@ -1,7 +1,6 @@
-import { count } from 'console'
 import { redirect } from 'next/navigation'
 import { auth } from '@clerk/nextjs'
-import { and, desc, eq, ilike, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, sql } from 'drizzle-orm'
 import { pick } from 'lodash'
 import { nanoid } from 'nanoid'
 
@@ -14,9 +13,8 @@ import {
 } from '@/app/dataset/type'
 
 import { getApps } from '../apps/actions'
-import { AppsTable, NewApp } from '../apps/schema'
+import { NewApp } from '../apps/schema'
 import { getDataset } from '../datasets/actions'
-import { DatasetsTable } from '../datasets/schema'
 import { DocumentsTable, NewDocument } from './schema'
 
 export type newDocumentParams = {

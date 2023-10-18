@@ -4,7 +4,6 @@ import { Mention, MentionsInput } from 'react-mentions'
 import { safeParse } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PdfImage } from '@/components/upload/component'
 
 import { SUB_TYPE_MAP } from '../(manage)/settings/workflow/const'
 import { WorkflowItem } from '../(manage)/settings/workflow/type'

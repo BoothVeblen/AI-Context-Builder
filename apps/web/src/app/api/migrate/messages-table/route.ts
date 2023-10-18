@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import pLimit from 'p-limit'
 
 import { db } from '@/lib/drizzle-edge'

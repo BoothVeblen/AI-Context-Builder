@@ -2,7 +2,6 @@ import { InferModel, relations } from 'drizzle-orm'
 import {
   boolean,
   index,
-  integer,
   pgTable,
   serial,
   text,

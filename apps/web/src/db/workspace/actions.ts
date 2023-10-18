@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 
 import { auth, currentUserEmail } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
