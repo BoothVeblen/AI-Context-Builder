@@ -457,17 +457,26 @@ export class SlackUtils {
       .select({
         session_id: SessionsTable.short_id,
         api_session_id: SessionsTable.api_session_id,
+        slack_team_app_id: SlackTeamAppsTable.short_id,
       })
       .from(SlackUserAppsTable)
-      .innerJoin(
+      .leftJoin(
         SessionsTable,
         eq(SessionsTable.short_id, SlackUserAppsTable.context_session_id)
+      )
+      .leftJoin(
+        SlackTeamAppsTable,
+        and(
+          eq(SlackTeamAppsTable.app_id, this.app_id),
+          eq(SlackTeamAppsTable.team_id, this.team_id)
+        )
       )
       .where(
         and(
           eq(SlackUserAppsTable.app_id, this.app_id),
           eq(SlackUserAppsTable.team_id, this.team_id),
-          eq(SlackUserAppsTable.user_id, user_id)
+          eq(SlackUserAppsTable.user_id, user_id),
+          eq(SessionsTable.archived, false)
         )
       )
       .orderBy(desc(SlackUserAppsTable.updated_at))

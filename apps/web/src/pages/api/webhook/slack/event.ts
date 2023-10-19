@@ -51,6 +51,9 @@ export default async function handler(
         text: '_Thinking..._',
       })
 
+      const ts = result.ts
+      if (!ts) throw new Error('ts is undefined')
+
       const slack_user = await slack.addOrUpdateUser(
         {
           user_id,
@@ -58,9 +61,17 @@ export default async function handler(
         { shouldUpdate: false }
       )
 
-      const { session_id, api_session_id } =
-        await slack.getCurrentSession(user_id)
-      if (!api_session_id) throw new Error('api_session_id is undefined')
+      const { session_id, api_session_id, slack_team_app_id } =
+        (await slack.getCurrentSession(user_id)) || {}
+
+      if (!session_id || !api_session_id || !slack_team_app_id) {
+        slack.updateMessage({
+          channel: channel_id,
+          ts,
+          text: 'Admin message: The config of this app has been updated. Please start a new chat from the Home tab.',
+        })
+        return res.status(200).json(body)
+      }
 
       const messages = await getFormattedMessages(session_id)
       const content = message.event.text
@@ -68,10 +79,6 @@ export default async function handler(
         session_id: api_session_id,
         messages: [...messages, { role: 'user', content }],
       }
-
-      const ts = result.ts
-
-      if (!ts) return
 
       let completion = ''
       const messageId = nanoid()

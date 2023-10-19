@@ -1,16 +1,12 @@
 import Link from 'next/link'
-import useSWR from 'swr'
 
-import { fetcher } from '@/lib/utils'
+import useUser from '@/hooks/use-user'
 import { Button } from '@/components/ui/button'
 import UserProfileCard from '@/components/user-profile-card'
 
 function Profile() {
-  const { data, isLoading } = useSWR('/api/me/profile', fetcher)
-
-  const { emailAddresses, firstName, lastName, imageUrl } = data ?? {}
-  const name = [firstName || '', lastName || ''].join(' ').trim()
-  const email = emailAddresses?.[0].emailAddress
+  const { data, isLoading } = useUser()
+  const { email, name, imageUrl } = data
 
   if (isLoading) {
     return <UserProfileCard.Loading />
