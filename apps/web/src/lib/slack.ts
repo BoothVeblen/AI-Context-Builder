@@ -468,7 +468,11 @@ export class SlackUtils {
         SlackTeamAppsTable,
         and(
           eq(SlackTeamAppsTable.app_id, this.app_id),
-          eq(SlackTeamAppsTable.team_id, this.team_id)
+          eq(SlackTeamAppsTable.team_id, this.team_id),
+          eq(
+            SlackTeamAppsTable.context_app_id,
+            SlackUserAppsTable.context_app_id
+          )
         )
       )
       .where(
