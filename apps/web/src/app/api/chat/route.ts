@@ -230,6 +230,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
       id: messageId,
     },
   })
+  req.signal.onabort = () => {
+    stream.cancel()
+  }
 
   return new Response(stream)
 }
