@@ -139,6 +139,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
   const payload = {
     session_id: apiSessionId,
     messages: messageDTO,
+    reload: !!reloadMessageId,
   }
 
   const requestId = nanoid()

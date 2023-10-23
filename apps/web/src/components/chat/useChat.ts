@@ -127,13 +127,21 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
       reloadId?: string
       messages?: ChatMessage[]
     }) => {
+      const responseMessage: ChatMessage = {
+        id: nanoid(),
+        content: '',
+        role: 'assistant',
+        type: 'chat',
+        createdAt: new Date(),
+      }
+      const currMessages = messagesRef.current
+      let streamedData = {} as StreamData
+
       try {
         _setLoading(true)
 
         const abortController = new AbortController()
         abortControllerRef.current = abortController
-
-        const currMessages = messagesRef.current
 
         const res = await fetch(api, {
           method: 'POST',
@@ -150,14 +158,6 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
 
         await onResponse?.(res)
 
-        const responseMessage: ChatMessage = {
-          id: nanoid(),
-          content: '',
-          role: 'assistant',
-          type: 'chat',
-          createdAt: new Date(),
-        }
-
         if (!res.ok) {
           throw new Error(
             (await res.text()) || 'Failed to fetch the chat response.'
@@ -169,7 +169,6 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
         }
 
         let streamedResponse = ''
-        let streamedData = {} as StreamData
 
         const reader = res.body.getReader()
         const decode = createChunkDecoder()
@@ -215,16 +214,9 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
           setMessages([...currMessages, { ...responseMessage }])
 
           // The request has been aborted, stop reading the stream.
-          if (abortControllerRef.current === null) {
-            reader.cancel()
-            break
-          }
         }
 
         // if the response is empty and there is no error, reset the messages
-        if (!responseMessage.content && !streamedData.error) {
-          setMessages(currMessages)
-        }
 
         if (onFinish) {
           onFinish(responseMessage, streamedData)
@@ -246,6 +238,14 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
         throw err
       } finally {
         _setLoading(false)
+        if (
+          responseMessage.content.endsWith(
+            MESSAGE_FOR_KEEP_STREAM_CONNECTION
+          ) ||
+          (!responseMessage.content && !streamedData.error)
+        ) {
+          setMessages(currMessages)
+        }
       }
     },
     [

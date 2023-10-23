@@ -35,8 +35,7 @@ export async function OpenAIStream({
   let completion = ''
   let initialed = false
   let error = false
-  // todo impl
-  // let token = 0
+  let aborted = false
   const abortController = new AbortController()
   const res = await fetch(`${baseUrl}/chat/completions`, {
     headers: {
@@ -50,6 +49,7 @@ export async function OpenAIStream({
 
   const stream = new ReadableStream({
     cancel() {
+      aborted = true
       abortController.abort()
     },
     async start(controller) {
@@ -130,6 +130,9 @@ export async function OpenAIStream({
 
       // https://web.dev/streams/#asynchronous-iteration
       for await (const chunk of res.body as any) {
+        if (aborted) {
+          break
+        }
         parser.feed(decoder.decode(chunk))
       }
     },
