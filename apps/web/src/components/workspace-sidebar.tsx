@@ -52,7 +52,7 @@ export default function WorkspaceSidebar({ appList }: IProps) {
   )
 
   return (
-    <div className="flex w-18 shrink-0 grow flex-col overflow-y-auto bg-slate-900 scrollbar-none">
+    <div className="flex h-full w-18 shrink-0 flex-col overflow-y-auto bg-slate-900 scrollbar-none">
       <div className="relative mt-6 flex shrink-0 flex-col space-y-4">
         {NavList?.map((item) => {
           const selected = item?.scopes?.some(

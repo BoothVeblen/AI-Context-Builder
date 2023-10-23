@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
-import { getLatestSessionId } from '@/db/sessions/actions'
+import { getApp } from '@/db/apps/actions'
+import { getLatestSessionId, getSessions } from '@/db/sessions/actions'
 
 // TODO: remove axios
 // export const runtime = 'edge'

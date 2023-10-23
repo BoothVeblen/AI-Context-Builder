@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { getDebugSessionId } from '@/db/apps/actions'
 import { TreeItem } from '@/components/dnd/types'
-import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
+import { WorkflowItem } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/type'
 
 // Get an api_session_id
 export async function POST(req: NextRequest) {

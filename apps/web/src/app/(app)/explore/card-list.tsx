@@ -1,7 +1,7 @@
 import { getAppsBasedOnIds } from '@/db/apps/actions'
 import { Skeleton } from '@/components/ui/skeleton'
 import AppCard from '@/components/app-card'
-import { getFeaturedAppIds } from '@/app/explore/utils'
+import { getFeaturedAppIds } from '@/app/(app)/explore/utils'
 
 interface IProps {
   categoryName: string

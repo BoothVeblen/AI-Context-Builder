@@ -14,7 +14,6 @@ export default async function RootSidebar({ title, nav }: IProps) {
   return (
     <div className="flex h-full overflow-hidden lg:border-r lg:border-slate-200">
       <WorkspaceSidebar appList={appList} />
-      <NavSidebar title={title} nav={nav} />
     </div>
   )
 }

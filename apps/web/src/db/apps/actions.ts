@@ -14,12 +14,12 @@ import { TreeItem } from '@/components/dnd/types'
 import {
   DEFAULT_WORKFLOW_DATA,
   DEFAULT_WORKFLOW_TREE,
-} from '@/app/app/[app_id]/(manage)/settings/workflow/const'
-import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
+} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
+import { WorkflowItem } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/type'
 import {
   formatTreeWithData,
   taskToApiFormatter,
-} from '@/app/app/[app_id]/(manage)/settings/workflow/utils'
+} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/utils'
 
 import { AppsDatasetsTable } from '../apps_datasets/schema'
 import { DatasetsTable } from '../datasets/schema'

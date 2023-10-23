@@ -40,7 +40,7 @@ const ChatInput = ({ onSubmit, showResend, onReload, onStop }: InputProps) => {
         isDebug ? '' : 'px-6 pb-4'
       )}
     >
-      <div className="flex w-full flex-col items-center justify-start">
+      <div className="absolute bottom-18 -ml-6 flex w-full flex-col items-center justify-start">
         {error && (
           <div className="pb-4 text-[14px] font-medium">
             There was an error generating a response

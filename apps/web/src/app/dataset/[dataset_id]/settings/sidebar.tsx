@@ -9,7 +9,7 @@ import { fetcher } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/confirm-dialog'
 
-import BaseSideBar from '../../../app/[app_id]/(manage)/sidebar'
+import BaseSideBar from '../../../(app)/app/[app_id]/(manage)/sidebar'
 
 interface IProps {
   name: string

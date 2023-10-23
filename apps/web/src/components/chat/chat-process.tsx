@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { SUB_TYPE_MAP } from '@/app/app/[app_id]/(manage)/settings/workflow/const'
+import { SUB_TYPE_MAP } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
 
 import { ProcessTask, ProcessTaskFromAPI } from './types'
 import { useChat } from './useChat'

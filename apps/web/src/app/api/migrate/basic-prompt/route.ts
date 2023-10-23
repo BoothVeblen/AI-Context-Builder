@@ -7,12 +7,12 @@ import { db } from '@/lib/drizzle-edge'
 import { safeParse } from '@/lib/utils'
 import { AppsTable } from '@/db/apps/schema'
 import { TreeItem } from '@/components/dnd/types'
-import { TASK_DEFAULT_VALUE_MAP } from '@/app/app/[app_id]/(manage)/settings/workflow/const'
-import { WorkflowItem } from '@/app/app/[app_id]/(manage)/settings/workflow/type'
+import { TASK_DEFAULT_VALUE_MAP } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
+import { WorkflowItem } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/type'
 import {
   formatTreeWithData,
   taskToApiFormatter,
-} from '@/app/app/[app_id]/(manage)/settings/workflow/utils'
+} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/utils'
 
 const limit = pLimit(5)
 

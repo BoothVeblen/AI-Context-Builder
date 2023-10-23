@@ -1,18 +1,20 @@
 import * as React from 'react'
+import { auth } from '@clerk/nextjs'
 
 import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
+import { getApp } from '@/db/apps/actions'
 import AppSettingDialog from '@/components/app-setting-dialog'
 
 interface IProps {
   appId: string
-  name: string
-  desc: string
-  icon: string
-  isOwner: boolean
 }
 
-export default function Header({ appId, name, desc, icon, isOwner }: IProps) {
-  const color = React.useMemo(() => getAvatarBgColor(appId), [appId])
+export default async function Header({ appId }: IProps) {
+  const { userId } = auth()
+  const color = getAvatarBgColor(appId)
+  const appDetail = await getApp(appId)
+  const { name, description: desc, icon } = appDetail
+  const isOwner = userId === appDetail.created_by
 
   return (
     <div>
