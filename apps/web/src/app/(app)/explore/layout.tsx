@@ -1,9 +1,8 @@
 import { PropsWithChildren } from 'react'
 
 import ExploreList from '@/components/explore-list'
+import ResponsiveLayout from '@/components/layouts/responsive-layout'
 import NavSidebar from '@/components/nav-sidebar'
-
-import ResponsiveLayout from '../../../components/layouts/responsive-layout'
 
 const Layout = ({ children }: PropsWithChildren) => {
   return (

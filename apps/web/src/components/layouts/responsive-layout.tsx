@@ -26,7 +26,9 @@ const ResponsiveLayout = (props: PropsWithChildren<Props>) => {
       </NavSheet>
 
       {/* Page content for desktop and mobile */}
-      <main className="h-full flex-1 pt-12 lg:pt-0">{children}</main>
+      <main className="h-full flex-1 overflow-auto pt-12 lg:pt-0">
+        {children}
+      </main>
     </div>
   )
 }
