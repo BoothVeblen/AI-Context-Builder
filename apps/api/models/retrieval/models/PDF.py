@@ -55,7 +55,7 @@ class PatchedSelfQueryRetriever(SelfQueryRetriever):
             docs = [doc for doc in docs if query.lower() in doc.page_content.lower()]
         elif self.search_type == "mmr":
             docs = await self.vectorstore.amax_marginal_relevance_search(
-                query,  **self.search_kwargs
+                query, **self.search_kwargs
             )
         else:
             raise ValueError(f"search_type of {self.search_type} not allowed.")
@@ -227,14 +227,16 @@ class PDFRetrieverMixin:
             ],
         )
         retriever.search_kwargs = {"filter": filter}
-        retriever.search_type = 'similarity_score_threshold'
+        retriever.search_type = "mmr"
         return retriever
 
     @classmethod
     def fetch_vectors(cls, ids: List[str]) -> Dict:
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = Index("context-prod")
-        result = index.fetch(namespace="withcontext", ids=ids).to_dict().get("vectors", {})
+        result = (
+            index.fetch(namespace="withcontext", ids=ids).to_dict().get("vectors", {})
+        )
         valid_vectors = {k: v for k, v in result.items() if v}
         return valid_vectors
 
