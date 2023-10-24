@@ -1,4 +1,4 @@
-import { ReactNode } from 'react-markdown/lib/ast-to-react'
+import { ReactNode } from 'react'
 
 import {
   Tooltip,
