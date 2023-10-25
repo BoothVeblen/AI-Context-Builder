@@ -27,7 +27,9 @@
     "LOGSNAG_TOKEN",
     "NEXT_PUBLIC_SLACK_CLIENT_ID",
     "SLACK_CLIENT_SECRET",
-    "MOCK_CHAT"
+    "MOCK_CHAT",
+    "E2E_USERNAME",
+    "E2E_PASSWORD"
   ],
   "pipeline": {
     "build": {

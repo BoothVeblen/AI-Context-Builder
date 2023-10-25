@@ -5,9 +5,9 @@ on:
 
 jobs:
   e2e_test:
-    if: github.ref.type != 'tag' && github.ref.name != 'main' && github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     name: E2E Testing
+    if: ${{ github.event.deployment.environment == 'Preview' }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -45,5 +45,5 @@ jobs:
         run: pnpm test:e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.target_url }}
-          E2E_USERNAME: ${{ env.E2E_USERNAME }}
-          E2E_PASSWORD: ${{ env.E2E_PASSWORD }}
+          E2E_USERNAME: ${{ vars.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ vars.E2E_PASSWORD }}

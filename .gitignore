@@ -6,3 +6,5 @@ dist/**
 
 service-account-file.json
 apps/upload-api/uploads/**
+
+playwright/

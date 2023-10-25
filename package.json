@@ -16,6 +16,7 @@
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
+    "@playwright/test": "^1.38.1",
     "@tailwindcss/typography": "^0.5.10",
     "@typescript-eslint/parser": "^6.7.2",
     "eslint": "8.49.0",

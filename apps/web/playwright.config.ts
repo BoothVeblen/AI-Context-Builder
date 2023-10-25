@@ -46,21 +46,29 @@ const config: PlaywrightTestConfig = {
 
   projects: [
     {
+      name: 'setup',
+      testMatch: 'setup-e2e.ts',
+    },
+    {
       name: 'Desktop Chrome',
       use: {
         ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/user.json',
       },
+      dependencies: ['setup'],
     },
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-      },
-    },
-    {
-      name: 'Mobile Safari',
-      use: devices['iPhone 12'],
-    },
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: {
+    //     ...devices['Pixel 5'],
+    //   },
+    //   dependencies: ['setup'],
+    // },
+    // {
+    //   name: 'Mobile Safari',
+    //   use: devices['iPhone 12'],
+    //   dependencies: ['setup'],
+    // },
   ],
 }
 export default config

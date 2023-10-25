@@ -52,6 +52,7 @@ export default function SessionListHeader({ appId }: IProps) {
             aria-hidden="true"
             onClick={handleAdd}
             disabled={isMutating}
+            data-testid="add-session"
           >
             {isMutating ? (
               <Loader2Icon className="h-4 w-4 animate-spin" />

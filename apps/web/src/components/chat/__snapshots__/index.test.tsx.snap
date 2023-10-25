@@ -90,6 +90,7 @@ exports[`Chat > send message and regenerate 1`] = `
                   >
                     <div
                       class="relative max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg lg:max-w-3xl xl:max-w-3xl bg-primary"
+                      data-testid="chat-card-content"
                     >
                       <div
                         class="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 text-white"
@@ -149,6 +150,7 @@ exports[`Chat > send message and regenerate 1`] = `
                   >
                     <div
                       class="relative max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg lg:max-w-3xl xl:max-w-3xl bg-gray-100"
+                      data-testid="chat-card-content"
                     >
                       <div
                         class="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 text-black"
@@ -257,6 +259,7 @@ exports[`Chat > send message and regenerate 1`] = `
                   >
                     <div
                       class="relative max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg lg:max-w-3xl xl:max-w-3xl bg-primary"
+                      data-testid="chat-card-content"
                     >
                       <div
                         class="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 text-white"
@@ -316,6 +319,7 @@ exports[`Chat > send message and regenerate 1`] = `
                   >
                     <div
                       class="relative max-w-[280px] rounded-lg p-4 sm:max-w-xs md:max-w-lg lg:max-w-3xl xl:max-w-3xl bg-gray-100"
+                      data-testid="chat-card-content"
                     >
                       <div
                         class="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 text-black"

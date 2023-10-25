@@ -148,7 +148,12 @@ const ChatCardLayout = (prop: Props) => {
       return <Markdown isUser={isUser}>{error}</Markdown>
     }
     if (!content) {
-      return <Loader2 className="h-3 w-3 animate-spin" />
+      return (
+        <Loader2
+          className="h-3 w-3 animate-spin"
+          data-testid="chat-card-loading"
+        />
+      )
     }
     return <Markdown isUser={isUser}>{content}</Markdown>
   }, [isUser, message, showError, error])
@@ -197,6 +202,7 @@ const ChatCardLayout = (prop: Props) => {
                 isUser ? 'bg-primary' : 'bg-gray-100',
                 showError ? 'rounded-lg border border-red-500	bg-red-50' : ''
               )}
+              data-testid="chat-card-content"
             >
               {renderContent}
               {!showError && (
