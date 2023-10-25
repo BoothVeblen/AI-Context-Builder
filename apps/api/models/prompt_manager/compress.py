@@ -1,19 +1,30 @@
 import tiktoken
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
+from langchain.prompts import PromptTemplate
+from langchain.schema import Document, HumanMessage, SystemMessage
+from langchain.schema.messages import get_buffer_string
 from langchain.text_splitter import CharacterTextSplitter
 from loguru import logger
-from langchain.prompts import PromptTemplate
-from .utils import MODEL_TO_MAX_TOKEN, RESPONSE_BUFFER_SIZE
-from langchain.schema import SystemMessage, Document, HumanMessage
-from langchain.schema.messages import get_buffer_string
+from models.base.model import Memory
 from utils.base import to_string
 
+from .memory import (
+    ConversationBufferWindowMemoryMixin,
+    ConversationSummaryBufferMemoryMixin,
+    ConversationTokenBufferMemoryMixin,
+)
+from .utils import MODEL_TO_MAX_TOKEN, RESPONSE_BUFFER_SIZE
 
-class PromptCompressor:
+
+class PromptCompressor(
+    ConversationTokenBufferMemoryMixin,
+    ConversationSummaryBufferMemoryMixin,
+    ConversationBufferWindowMemoryMixin,
+):
     # openai offical example
-    @staticmethod
-    def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
+    @classmethod
+    def num_tokens_from_messages(cls, messages, model="gpt-3.5-turbo-0613"):
         """Return the number of tokens used by a list of messages."""
         try:
             encoding = tiktoken.encoding_for_model(model)
@@ -63,8 +74,8 @@ class PromptCompressor:
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
         return num_tokens
 
-    @staticmethod
-    def num_tokens_from_contents(content: str, model="gpt-3.5-turbo-0613"):
+    @classmethod
+    def num_tokens_from_contents(cls, content: str, model="gpt-3.5-turbo-0613"):
         """Return the number of tokens used by a string."""
         try:
             encoding = tiktoken.encoding_for_model(model)
@@ -74,8 +85,8 @@ class PromptCompressor:
 
         return len(encoding.encode(str(content)))
 
-    @staticmethod
-    async def sumrize_content(content, model, chain_type, max_tokens=500):
+    @classmethod
+    def sumrize_content(cls, content, model, chain_type, max_tokens=500):
         """Return a summary of a string."""
 
         content = to_string(content)
@@ -88,7 +99,7 @@ class PromptCompressor:
             )
             documents = token_splitter.split_text(content)
             documents = [Document(page_content=document) for document in documents]
-            documents = await summarize_chain.acombine_docs(documents)
+            documents = summarize_chain.combine_docs(documents)
             sumrize_step += 1
             content = documents[0]
             current_tokens = PromptCompressor.num_tokens_from_contents(content, model)
@@ -98,45 +109,37 @@ class PromptCompressor:
             )
         return content
 
-    @staticmethod
-    async def sumrize_messages(messages: list, model, chain_type, max_tokens=500):
-        """Return a summary of a list of messages."""
-        sumrize_step = 0
-        current_tokens = PromptCompressor.num_tokens_from_messages(messages, model)
-        while (sumrize_step < 2) and (current_tokens > max_tokens):
-            summarize_chain = load_summarize_chain(OpenAI(), chain_type=chain_type)
-            if type(messages[0]) == str:
-                documents = [Document(page_content=message) for message in messages]
-            else:
-                documents = [
-                    Document(page_content=message.content) for message in messages
-                ]
-            splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                chunk_size=500, chunk_overlap=0, separator="\n"
-            )
-            documents = splitter.split_documents(documents)
-            documents = await summarize_chain.acombine_docs(documents)
-            sumrize_step += 1
-            messages = documents[0]
-            current_tokens = PromptCompressor.num_tokens_from_messages(messages, model)
-        if current_tokens > max_tokens:
-            logger.warning(
-                f"messages are too long to summarize. Returning original messages. messages length: {current_tokens} max_tokens: {max_tokens}"
-            )
-        if isinstance(messages, list):
-            if messages == []:
-                return ""
-            if isinstance(messages[0], str):
-                return "\n".join([message for message in messages])
-            else:
-                return "\n".join([message.content for message in messages])
-        return messages
+    @classmethod
+    def sumrize_messages(
+        cls, messages: list, memory: Memory, model: str = "gpt-3.5-turbo-0613"
+    ) -> (list, str):
+        match memory.memory_type:
+            case "no_memory":
+                return [], ""
+            case "conversation_buffer_window_memory":
+                return (
+                    PromptCompressor.get_buffer_window_meesages(messages, memory.k),
+                    "",
+                )
+            case "conversation_token_buffer_memory":
+                return (
+                    PromptCompressor.get_token_buffer_messages(
+                        messages, memory.max_token_limit, model
+                    ),
+                    "",
+                )
+            case "summary_memory":
+                return PromptCompressor.get_summary_buffer_messages(
+                    messages, memory.max_token_limit, model
+                )
 
-    @staticmethod
+    @classmethod
     async def get_compressed_messages(
+        cls,
         prompt_template: PromptTemplate,
         inputs: dict,
         model: str,
+        memory: Memory,
         chain_dialog_key="chat_history",
     ):
         """Return a compressed list of messages."""
@@ -160,24 +163,16 @@ class PromptCompressor:
         prompt_value = prompt_template.format_prompt(**filt_inputs)
         history_messages = inputs.get(chain_dialog_key, [])
 
-        history_messages = history_messages[:-1]
-        messages = (
-            [SystemMessage(content=prompt_value.to_string())]
-            + history_messages
+        # compress history
+        # TODO change variable name
+        compressed_memory, system_suffix = PromptCompressor.sumrize_messages(
+            history_messages, memory, model=model
+        )
+        compressed_messages = (
+            [SystemMessage(content=prompt_value.to_string() + system_suffix)]
+            + compressed_memory
             + [HumanMessage(content=question)]
         )
-
-        current_token = PromptCompressor.num_tokens_from_messages(messages, model)
-        if current_token + RESPONSE_BUFFER_SIZE < max_tokens:
-            return messages
-
-        # compress history
-        compressed_message = await PromptCompressor.sumrize_messages(
-            history_messages, model, chain_type="map_reduce", max_tokens=500
-        )
-        compressed_messages = [
-            SystemMessage(content=prompt_value.to_string() + compressed_message)
-        ] + [HumanMessage(content=question)]
         current_token = PromptCompressor.num_tokens_from_messages(
             compressed_messages, model
         )
@@ -191,49 +186,17 @@ class PromptCompressor:
                 continue
             if type(filt_inputs[key]) == list:
                 continue
-            compressed_inputs[key] = await PromptCompressor.sumrize_content(
+            compressed_inputs[key] = PromptCompressor.sumrize_content(
                 filt_inputs[key], model, chain_type="map_reduce", max_tokens=500
             )
         compressed_prompt_value = prompt_template.format_prompt(**compressed_inputs)
-        compressed_messages = [
-            SystemMessage(
-                content=compressed_prompt_value.to_string() + "\n" + compressed_message
-            )
-        ] + [HumanMessage(content=question)]
-        current_token = PromptCompressor.num_tokens_from_messages(
-            compressed_messages, model
+        compressed_messages = (
+            [
+                SystemMessage(
+                    content=compressed_prompt_value.to_string() + "\n" + system_suffix
+                )
+            ]
+            + compressed_memory
+            + [HumanMessage(content=question)]
         )
-        if current_token + RESPONSE_BUFFER_SIZE < max_tokens:
-            return compressed_messages
-
-        system_message = compressed_messages[0]
-
-        # compress system message
-        compressed_system_message = await PromptCompressor.sumrize_content(
-            content=system_message.content,
-            model=model,
-            chain_type="stuff",
-            max_tokens=max_tokens / 2,
-        )
-
-        compressed_messages = [
-            SystemMessage(content=compressed_system_message),
-            HumanMessage(content=question),
-        ]
-
-        if current_token + RESPONSE_BUFFER_SIZE > max_tokens:
-            logger.warning(
-                f"compressed messages are still too long. Returning original messages."
-            )
         return compressed_messages
-
-        # # compress question
-        # system_message_token = PromptCompressor.num_tokens_from_messages(
-        #     [SystemMessage(content=compressed_system_message)], model
-        # )
-        # question_token = max_tokens - RESPONSE_BUFFER_SIZE - system_message_token
-        # question = question[: -(question_token * 2)]
-        # return [
-        #     SystemMessage(content=compressed_system_message),
-        #     HumanMessage(content=question),
-        # ]

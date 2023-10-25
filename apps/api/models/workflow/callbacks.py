@@ -2,15 +2,15 @@ import asyncio
 from asyncio import Task, sleep
 from typing import Any, Coroutine, Dict, List, Optional, Union, cast
 from uuid import UUID
-from langchain.schema.messages import BaseMessage
-from langchain.schema.output import LLMResult
-from loguru import logger
 
 import tiktoken
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.callbacks.base import AsyncCallbackHandler
 from langchain.schema import LLMResult
-from pydantic import Field, BaseModel
+from langchain.schema.messages import BaseMessage
+from langchain.schema.output import LLMResult
+from loguru import logger
+from pydantic import BaseModel, Field
 
 # https://github.com/langchain-ai/langchain/issues/3114
 
@@ -158,7 +158,6 @@ class IOTraceCallbackHandler(AsyncCallbackHandler):
             f"System: {messages[0][0].content}\nHuman: {messages[0][-1].content}"
         )
         logger.info(f"input log in callback: {self.tem_input}")
-
 
 
 class CostCalcAsyncHandler(AsyncCallbackHandler):
@@ -357,3 +356,36 @@ class LLMAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         return await super().on_chain_error(
             error, run_id=run_id, parent_run_id=parent_run_id, tags=tags, **kwargs
         )
+
+
+class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
+    def __init__(self, queue, done) -> None:
+        self.done = done
+        self.queue = queue
+
+    async def on_llm_new_token(
+        self, token: str, **kwargs: Any
+    ) -> Coroutine[Any, Any, None]:
+        if token is not None and token != "":
+            await self.queue.put(token)
+
+    async def on_chain_end(self, response: Any, **kwargs: Any) -> None:
+        self.done.set()
+
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        pass
+
+    async def on_llm_error(
+        self, error: Exception | KeyboardInterrupt, **kwargs: Any
+    ) -> None:
+        return await super().on_llm_error(error, **kwargs)

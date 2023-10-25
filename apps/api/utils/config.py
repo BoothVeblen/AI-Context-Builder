@@ -20,3 +20,6 @@ AZURE_BASE_URL = "https://context-ai.openai.azure.com"
 AZURE_DEPLOYMENT_NAME = "gpt-35-turbo-0613"
 AZURE_API_VERSION = "2023-03-15-preview"
 AZURE_API_KEY = os.environ.get("AZURE_API_KEY")
+OUTPUT_DEFINITION_TEMPLATE = """The goal is [{target}].
+[{dialog}].
+Please output the target based on this conversation."""

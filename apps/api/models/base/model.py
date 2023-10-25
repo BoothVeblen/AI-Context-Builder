@@ -5,7 +5,7 @@ from typing import Optional
 from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy import JSON, Boolean, Column, String
-from utils import OPENAI_API_KEY
+from utils import OPENAI_API_KEY, OUTPUT_DEFINITION_TEMPLATE
 
 from .base import Base
 
@@ -26,6 +26,13 @@ class Prompt(BaseModel):
     check_prompt: Optional[str] = Field(default=None)
     follow_up_questions_num: Optional[int] = Field(default=0)
     basic_prompt: Optional[str] = Field(default=None)
+    output_definition: Optional[str] = Field(default=OUTPUT_DEFINITION_TEMPLATE)
+
+
+class Memory(BaseModel):
+    memory_type: str = Field(default="conversation_buffer_window_memory")
+    k: int = Field(default=5)
+    max_token_limit: int = Field(default=2000)
 
 
 class Chain(BaseModel):
@@ -33,6 +40,7 @@ class Chain(BaseModel):
     prompt: Prompt
     datasets: Optional[list[str]] = []
     chain_type: str
+    memory: Optional[Memory] = Field(default_factory=lambda: Memory())
     key: Optional[str] = None
 
 
