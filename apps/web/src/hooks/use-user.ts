@@ -7,16 +7,8 @@ export default function useUser() {
     revalidateOnFocus: true,
   })
 
-  const { emailAddresses, firstName, lastName, imageUrl } = data ?? {}
-  const name = [firstName || '', lastName || ''].join(' ').trim()
-  const email = emailAddresses?.[0].emailAddress
-
   return {
     isLoading,
-    data: {
-      email,
-      name,
-      imageUrl,
-    },
+    data,
   }
 }

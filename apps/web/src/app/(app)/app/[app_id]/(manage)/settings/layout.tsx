@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { auth } from '@/lib/auth'
+import { auth, currentUser } from '@/lib/auth'
 import { getApp } from '@/db/apps/actions'
 
 import Sidebar from './sidebar'
@@ -15,10 +15,12 @@ interface IProps {
 export default async function SettingsLayout({ children, params }: IProps) {
   const { app_id } = params
   const { userId } = auth()
+  const { isAdmin } = await currentUser()
 
   const appDetail = await getApp(app_id)
+  const isOwner = appDetail.created_by === userId
 
-  if (appDetail.created_by !== userId) {
+  if (!isOwner && !isAdmin) {
     redirect('/')
   }
 

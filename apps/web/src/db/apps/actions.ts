@@ -5,7 +5,7 @@ import axios from 'axios'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { difference, isEmpty, pick } from 'lodash'
 
-import { auth, currentUserEmail } from '@/lib/auth'
+import { auth, currentUser } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
 import { logsnag } from '@/lib/logsnag'
@@ -38,7 +38,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       throw new Error('Not authenticated')
     }
 
-    const email = await currentUserEmail()
+    const { email } = await currentUser()
 
     await logsnag?.track({
       user_id: userId,
@@ -191,7 +191,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
-      const email = await currentUserEmail()
+      const { email } = await currentUser()
       await logsnag?.track({
         user_id: userId,
         channel: 'creator',
@@ -261,7 +261,7 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
       }
     }
 
-    const email = await currentUserEmail()
+    const { email, isAdmin } = await currentUser()
 
     if (flags.enabledAIService) {
       const { api_model_id } = await getApp(appId)
@@ -290,7 +290,9 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
       .update(AppsTable)
       .set(newValue)
       .where(
-        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+        isAdmin
+          ? eq(AppsTable.short_id, appId)
+          : and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
       .returning()
 
@@ -311,7 +313,7 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
-      const email = await currentUserEmail()
+      const { email } = await currentUser()
       await logsnag?.track({
         user_id: userId,
         channel: 'creator',
@@ -344,7 +346,7 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       throw new Error('Not authenticated')
     }
 
-    const email = await currentUserEmail()
+    const { email, isAdmin } = await currentUser()
 
     if (flags.enabledAIService) {
       const { api_model_id } = await getApp(appId)
@@ -448,7 +450,9 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       .update(AppsTable)
       .set(newValue)
       .where(
-        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+        isAdmin
+          ? eq(AppsTable.short_id, appId)
+          : and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
       .returning()
 
@@ -470,7 +474,7 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
-      const email = await currentUserEmail()
+      const { email } = await currentUser()
       await logsnag?.track({
         user_id: userId,
         channel: 'creator',
@@ -503,13 +507,15 @@ export async function removeApp(appId: string) {
       throw new Error('Not authenticated')
     }
 
-    const email = await currentUserEmail()
+    const { email, isAdmin } = await currentUser()
 
     const [updatedApp] = await db
       .update(AppsTable)
       .set({ archived: true, updated_at: new Date() })
       .where(
-        and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
+        isAdmin
+          ? eq(AppsTable.short_id, appId)
+          : and(eq(AppsTable.short_id, appId), eq(AppsTable.created_by, userId))
       )
       .returning()
 
@@ -530,7 +536,7 @@ export async function removeApp(appId: string) {
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
-      const email = await currentUserEmail()
+      const { email } = await currentUser()
       await logsnag?.track({
         user_id: userId,
         channel: 'creator',
@@ -577,7 +583,7 @@ export async function addDebugSession(api_model_id: string) {
     const { userId } = auth()
     if (!userId || !flags.enabledAIService) return null
 
-    const email = await currentUserEmail()
+    const { email } = await currentUser()
 
     let { data: res } = await axios.post(
       `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
@@ -605,7 +611,7 @@ export async function addDebugSession(api_model_id: string) {
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
-      const email = await currentUserEmail()
+      const { email } = await currentUser()
       await logsnag?.track({
         user_id: userId,
         channel: 'creator',

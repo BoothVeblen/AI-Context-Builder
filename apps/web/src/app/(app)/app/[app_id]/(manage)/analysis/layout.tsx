@@ -1,22 +1,26 @@
 import { redirect } from 'next/navigation'
 
-import { auth } from '@/lib/auth'
+import { auth, currentUser } from '@/lib/auth'
 import { getApp } from '@/db/apps/actions'
 
 import Sidebar from './sidebar'
+
+export const runtime = 'edge'
 
 interface IProps {
   children: React.ReactNode
   params: { app_id: string }
 }
-
+// TODO: merge with apps/web/src/app/(app)/app/[app_id]/(manage)/settings/layout.tsx
 export default async function MonitoringLayout({ children, params }: IProps) {
   const { app_id } = params
   const { userId } = auth()
+  const { isAdmin } = await currentUser()
 
   const appDetail = await getApp(app_id)
+  const isOwner = appDetail.created_by === userId
 
-  if (appDetail.created_by !== userId) {
+  if (!isOwner && !isAdmin) {
     redirect('/')
   }
 

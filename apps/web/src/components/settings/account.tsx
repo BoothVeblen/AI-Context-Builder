@@ -6,12 +6,12 @@ import UserProfileCard from '@/components/user-profile-card'
 
 function Profile() {
   const { data, isLoading } = useUser()
-  const { email, name, imageUrl } = data
 
   if (isLoading) {
     return <UserProfileCard.Loading />
   }
 
+  const { email, name, imageUrl } = data
   return <UserProfileCard name={name} email={email} imageUrl={imageUrl} />
 }
 

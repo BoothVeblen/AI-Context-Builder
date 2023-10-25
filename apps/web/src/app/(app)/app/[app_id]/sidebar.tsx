@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 
-import { getSessions } from '@/db/sessions/actions'
 import { Skeleton } from '@/components/ui/skeleton'
 import AuthButton from '@/components/auth-button'
 import SessionList from '@/components/session-list'

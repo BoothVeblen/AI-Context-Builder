@@ -7,10 +7,7 @@ import UserProfileCard from './user-profile-card'
 export default async function AuthButton() {
   if (!flags.enabledAuth) return null
 
-  const { emailAddresses, firstName, lastName, imageUrl } =
-    (await currentUser()) ?? {}
-  const name = [firstName || '', lastName || ''].join(' ').trim()
-  const email = emailAddresses?.[0].emailAddress
+  const { name, email, imageUrl, isAdmin } = await currentUser()
 
   return (
     <AuthDropdownMenu>
@@ -18,7 +15,12 @@ export default async function AuthButton() {
         type="button"
         className="flex h-16 items-center border-t border-slate-200 px-4 text-left hover:bg-slate-100 focus:outline-none"
       >
-        <UserProfileCard name={name} email={email} imageUrl={imageUrl} />
+        <UserProfileCard
+          name={name}
+          email={email}
+          imageUrl={imageUrl}
+          isAdmin={isAdmin}
+        />
       </button>
     </AuthDropdownMenu>
   )

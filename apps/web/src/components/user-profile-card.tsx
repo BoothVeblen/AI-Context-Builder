@@ -1,12 +1,19 @@
+import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface IProps {
   name: string
   email?: string
   imageUrl?: string
+  isAdmin?: boolean
 }
 
-export default function UserProfileCard({ name, email, imageUrl }: IProps) {
+export default function UserProfileCard({
+  name,
+  email,
+  imageUrl,
+  isAdmin,
+}: IProps) {
   return (
     <div className="flex items-center space-x-2 truncate">
       {imageUrl && (
@@ -19,7 +26,14 @@ export default function UserProfileCard({ name, email, imageUrl }: IProps) {
         </div>
       )}
       <div className="truncate">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <div className="flex items-center">
+          <p className="truncate text-sm font-medium">{name}</p>
+          {isAdmin && (
+            <Badge variant="secondary" className="ml-2">
+              👨🏻‍💻
+            </Badge>
+          )}
+        </div>
         {email && (
           <p className="truncate text-xs font-medium text-slate-500">{email}</p>
         )}
