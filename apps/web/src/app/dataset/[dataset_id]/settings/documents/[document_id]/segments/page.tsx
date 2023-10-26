@@ -3,6 +3,8 @@ import { NewDocument } from '@/db/documents/schema'
 
 import SegmentPage from './view-page'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: { dataset_id: string; document_id: string }
 }

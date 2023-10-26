@@ -5,6 +5,8 @@ import { getDataset } from '@/db/datasets/actions'
 
 import BasicsForm from './basic-form'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: { dataset_id: string }
 }

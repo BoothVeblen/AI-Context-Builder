@@ -2,8 +2,7 @@ import ResponsiveLayout from '@/components/layouts/responsive-layout'
 
 import Sidebar from './sidebar'
 
-// TODO: remove axios
-// export const runtime = 'edge'
+export const runtime = 'edge'
 
 interface IProps {
   children: React.ReactNode

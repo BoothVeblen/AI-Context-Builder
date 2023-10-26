@@ -2,6 +2,8 @@ import { getNotedData } from '@/db/documents/action'
 
 import SettingPage from '../[document_id]/setting-page'
 
+export const runtime = 'edge'
+
 const defaultValues = {
   loaderType: 'pdf',
   splitType: 'character',

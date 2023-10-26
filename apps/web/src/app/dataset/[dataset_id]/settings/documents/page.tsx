@@ -4,6 +4,8 @@ import { getDatasetDocument, getDocumentByTable } from '@/db/documents/action'
 import ViewPage from '../viewer/view-page'
 import DataPage from './data-page'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: { dataset_id: string }
 }

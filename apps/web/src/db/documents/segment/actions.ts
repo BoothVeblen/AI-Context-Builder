@@ -1,3 +1,5 @@
+import { api } from '@/lib/api'
+
 import { getDataset } from '../../datasets/actions'
 
 export async function getApiDatasetId(dataset_id: string) {
@@ -19,15 +21,9 @@ export async function getSegments(
   if (search) {
     params = `query=${search}`
   }
-  const data = await fetch(
-    `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}/document/${uid}?${params}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'GET',
-    }
-  ).then((res) => res.json())
+  const data = api.get<{ segments: any[]; totalItems: number }>(
+    `/v1/datasets/${api_dataset_id}/document/${uid}?${params}`
+  )
   return data
 }
 
@@ -37,18 +33,11 @@ export async function addSegment(
   content: string
 ) {
   const api_dataset_id = await getApiDatasetId(dataset_id)
-  const res = await fetch(
-    `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}/document/${uid}/segment`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify({ content }),
-    }
-  ).then((res) => res.json())
-
-  return res
+  const data = await api.post(
+    `/v1/datasets/${api_dataset_id}/document/${uid}/segment`,
+    { content }
+  )
+  return data
 }
 
 export async function editSegment(
@@ -59,16 +48,9 @@ export async function editSegment(
 ) {
   const api_dataset_id = await getApiDatasetId(dataset_id)
   const url = encodeURIComponent(segment_id)
-  const data = await fetch(
-    `${process.env.AI_SERVICE_API_BASE_URL}/v1/datasets/${api_dataset_id}/document/${uid}/segment/${url}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'PATCH',
-      body: JSON.stringify({ content }),
-    }
-  ).then((res) => res.json())
-
+  const data = await api.patch(
+    `/v1/datasets/${api_dataset_id}/document/${uid}/segment/${url}`,
+    { content }
+  )
   return data
 }

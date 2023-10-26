@@ -4,6 +4,8 @@ import { DataSchemeProps, FileSplitConfigProps } from '@/app/dataset/type'
 
 import SettingPage from './setting-page'
 
+export const runtime = 'edge'
+
 interface IProps {
   params: { dataset_id: string; document_id: string }
 }

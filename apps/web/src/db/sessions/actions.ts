@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
-import axios from 'axios'
 import {
   and,
   desc,
@@ -16,6 +15,7 @@ import {
   sql,
 } from 'drizzle-orm'
 
+import { api } from '@/lib/api'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
@@ -45,15 +45,12 @@ export async function addSession(appId: string) {
   }
 
   let api_session_id = null
-  if (flags.enabledAIService) {
-    let { data: res } = await axios.post(
-      `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+  if (flags.enabledAIService && foundApp?.api_model_id) {
+    const data = await api.post<{ model_id: string }, { session_id: string }>(
+      '/v1/chat/session',
       { model_id: foundApp?.api_model_id }
     )
-    if (res.status !== 200) {
-      throw new Error(`AI service error: ${res.message}`)
-    }
-    api_session_id = res?.data?.session_id
+    api_session_id = data?.session_id
   }
 
   const [allSessions] = await db
@@ -184,15 +181,12 @@ export async function getLatestSessionId(appId: string) {
       }
 
       let api_session_id = null
-      if (flags.enabledAIService) {
-        let { data: res } = await axios.post(
-          `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
-          { model_id: foundApp?.api_model_id }
-        )
-        if (res.status !== 200) {
-          throw new Error(`AI service error: ${res.message}`)
-        }
-        api_session_id = res?.data?.session_id
+      if (flags.enabledAIService && foundApp?.api_model_id) {
+        const data = await api.post<
+          { model_id: string },
+          { session_id: string }
+        >('/v1/chat/session', { model_id: foundApp?.api_model_id })
+        api_session_id = data?.session_id
       }
       const sessionVal = {
         short_id: nanoid(),

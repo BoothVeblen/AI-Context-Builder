@@ -1,10 +1,10 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
-import axios from 'axios'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { difference, isEmpty, pick } from 'lodash'
 
+import { api } from '@/lib/api'
 import { auth, currentUser } from '@/lib/auth'
 import { db } from '@/lib/drizzle-edge'
 import { flags } from '@/lib/flags'
@@ -53,7 +53,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       },
     })
 
-    let api_model_id = null
+    let api_model_id = ''
     if (flags.enabledAIService) {
       await logsnag?.track({
         user_id: userId,
@@ -68,16 +68,11 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       })
 
       const chains = DEFAULT_WORKFLOW_DATA.map(taskToApiFormatter)
-      const { data: res } = await axios.post(
-        `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
-        {
-          chains,
-        }
+      const data = await api.post<{ chains: any[] }, { id: string }>(
+        '/v1/models',
+        { chains }
       )
-      if (res.status !== 200) {
-        throw new Error(`API service error: ${res.message}`)
-      }
-      api_model_id = res?.data?.id
+      api_model_id = data?.id
     }
 
     const appVal = {
@@ -122,7 +117,7 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
       },
     })
 
-    let api_session_id = null
+    let api_session_id = ''
     if (flags.enabledAIService) {
       await logsnag?.track({
         user_id: userId,
@@ -138,14 +133,11 @@ export async function addApp(app: Omit<NewApp, 'short_id' | 'created_by'>) {
         },
       })
 
-      let { data: res } = await axios.post(
-        `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+      const data = await api.post<{ model_id: string }, { session_id: string }>(
+        '/v1/chat/session',
         { model_id: api_model_id }
       )
-      if (res.status !== 200) {
-        throw new Error(`API service error: ${res.message}`)
-      }
-      api_session_id = res?.data?.session_id
+      api_session_id = data?.session_id
     }
 
     const sessionVal = {
@@ -275,13 +267,7 @@ export async function editApp(appId: string, newValue: Partial<NewApp>) {
           'enable_video_interaction',
         ])
         if (!isEmpty(payload)) {
-          let { data: res } = await axios.patch(
-            `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`,
-            payload
-          )
-          if (res.status !== 200) {
-            throw new Error(`API service error: ${res.message}`)
-          }
+          await api.patch(`/v1/models/${api_model_id}`, payload)
         }
       }
     }
@@ -364,13 +350,7 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       ) as WorkflowItem[]
       const workflow = formatTreeWithData(tree, data)
       const chains = workflow.map(taskToApiFormatter)
-      let { data: res } = await axios.patch(
-        `${process.env.AI_SERVICE_API_BASE_URL}/v1/models/${api_model_id}`,
-        { chains }
-      )
-      if (res.status !== 200) {
-        throw new Error(`API service error: ${res.message}`)
-      }
+      await api.patch(`/v1/models/${api_model_id}`, { chains })
     }
 
     // BEGIN link datasets to this app
@@ -585,14 +565,10 @@ export async function addDebugSession(api_model_id: string) {
 
     const { email } = await currentUser()
 
-    let { data: res } = await axios.post(
-      `${process.env.AI_SERVICE_API_BASE_URL}/v1/chat/session`,
+    const data = await api.post<{ model_id: string }, { session_id: string }>(
+      '/v1/chat/session',
       { model_id: api_model_id }
     )
-
-    if (res.status !== 200) {
-      throw new Error(`API service error: ${res.message}`)
-    }
 
     await logsnag?.track({
       user_id: userId,
@@ -607,7 +583,7 @@ export async function addDebugSession(api_model_id: string) {
       },
     })
 
-    return res?.data?.session_id
+    return data?.session_id
   } catch (error: any) {
     const { userId } = auth()
     if (userId) {
@@ -645,17 +621,10 @@ export async function getDebugSessionId({
   const workflow = formatTreeWithData(tree, data)
   const chains = workflow.map(taskToApiFormatter)
 
-  const { data: res } = await axios.post(
-    `${process.env.AI_SERVICE_API_BASE_URL}/v1/models`,
-    {
-      chains,
-    }
+  const response = await api.post<{ chains: any[] }, { id: string }>(
+    '/v1/models',
+    { chains }
   )
-
-  if (res.status !== 200) {
-    throw new Error(`AI service error: ${res.message}`)
-  }
-
-  const api_model_id = res?.data?.id
+  const api_model_id = response?.id
   return await addDebugSession(api_model_id)
 }

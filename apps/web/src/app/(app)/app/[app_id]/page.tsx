@@ -1,10 +1,8 @@
 import { redirect } from 'next/navigation'
 
-import { getApp } from '@/db/apps/actions'
-import { getLatestSessionId, getSessions } from '@/db/sessions/actions'
+import { getLatestSessionId } from '@/db/sessions/actions'
 
-// TODO: remove axios
-// export const runtime = 'edge'
+export const runtime = 'edge'
 
 interface IProps {
   params: { app_id: string }
