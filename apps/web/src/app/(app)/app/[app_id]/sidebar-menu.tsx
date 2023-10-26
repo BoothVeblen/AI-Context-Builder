@@ -4,19 +4,14 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { GitCommitIcon, ShareIcon } from 'lucide-react'
 
-import { flags } from '@/lib/flags'
 import { cn } from '@/lib/utils'
 
 const MENU_ITEMS = [
-  ...(flags.enabledWorkflow
-    ? [
-        {
-          id: 'workflow',
-          name: 'Workflow',
-          Icon: GitCommitIcon,
-        },
-      ]
-    : []),
+  {
+    id: 'workflow',
+    name: 'Workflow',
+    Icon: GitCommitIcon,
+  },
   {
     id: 'share',
     name: 'Share',

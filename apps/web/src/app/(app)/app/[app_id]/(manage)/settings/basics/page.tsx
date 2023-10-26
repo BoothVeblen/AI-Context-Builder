@@ -24,10 +24,8 @@ export default async function Page({ params }: IProps) {
   }
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="mx-10 mb-10 mt-18 w-[530px] px-4">
-        <BasicsSettingForm appId={app_id} defaultValues={defaultValues} />
-      </div>
+    <div className="mx-10 mb-10 mt-18 w-[530px] px-4">
+      <BasicsSettingForm appId={app_id} defaultValues={defaultValues} />
     </div>
   )
 }

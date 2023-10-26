@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 
-import { auth, currentUser } from '@/lib/auth'
 import { getApp } from '@/db/apps/actions'
+import { checkIsAdminNotOwner, checkIsAdminOrOwner } from '@/utils/permission'
+import ManageLayout from '@/components/layouts/manage-layout'
+import WarningLabel from '@/components/warning-label'
 
 import Sidebar from './sidebar'
 
@@ -11,25 +13,30 @@ interface IProps {
   children: React.ReactNode
   params: { app_id: string }
 }
-// TODO: merge with apps/web/src/app/(app)/app/[app_id]/(manage)/settings/layout.tsx
-export default async function MonitoringLayout({ children, params }: IProps) {
+
+export default async function Layout({ children, params }: IProps) {
   const { app_id } = params
-  const { userId } = auth()
-  const { isAdmin } = await currentUser()
-
   const appDetail = await getApp(app_id)
-  const isOwner = appDetail.created_by === userId
 
-  if (!isOwner && !isAdmin) {
+  const isAdminOrOwner = await checkIsAdminOrOwner(appDetail.created_by)
+  if (!isAdminOrOwner) {
     redirect('/')
   }
 
+  const isAdminNotOwner = await checkIsAdminNotOwner(appDetail.created_by)
+
   return (
-    <div className="fixed inset-0 z-50 flex h-full w-full bg-white">
-      <div className="w-[276px] shrink-0 border-r border-slate-200 bg-slate-50">
-        <Sidebar appId={app_id} appName={appDetail.name} />
-      </div>
-      <div className="flex-1 overflow-auto">{children}</div>
-    </div>
+    <>
+      <ManageLayout
+        sidebar={<Sidebar appId={app_id} appName={appDetail.name} />}
+      >
+        {children}
+      </ManageLayout>
+      {isAdminNotOwner && (
+        <div className="fixed bottom-2 left-2 z-50">
+          <WarningLabel>You are not the owner of this app.</WarningLabel>
+        </div>
+      )}
+    </>
   )
 }

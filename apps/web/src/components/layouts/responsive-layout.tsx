@@ -11,7 +11,7 @@ type Props = {
 }
 
 const ResponsiveLayout = (props: PropsWithChildren<Props>) => {
-  const { sidebar, children, pageTitle, mainClassnames } = props
+  const { sidebar, children, pageTitle } = props
   return (
     <div className="flex h-full flex-col lg:flex-row">
       {/* Static sidebar for desktop */}
