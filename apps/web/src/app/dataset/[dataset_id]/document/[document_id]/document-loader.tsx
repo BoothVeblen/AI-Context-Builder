@@ -1,13 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
-
 import {
   FormControl,
   FormField,
   FormItem,
   FormMessage,
 } from '@/components/ui/form'
+import { FileType, UPLOAD_ACCEPT_MAP } from '@/components/upload/type'
 import Upload from '@/components/upload/upload'
 import { FileProps } from '@/components/upload/utils'
 
@@ -18,6 +17,7 @@ import AddAnnotatedData from './noted-data-alert'
 
 const types = [
   { label: 'PDF loader', value: 'pdf' },
+  { label: 'Microsoft Word Loader', value: 'word' },
   { label: 'Annotated data', value: 'annotated_data' },
   { label: 'More Coming Soon...', value: 'coming soon' },
 ]
@@ -33,14 +33,10 @@ const DocumentLoader = ({ form }: IProps) => {
   const onChangeFileList = (values: FileProps[]) => {
     setValue('files', [...values])
   }
-
   const formValues = getValues()
   const loaderType = formValues?.loaderType
+  const isNotedData = loaderType === 'annotated_data'
 
-  const showButton = useMemo(() => {
-    const files = formValues.files?.filter((item: any) => item?.type === 'pdf')
-    return (files?.length === 0 && !isAdd) || isAdd
-  }, [formValues.files, isAdd])
   return (
     <section id="loaders" className="w-full py-6">
       <div className="mb-6 text-sm font-normal leading-6 text-slate-600">
@@ -68,17 +64,18 @@ const DocumentLoader = ({ form }: IProps) => {
           return (
             <FormItem className="w-[332px]">
               <FormControl>
-                {loaderType === 'pdf' ? (
+                {!isNotedData ? (
                   <Upload
                     className="items-start justify-start"
                     listProps={{
                       showDownloadIcon: false,
                       showPreviewIcon: false,
                     }}
-                    listType={showButton ? 'pdf' : 'update-pdf'}
+                    listType={isAdd ? 'files' : 'update-file'}
                     type="drag"
                     fileType={loaderType}
-                    accept="application/pdf"
+                    accept={UPLOAD_ACCEPT_MAP[loaderType as FileType]}
+                    multiple={isAdd}
                     fileList={files}
                     onChangeFileList={onChangeFileList}
                   />

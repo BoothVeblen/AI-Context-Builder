@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useToast } from '@/components/ui/use-toast'
+import { UPLOAD_ACCEPT_MAP } from '@/components/upload/type'
 import Upload from '@/components/upload/upload'
 import { FileProps } from '@/components/upload/utils'
 
@@ -167,7 +168,7 @@ export default function BasicsSettingForm({ appId, defaultValues }: IProps) {
             <label className="text-sm font-medium">Image</label>
             <Upload
               listType="update-image"
-              accept=".png,.jpeg,.webp,.jpg"
+              accept={UPLOAD_ACCEPT_MAP['image']}
               fileList={image}
               bgColor={color}
               listProps={false}

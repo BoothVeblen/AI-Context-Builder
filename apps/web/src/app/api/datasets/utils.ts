@@ -49,7 +49,9 @@ export async function createDocumentParams(dataConfig: any) {
   }
   const currentDocuments = isNotedData
     ? dataConfig?.notedData
-    : dataConfig?.files
+    : dataConfig?.files?.filter(
+        (item: FileProps) => item?.type === dataConfig?.loaderType
+      )
 
   const files = currentDocuments?.reduce(
     (m: DocumentParamsType[], item: FileProps) => {

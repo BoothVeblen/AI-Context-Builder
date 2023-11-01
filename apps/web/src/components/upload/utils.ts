@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { pick } from 'lodash'
 
 import { nanoid } from '@/lib/utils'
 
@@ -12,52 +13,18 @@ import type {
 } from './type'
 import { listPropsInterface } from './type'
 
-export function file2Obj(file: RcFile): InternalUploadFile {
+export function file2Obj(file: RcFile, fileType?: string): InternalUploadFile {
   return {
     ...file,
     lastModified: file.lastModified,
     name: file.name,
     size: file.size,
-    type: file.type,
-    uid: file.uid,
+    type: fileType || file.type,
+    uid: nanoid(),
     percent: 0,
+    url: '',
     originFileObj: file,
   }
-}
-
-/** Upload fileList. Replace file if exist or just push into it. */
-export function updateFileList(
-  file: UploadFile,
-  fileList: (UploadFile | Readonly<UploadFile>)[]
-) {
-  const nextFileList = [...fileList]
-  const fileIndex = nextFileList.findIndex(({ uid }) => uid === file.uid)
-  if (fileIndex === -1) {
-    nextFileList.push(file)
-  } else {
-    nextFileList[fileIndex] = file
-  }
-  return nextFileList
-}
-
-export function getFileItem(
-  file: RcFile,
-  fileList: (UploadFile | Readonly<UploadFile>)[]
-) {
-  const matchKey = file.uid !== undefined ? 'uid' : 'name'
-  return fileList.filter((item) => item[matchKey] === file[matchKey])[0]
-}
-
-export function removeFileItem(
-  file: UploadFile,
-  fileList: (UploadFile | Readonly<UploadFile>)[]
-) {
-  const matchKey = file.uid !== undefined ? 'uid' : 'name'
-  const removed = fileList.filter((item) => item[matchKey] !== file[matchKey])
-  if (removed.length === fileList.length) {
-    return null
-  }
-  return removed
 }
 
 export const checkShowIcon = (listProps: boolean | listPropsInterface) => {
@@ -68,13 +35,6 @@ export const checkShowIcon = (listProps: boolean | listPropsInterface) => {
   }
 }
 
-export const checkType = (file: UploadFile) => {
-  if (file?.type !== 'application/pdf' || file?.url?.includes('.pdf')) {
-    return 'isPDF'
-  }
-  return 'isImage'
-}
-
 export const getBase64 = (img: RcFile, callback: (url: string) => void) => {
   const reader = new FileReader()
   reader.addEventListener('load', () => callback(reader.result as string))
@@ -82,12 +42,10 @@ export const getBase64 = (img: RcFile, callback: (url: string) => void) => {
 }
 
 export const handleSuccess = ({
-  fileType,
   setMergedFileList,
   onChangeFileList,
 }: {
   setMergedFileList?: (s: any) => void
-  fileType?: string
   onChangeFileList?: (files: FileProps[]) => void
 }) => {
   setMergedFileList?.((files: UploadFile[]) => {
@@ -95,12 +53,8 @@ export const handleSuccess = ({
       (item) => item?.status === 'success' && item?.url
     )
     const data = success?.reduce((m: FileProps[], item: UploadFile) => {
-      m.push({
-        url: item?.url || '',
-        uid: nanoid(),
-        type: fileType || item?.type,
-        name: item?.name,
-      })
+      const cur = pick(item, ['url', 'uid', 'type', 'name'])
+      m.push(cur)
       return m
     }, [])
     onChangeFileList?.(data)
@@ -127,15 +81,11 @@ const handelProcess = (file: UploadFile, setProcess?: any) => {
 
 export const uploadFile = async ({
   file,
-  fileList,
   setMergedFileList,
   aborts,
   setProcess,
   onChangeFileList,
-  setIsUploading,
-  fileType,
 }: UploadFileProps) => {
-  setIsUploading(true)
   if (!file) return
   file.status = 'uploading'
   const filename = encodeURIComponent(file?.name || '')
@@ -143,7 +93,6 @@ export const uploadFile = async ({
   const { success, data } = await res.json()
   if (!success) {
     file.status = 'error'
-    setIsUploading(false)
   }
   const { upload_url, upload_fields, file_url } = data as {
     provider: string
@@ -174,15 +123,12 @@ export const uploadFile = async ({
     .then(async () => {
       file.status = 'success'
       file.url = file_url
-      setIsUploading(false)
       handleSuccess({
         setMergedFileList,
         onChangeFileList,
-        fileType,
       })
     })
     .catch(async (error) => {
-      setIsUploading(false)
       file.status = 'error'
       console.error(error)
     })
@@ -216,10 +162,8 @@ export const changeToUploadFile = (
     const data = value?.reduce((m: UploadFile[], item: FileProps | string) => {
       const isImage = typeof item === 'string'
       const status: UploadFileStatus = 'success'
-      const cur = isImage
-        ? stringUrlToFile(item)[0]
-        : { ...item, status, uid: nanoid() }
-      m.push(cur)
+      const cur = isImage ? stringUrlToFile(item)[0] : { ...item, status }
+      m.push(cur as UploadFile)
       return m
     }, [])
     return data

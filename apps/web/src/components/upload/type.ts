@@ -1,4 +1,4 @@
-import { ReactNode, RefObject } from 'react'
+import { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 import { CancelTokenSource } from 'axios'
 import type {
   RcFile as OriRcFile,
@@ -24,23 +24,6 @@ export type UploadFileStatus =
   | 'uploading'
   | 'removed'
 
-export interface CustomFile extends File {
-  progress?: number
-  path?: string
-  preview?: string
-  lastModifiedDate?: Date
-  indexStatus?: number
-}
-
-export interface UploadedFile {
-  name: string
-  url: string
-  process?: number
-}
-
-export function isUploadedFile(obj: any): obj is UploadedFile {
-  return obj !== null && 'name' in obj && 'url' in obj
-}
 export interface RcFile extends OriRcFile {
   readonly lastModifiedDate: Date
 }
@@ -50,13 +33,13 @@ export interface UploadFile<T = any> {
   size?: number
   name: string
   lastModified?: number
-  url?: string
+  url: string
   status?: UploadFileStatus
   percent?: number
   originFileObj?: File
   response?: T
   error?: any
-  type?: string
+  type: string
   preview?: string
 }
 
@@ -69,28 +52,28 @@ export interface UploadChangeParam<T = UploadFile> {
   event?: { percent: number }
 }
 
+export type ListTypeProps =
+  | 'images-list'
+  | 'files'
+  | 'image'
+  | 'update-image'
+  | 'update-file'
+
+export type FileType = 'pdf' | 'word' | 'image'
 export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
   name?: string
-  controller?: AbortController
   onChangeFileList?: (files: FileProps[]) => void
   setUploading?: (s: boolean) => void
   bgColor?: string
   bgText?: string
-  fileType?: string
-  defaultFileList?: Array<UploadFile<T>>
-  showFileList?: boolean
+  fileType?: FileType
   fileList?: FileProps[]
   type?: 'drag' | 'select'
-  listType?: 'images-list' | 'pdf' | 'image' | 'update-image' | 'update-pdf'
+  listType?: ListTypeProps
   action?:
     | string
     | ((file: RcFile) => string)
     | ((file: RcFile) => PromiseLike<string>)
-  data?:
-    | Record<string, unknown>
-    | ((
-        file: UploadFile<T>
-      ) => Record<string, unknown> | Promise<Record<string, unknown>>)
   method?: 'POST' | 'PUT' | 'PATCH' | 'post' | 'put' | 'patch'
   headers?: HttpRequestHeader
   listProps?: boolean | listPropsInterface
@@ -101,15 +84,11 @@ export interface UploadProps<T = any> extends Pick<RcUploadProps, 'capture'> {
     FileList: RcFile[]
   ) => BeforeUploadValueType | Promise<BeforeUploadValueType>
   onChange?: (info: UploadChangeParam<UploadFile<T>>) => void
-  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void
   className?: string
-  fileNameStyle?: string
   onPreview?: (file: UploadFile<T>) => void
   onDownload?: (file: UploadFile<T>) => void
-  onRemove?: (file: UploadFile<T>) => void | boolean | Promise<void | boolean>
   customRequest?: (options: RcCustomRequestOptions) => void
   withCredentials?: boolean
-  openFileDialogOnClick?: boolean
   locale?: UploadLocale
   progress?: ReactNode
   maxCount?: number
@@ -134,19 +113,15 @@ export interface UploadLocale {
   previewFile?: string | ReactNode
 }
 
-export interface UploadState<T = any> {
-  fileList: UploadFile<T>[]
-  dragState: string
-}
 export interface FileItemProps<T = any> {
   onPreview?: (file: UploadFile<T>) => void
   onDownload?: (file: UploadFile<T>) => void
   onRemove?: (file: UploadFile<T>) => void | boolean | Promise<boolean | void>
   file: UploadFile
+  listType?: ListTypeProps
   progress?: ReactNode | number
   className?: string
   listProps?: boolean | listPropsInterface
-  fileNameStyle?: string
   locale?: UploadLocale
 }
 
@@ -158,13 +133,18 @@ export interface FilePercent {
 export interface UploadFileProps {
   file: UploadFile
   fileList: UploadFile<any>[]
-  setMergedFileList?: (s: UploadFile<any>[]) => void
+  setMergedFileList?: Dispatch<SetStateAction<UploadFile<any>[]>>
   fileType?: string
   aborts: RefObject<AbortRef>
   source?: CancelTokenSource
   onChangeFileList?: (files: FileProps[]) => void
-  setIsUploading: (s: boolean) => void
   setProcess?: (s: FilePercent[]) => void
 }
 
 export type AbortRef = { uid: string; control: AbortController }[]
+
+export const UPLOAD_ACCEPT_MAP = {
+  pdf: 'application/pdf',
+  word: '.doc, .docx',
+  image: '.png, .jpeg,.webp,.jpg',
+}

@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
   const { dataset_id, dataConfig } = await req.json()
   const isNotedData = dataConfig?.loaderType === 'annotated_data'
 
-  const currents = isNotedData ? dataConfig?.notedData : dataConfig?.files
+  const currents = isNotedData
+    ? dataConfig?.notedData
+    : dataConfig?.files?.filter(
+        (item: FileProps) => item?.type === dataConfig?.loaderType
+      )
   const { files, config } = await createDocumentParams(dataConfig)
   const documents = await formateDocumentParams(dataset_id, '')
 

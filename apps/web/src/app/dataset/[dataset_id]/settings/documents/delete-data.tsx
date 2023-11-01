@@ -27,9 +27,16 @@ interface IProps {
   uid: string
   open: boolean
   setOpen: (s: boolean) => void
+  confirmDelete: () => void
 }
 
-const DeleteData = ({ datasetId, uid, open, setOpen }: IProps) => {
+const DeleteData = ({
+  datasetId,
+  uid,
+  open,
+  setOpen,
+  confirmDelete,
+}: IProps) => {
   const { trigger, isMutating } = useSWRMutation(
     `/api/datasets/document`,
     deleteData
@@ -39,6 +46,7 @@ const DeleteData = ({ datasetId, uid, open, setOpen }: IProps) => {
   const handelDelete = () => {
     trigger({ dataset_id: datasetId, uid }).then((res) => {
       setOpen(false)
+      confirmDelete()
       router.refresh()
     })
   }

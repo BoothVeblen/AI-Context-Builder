@@ -269,6 +269,9 @@ importers:
       pusher-js:
         specifier: ^8.3.0
         version: 8.3.0
+      rc-pagination:
+        specifier: ^3.7.0
+        version: 3.7.0(react-dom@18.2.0)(react@18.2.0)
       rc-upload:
         specifier: ^4.3.4
         version: 4.3.4(react-dom@18.2.0)(react@18.2.0)
@@ -7955,6 +7958,19 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
+  /rc-pagination@3.7.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-IxSzKapd13L91/195o1TPkKnCNw8gIR25UP1GCW/7c7n/slhld4npu2j2PB9IWjXm4SssaAaSAt2lscYog7wzg==}
+    peerDependencies:
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
+    dependencies:
+      '@babel/runtime': 7.22.15
+      classnames: 2.3.2
+      rc-util: 5.37.0(react-dom@18.2.0)(react@18.2.0)
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /rc-upload@4.3.4(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-uVbtHFGNjHG/RyAfm9fluXB6pvArAGyAx8z7XzXXyorEgVIWj6mOlriuDm0XowDHYz4ycNK0nE0oP3cbFnzxiQ==}
     peerDependencies:
@@ -8815,7 +8831,7 @@ packages:
     peerDependencies:
       react: '>=16.8.3'
     dependencies:
-      '@babel/runtime': 7.4.5
+      '@babel/runtime': 7.22.15
       invariant: 2.2.4
       react: 18.2.0
     dev: false

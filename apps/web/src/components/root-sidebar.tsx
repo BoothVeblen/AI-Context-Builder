@@ -1,6 +1,5 @@
 import { getWorkspace } from '@/db/workspace/actions'
 
-import NavSidebar from './nav-sidebar'
 import WorkspaceSidebar from './workspace-sidebar'
 
 interface IProps {

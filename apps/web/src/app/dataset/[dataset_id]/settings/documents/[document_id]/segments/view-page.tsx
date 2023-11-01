@@ -66,7 +66,7 @@ const SegmentPage = ({ datasetId, name, type, icon, appId }: IProps) => {
     state: { pagination },
     onPaginationChange: setPagination,
     manualPagination: true,
-    pageCount: Math.ceil((data?.totalItems || 0) / pagination.pageSize),
+    pageCount: Math.ceil(data?.totalItems || 1),
   })
   const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e?.target?.value)

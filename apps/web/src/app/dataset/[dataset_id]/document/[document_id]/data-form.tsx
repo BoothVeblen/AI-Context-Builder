@@ -121,15 +121,13 @@ const DataForm = () => {
   }
 
   const handleClick = async () => {
-    const files = formValues?.files
-    const notedData = formValues?.notedData
     const type = formValues?.loaderType
     const isNotedData = type === 'annotated_data'
+    const current = isNotedData
+      ? formValues?.notedData
+      : formValues?.files?.filter((item) => item?.type === type)
     const text = type === 'annotated_data' ? 'Annotated Data' : 'document'
-    if (
-      (!files?.length && !isNotedData) ||
-      (!notedData?.length && isNotedData)
-    ) {
+    if (!current?.length) {
       toast({
         variant: 'destructive',
         description: `Please select a ${text}.`,
@@ -161,6 +159,7 @@ const DataForm = () => {
       })
     }
   }
+
   return (
     <div className="h-full w-full">
       <div

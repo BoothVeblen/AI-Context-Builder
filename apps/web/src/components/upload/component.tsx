@@ -11,11 +11,13 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 
+import MicrosoftWordIcon from '../icons/MicrosoftWordIcon'
+import PdfIcon from '../icons/PdfIcon'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent } from '../ui/dialog'
 import { Progress } from '../ui/progress'
 import { Toggle } from '../ui/toggle'
-import { FileItemProps, UploadFile } from './type'
+import { FileItemProps, FileType, UploadFile } from './type'
 import { checkShowIcon } from './utils'
 
 interface IconBoxProps {
@@ -60,23 +62,22 @@ export const PreviewPdf = (props: PreviewProps) => {
   )
 }
 
-export const PdfImage = ({
+export const FileImage = ({
   className,
+  type,
 }: {
-  width?: string
-  height?: string
-  id?: string
+  type: FileType
   className?: string
-}) => (
-  <img
-    src="/pdf.png"
-    alt="pdf"
-    className={cn('flex h-[32px] w-[32px]', className)}
-  />
-)
+}) => {
+  if (type === 'word')
+    return <MicrosoftWordIcon className={cn('h-8 w-8 shrink-0', className)} />
 
-export const PDFFile = (props: FileItemProps) => {
-  const { file, listProps, fileNameStyle, onRemove } = props
+  if (type === 'pdf')
+    return <PdfIcon className={cn('h-8 w-8 shrink-0', className)} />
+}
+
+export const FileCard = (props: FileItemProps) => {
+  const { file, listProps, onRemove, className } = props
   const showIcon = checkShowIcon(listProps || false)
   const [open, setOpen] = useState<boolean>(false)
   const preview = (file: UploadFile) => {
@@ -98,16 +99,15 @@ export const PDFFile = (props: FileItemProps) => {
       <div
         className={cn(
           'relative z-10 flex h-full w-full rounded-md border p-4',
-          file?.status === 'error' ? 'border-[#ff4d4f]' : ''
+          file?.status === 'error' ? 'border-red-600' : '',
+          className
         )}
       >
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex-b flex w-[90%] items-center gap-2">
-            <PdfImage />
-            <div className="flex w-full flex-col gap-1">
-              <div className={cn('line-clamp-1 break-all', fileNameStyle)}>
-                {file?.name}
-              </div>
+            <FileImage type={file?.type as FileType} />
+            <div className="flex w-full flex-col gap-1 truncate">
+              <div className="truncate">{file?.name}</div>
               {file?.status === 'uploading' && (
                 <Progress value={process} className="h-1" />
               )}
@@ -147,7 +147,7 @@ export const PDFFile = (props: FileItemProps) => {
         </div>
       </div>
       {file?.status === 'error' && (
-        <div className="line-clamp-1 text-[rgb(255,77,79)]">
+        <div className="line-clamp-1 bg-red-600">
           {file?.error?.message || props?.locale?.uploadError}
         </div>
       )}
@@ -156,8 +156,8 @@ export const PDFFile = (props: FileItemProps) => {
   )
 }
 
-export const ImageFile = (props: FileItemProps) => {
-  const { className, file, listProps, onRemove } = props
+export const ImageCard = (props: FileItemProps) => {
+  const { className, file, listProps, onRemove, listType } = props
   const showIcon = checkShowIcon(listProps || false)
   const [open, setOpen] = useState<boolean>(false)
   const preview = (event: React.SyntheticEvent) => {
@@ -174,8 +174,9 @@ export const ImageFile = (props: FileItemProps) => {
         className={cn(
           'relative h-16 w-16 rounded-lg p-0',
           className,
-          file?.status === 'error' ? 'border-[#ff4d4f]' : '',
-          file?.status === 'uploading' ? 'bg-gray-50 p-1' : ''
+          file?.status === 'error' && 'border-red-600	',
+          file?.status === 'uploading' && 'bg-gray-50 p-1',
+          file?.status === 'uploading' && listType === 'image' && 'p-0'
         )}
         key={file?.uid || file?.url}
       >
@@ -212,7 +213,7 @@ export const ImageFile = (props: FileItemProps) => {
         )}
       </div>
       {file?.status === 'error' && (
-        <div className="line-clamp-1 text-[rgb(255,77,79)]">
+        <div className="line-clamp-1 text-red-600">
           {file?.error?.message || props?.locale?.uploadError}
         </div>
       )}

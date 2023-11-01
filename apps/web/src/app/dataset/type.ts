@@ -37,7 +37,7 @@ export const DataSchema = z.object({
   notedData: FileSchema,
 })
 
-export type LoaderTypeProps = 'pdf' | 'annotated_data'
+export type LoaderTypeProps = 'pdf' | 'annotated_data' | 'word'
 
 export type DataBaseProps = {
   type: LoaderTypeProps

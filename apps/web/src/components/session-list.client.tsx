@@ -4,7 +4,6 @@ import * as React from 'react'
 import useSWR from 'swr'
 
 import { fetcher } from '@/lib/utils'
-import { getSessions } from '@/db/sessions/actions'
 import { Session } from '@/db/sessions/schema'
 
 import SessionListItem from './session-list-item'

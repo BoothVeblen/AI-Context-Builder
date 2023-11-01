@@ -29,6 +29,7 @@ import {
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import { useToast } from './ui/use-toast'
+import { UPLOAD_ACCEPT_MAP } from './upload/type'
 import Upload from './upload/upload'
 import { FileProps } from './upload/utils'
 
@@ -172,7 +173,7 @@ const CreateAppDialog = (props: IProps) => {
                       <Upload
                         listType={image?.length ? 'update-image' : 'image'}
                         setUploading={setUploading}
-                        accept=".png, .jpeg,.webp,.jpg"
+                        accept={UPLOAD_ACCEPT_MAP.image}
                         fileList={image}
                         onChangeFileList={onChangeFileList}
                       />

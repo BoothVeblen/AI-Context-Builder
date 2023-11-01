@@ -77,7 +77,6 @@ const UploadScenes = () => {
         <Upload
           listType="update-image"
           accept=".png,jpeg,.jpg,.webp"
-          showFileList={false}
           fileList={current}
           onChangeFileList={(files) => {
             setCurrent(files)

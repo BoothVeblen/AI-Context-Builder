@@ -79,3 +79,25 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 }
+
+.rc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  /* width: 100%; */
+}
+.rc-pagination .rc-pagination-item{
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.rc-pagination-item-active{
+  color:#fff;
+  background-color: black;
+}

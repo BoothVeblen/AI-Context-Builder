@@ -1,7 +1,8 @@
 import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
 import { NewDocument } from '@/db/documents/schema'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { PdfImage } from '@/components/upload/component'
+import { FileImage } from '@/components/upload/component'
+import { FileType } from '@/components/upload/type'
 
 interface IProps {
   data: Partial<NewDocument>
@@ -15,7 +16,10 @@ const FileIcon = ({ data, className, isSegment }: IProps) => {
   return (
     <div className="flex items-center gap-1">
       {!isNotedData ? (
-        <PdfImage className={cn('h-4 w-4', className)} />
+        <FileImage
+          className={cn('h-4 w-4', className)}
+          type={data?.type as FileType}
+        />
       ) : (
         <Avatar
           className={cn(
@@ -27,7 +31,7 @@ const FileIcon = ({ data, className, isSegment }: IProps) => {
           {data?.icon ? (
             <img
               src={data?.icon}
-              className="h-4 w-4"
+              className="h-4 w-4 shrink-0"
               alt="annotatedData icon"
             />
           ) : (
