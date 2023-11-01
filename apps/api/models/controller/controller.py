@@ -1,23 +1,23 @@
 import asyncio
+import copy
+import json
+import time
 from typing import Union
 
+import redis
+from langchain.schema import Document
+from langchain.text_splitter import CharacterTextSplitter
 from loguru import logger
 from models.base import BaseManager, Dataset, Model, SessionState
-from models.workflow import Workflow
+from models.data_loader import PDFHandler, WordHandler
+from models.prompt_manager.manager import PromptManagerMixin
 from models.retrieval import Retriever
-from models.data_loader import PDFLoader
-from langchain.text_splitter import CharacterTextSplitter
-from utils import GoogleCloudStorageClient, AnnotatedDataStorageClient
-from langchain.schema import Document
+from models.retrieval.webhook import WebhookHandler as DocumentWebhookHandler
+from models.workflow import Workflow
+from utils import AnnotatedDataStorageClient, GoogleCloudStorageClient
+from utils.config import UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL
 
 from .webhook import WebhookHandler as DatasetWebhookHandler
-from models.retrieval.webhook import WebhookHandler as DocumentWebhookHandler
-from utils.config import UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL
-import redis
-import json
-import copy
-
-from models.prompt_manager.manager import PromptManagerMixin
 
 
 class RelativeManager(BaseManager):
@@ -136,6 +136,9 @@ class DatasetManager(BaseManager):
         if len(dataset.documents) != 0:
             Retriever.create_index(dataset)
         self.redis.set(urn, json.dumps(dataset.dict()))
+        Retriever.upsert_vector(
+            id=f"dataset:{dataset.id}", content="", metadata={"text": ""}
+        )
         handler.update_dataset_status(dataset.id, 0)
 
         return self.table.insert().values(dataset.dict())
@@ -153,7 +156,7 @@ class DatasetManager(BaseManager):
         urn = self.get_dataset_urn(dataset_id)
         if self.redis.get(urn):
             self.redis.delete(urn)
-        if update_data.get("documents"):
+        if update_data.get("documents") is not None:
             handler = DatasetWebhookHandler()
             handler.update_dataset_status(dataset_id, 1)
             dataset = self.get_datasets(dataset_id)[0]
@@ -164,10 +167,8 @@ class DatasetManager(BaseManager):
             update_data.pop("retrieval", None)
             update_data["retrieval"] = retrieval_dict
             # Let's start all over again first
-            chains = []
-            if len(dataset.documents) != 0:
-                chains = Retriever.get_relative_chains(dataset)
-                Retriever.delete_index(dataset)
+            chains = Retriever.get_relative_chains(dataset)
+            Retriever.delete_index(dataset)
             if len(update_data["documents"]) != 0:
                 dataset = Dataset(id=dataset_id, **update_data)
                 # pages updated
@@ -186,7 +187,19 @@ class DatasetManager(BaseManager):
                     f"Updating dataset {dataset_id} in cache, dataset: {dataset_dict_for_redis}"
                 )
                 self._update_dataset(dataset_id, dataset.dict())
+                webhook_handler = DocumentWebhookHandler()
+                for doc in dataset.documents:
+                    webhook_handler.update_document_status(
+                        dataset.id, doc.uid, doc.content_size, 0
+                    )
                 return
+        webhook_handler = DocumentWebhookHandler()
+        dataset = Dataset(**update_data, id=dataset_id)
+        for doc in dataset.documents:
+            webhook_handler.update_document_status(
+                dataset.id, doc.uid, doc.content_size, 0
+            )
+        handler.update_dataset_status(dataset_id, 0)
         self._update_dataset(dataset_id, update_data)
 
     @BaseManager.db_session
@@ -252,7 +265,7 @@ class DatasetManager(BaseManager):
         if query is not None:
             logger.info(f"Searching for query {query}")
             return self.search_document_segments(dataset_id, uid, query=query)
-        # Retrieve the dataset object
+        # retrieve the dataset object
         dataset_response = self.get_datasets(dataset_id)
         if not dataset_response:
             raise ValueError("Dataset not found")
@@ -273,26 +286,24 @@ class DatasetManager(BaseManager):
                 break
         if not matching_url:
             raise ValueError("UID not found in dataset documents")
-        segments = []
-        i = offset
-        seg_ids = []
-        while i < limit + offset:
-            seg_id = f"{dataset_id}-{matching_url}-{i}"
-            seg_ids.append(seg_id)
-            i += 1
-        vectors = Retriever.fetch_vectors(ids=seg_ids)
-        for seg_id in seg_ids:
-            if (
-                seg_id in vectors
-                and "metadata" in vectors[seg_id]
-                and "text" in vectors[seg_id]["metadata"]
-            ):
-                text = vectors[seg_id]["metadata"]["text"]
-                segments.append({"segment_id": seg_id, "content": text})
-            else:
-                logger.info(
-                    f"Segment {seg_id} has incomplete data in Pinecone or not found"
-                )
+        if not hundredth_ids:
+            start_idx = 0
+            end_idx = segment_size
+        else:
+            start_idx = 0 if offset == 0 else hundredth_ids[offset // 100 - 1] + 1
+            end_idx = (
+                segment_size
+                if start_idx - 1 == hundredth_ids[-1]
+                else hundredth_ids[(offset + limit) // 100 - 1]
+            )
+        seg_ids_to_fetch = [
+            f"{dataset_id}-{matching_url}-{i}" for i in range(start_idx, end_idx + 1)
+        ]
+        vectors = Retriever.fetch_vectors(ids=seg_ids_to_fetch)
+        segments = [
+            {"segment_id": seg_id, "content": vectors[seg_id]["metadata"]["text"]}
+            for seg_id in sorted(vectors, key=lambda x: int(x.split("-")[-1]))
+        ]
         return segment_size, segments
 
     def search_document_segments(self, dataset_id, uid, query):
@@ -311,7 +322,11 @@ class DatasetManager(BaseManager):
                 }
             }
         )
-        docs = asyncio.run(retriever.aget_relevant_documents(query))
+        retriever.search_kwargs["k"] = 10000
+        retriever.search_type = "similarity_score_threshold"
+        docs_and_similarities = asyncio.run(retriever.aget_relevant_documents(query))
+        docs = [doc for doc, _ in docs_and_similarities]
+        docs = [doc for doc in docs if query.lower() in doc.page_content.lower()]
         segments = []
         segments_id = []
         for _doc in docs:
@@ -352,8 +367,12 @@ class DatasetManager(BaseManager):
         for doc in dataset.documents:
             if doc.uid == uid:
                 current_page_size = get_page_size_via_segment_id(segment_id)
+                matching_url = doc.url
+                if not hasattr(doc, "hundredth_ids"):
+                    hundredth_ids = [i for i in range(99, doc.page_size, 100)]
+                    doc.hundredth_ids = hundredth_ids
                 if content == "":
-                    # Handle deletion
+                    # handle deletion
                     if doc.page_size > 0:
                         segment_length = len(
                             Retriever.fetch_vectors(ids=[segment_id])[segment_id][
@@ -361,12 +380,55 @@ class DatasetManager(BaseManager):
                             ]["text"]
                         )
                         doc.content_size -= segment_length
+                        # update hundreaith_id values
+                        if len(doc.hundredth_ids) == 1:
+                            if 0 <= current_page_size <= doc.hundredth_ids[0]:
+                                doc.hundredth_ids[0] += 1
+                        else:
+                            adjusted = False
+                            if doc.hundredth_ids:
+                                if current_page_size <= doc.hundredth_ids[0]:
+                                    adjusted = True
+                                    doc.hundredth_ids[0] += 1
+                            for i in range(len(doc.hundredth_ids) - 1):
+                                if (
+                                    adjusted
+                                    or doc.hundredth_ids[i]
+                                    <= current_page_size
+                                    <= doc.hundredth_ids[i + 1]
+                                ):
+                                    doc.hundredth_ids[i + 1] += 1
+                                    adjusted = True
                 elif doc.page_size == current_page_size:
-                    # Handle addition
+                    # handle addition
                     doc.page_size += 1
                     doc.content_size += len(content)
+                    if doc.hundredth_ids:
+                        if doc.page_size - doc.hundredth_ids[-1] >= 100:
+                            seg_ids = [
+                                f"{dataset_id}-{matching_url}-{i}"
+                                for i in range(doc.hundreaith_id[-1], doc.page_size)
+                            ]
+                            vectors = Retriever.fetch_vectors(ids=seg_ids)
+                            if len(vectors) >= 100:
+                                last_vector_id = get_page_size_via_segment_id(
+                                    list(vectors.keys())[-1]
+                                )
+                                doc.hundredth_ids.append(last_vector_id)
+                    else:
+                        if doc.page_size >= 99:
+                            seg_ids = [
+                                f"{dataset_id}-{matching_url}-{i}"
+                                for i in range(0, doc.page_size)
+                            ]
+                            vectors = Retriever.fetch_vectors(ids=seg_ids)
+                            if len(vectors) >= 100:
+                                last_vector_id = get_page_size_via_segment_id(
+                                    list(vectors.keys())[-1]
+                                )
+                                doc.hundredth_ids.append(last_vector_id)
                 else:
-                    # Handle edit
+                    # handle edit
                     segment_length = len(
                         Retriever.fetch_vectors(ids=[segment_id])[segment_id][
                             "metadata"
@@ -374,14 +436,14 @@ class DatasetManager(BaseManager):
                     )
                     doc.content_size += len(content) - segment_length
                 break
-        self._update_dataset(dataset_id, dataset.dict())
         urn = self.get_dataset_urn(dataset_id)
         self.redis.set(urn, json.dumps(dataset.dict()))
-
+        for document in dataset.documents:
+            document.hundredth_ids = []
+        self._update_dataset(dataset_id, dataset.dict())
         logger.info(
             f"Updating dataset {dataset_id} in cache, dataset: {dataset.dict()}"
         )
-
         webhook_handler = DocumentWebhookHandler()
         for doc in dataset.documents:
             webhook_handler.update_document_status(
@@ -398,12 +460,14 @@ class DatasetManager(BaseManager):
 
     def upsert_preview(self, dataset, preview_size, document_uid):
         # todo change logic to retriever folder
+        selected_doc = None
         url = None
         splitter = {}
         doc_type = None
         uid = None
         for doc in dataset.documents:
             if doc.uid == document_uid:
+                selected_doc = doc
                 url = doc.url
                 splitter = doc.split_option
                 doc_type = doc.type
@@ -411,14 +475,15 @@ class DatasetManager(BaseManager):
                 break
         if doc_type == None:
             raise ValueError("UID not found in dataset documents")
-        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        text_splitter = CharacterTextSplitter(
             chunk_size=splitter.get("chunk_size", 100),
             chunk_overlap=splitter.get("chunk_overlap", 0),
+            separator="\n",
         )
         if doc_type == "pdf":
             storage_client = GoogleCloudStorageClient()
             pdf_content = storage_client.load(url)
-            text = PDFLoader.extract_text_from_pdf(pdf_content, preview_size)
+            text = PDFHandler.extract_text_from_pdf(pdf_content, preview_size)
             pages = text.split("\f")
             _docs = [
                 Document(page_content=page, metadata={"source": url}) for page in pages
@@ -427,6 +492,13 @@ class DatasetManager(BaseManager):
             storage_client = AnnotatedDataStorageClient()
             annotated_data = storage_client.load(uid)
             _docs = [Document(page_content=annotated_data, metadata={"source": uid})]
+        elif doc_type == "word":
+            word_handler = WordHandler()
+            text = word_handler.fetch_content(selected_doc, preview_size)
+            pages = text.split("\f")
+            _docs = [
+                Document(page_content=page, metadata={"source": url}) for page in pages
+            ]
         else:
             raise ValueError("Document type not supported")
         _docs = text_splitter.split_documents(_docs)
@@ -650,10 +722,14 @@ class SessionStateManager(BaseManager, PromptManagerMixin):
         return session_states[0].model_id
 
     def save_workflow_status(self, session_id, workflow):
+        logger.info(f"Saving workflow status {session_id}")
         for chain in workflow.context.chains:
             if type(chain) in workflow.context.state_dependent_chains:
                 self.save_chain_status(
-                    session_id, chain.output_keys[0], chain.process, chain.max_retries
+                    session_id,
+                    chain.output_keys[0],
+                    chain.process,
+                    chain.max_retries,
                 )
                 self.save_chain_output(
                     session_id,
@@ -663,13 +739,15 @@ class SessionStateManager(BaseManager, PromptManagerMixin):
         self.save_chain_memory(session_id, workflow.context.current_chain_io)
         self.save_workflow_step(session_id, workflow.context.current_chain)
 
-    def get_workflow(self, session_id, model):
+    def get_workflow(self, session_id, model, disconnect_event):
         if model is None:
             model_id = self.get_model_id(session_id)
             if model_id is None:
                 raise Exception("Session state not found")
             model = model_manager.get_models(model_id)[0]
-        workflow = Workflow(model=model, session_id=session_id)
+        workflow = Workflow(
+            model=model, session_id=session_id, disconnect_event=disconnect_event
+        )
         # get chain status
         for chain in workflow.context.chains:
             if type(chain) in workflow.context.state_dependent_chains:
@@ -714,7 +792,8 @@ class SessionStateManager(BaseManager, PromptManagerMixin):
             current_status = json.loads(current_status)
             current_status[output_key] = (status, max_retries)
             self.redis.set(
-                self.get_session_state_urn(session_id), json.dumps(current_status)
+                self.get_session_state_urn(session_id),
+                json.dumps(current_status),
             )
         else:
             self.redis.set(

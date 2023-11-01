@@ -4,5 +4,16 @@ FROM python:3.11-slim
 
 WORKDIR /base
 
+RUN apt update && \
+    apt install -y --no-install-recommends \
+    libreoffice \
+    libreoffice-script-provider-python \
+    unoconv \
+    fonts-liberation \
+    fonts-dejavu && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+ENV UNO_PATH=/usr/lib/libreoffice
+ENV PYTHONPATH=/usr/lib/python3/dist-packages
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

@@ -51,11 +51,14 @@ class Workflow(BaseModel):
     outout_keys: List[str] = []
     outputs: dict = {}
     error_flags: List[Exception] = []
+    disconnect_event: Optional[asyncio.Event] = asyncio.Event()
 
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, model: Model, session_id: str) -> None:
+    def __init__(
+        self, model: Model, session_id: str, disconnect_event: asyncio.Event
+    ) -> None:
         super().__init__()
         chains = []
         self.session_id = session_id
@@ -79,6 +82,7 @@ class Workflow(BaseModel):
             chain_dialog_key = self.get_chain_dialog_key(_chain.key)
             self.known_keys.append(chain_dialog_key)
             self.dialog_keys.append(chain_dialog_key)
+            self.disconnect_event = disconnect_event
         self.context = EnhanceSequentialChain(
             chains=chains,
             input_variables=[QUESTION_KEY, CHAT_HISTORY_KEY, CONTEXT_KEY]
@@ -127,11 +131,8 @@ class Workflow(BaseModel):
         llm = _chain.llm.dict()
         llm_model = llm.pop("name")
         # TODO add max_tokens to chain
-        llm.pop("max_tokens")
+        max_token = llm.pop("max_tokens")
         temperature = llm.pop("temperature")
-        top_p = llm.pop("top_p")
-        frequency_penalty = llm.pop("frequency_penalty")
-        presence_penalty = llm.pop("presence_penalty")
         if llm_model == "Azure-GPT-3.5":
             llm = AzureChatOpenAI(
                 openai_api_base=AZURE_BASE_URL,
@@ -146,9 +147,6 @@ class Workflow(BaseModel):
                         self.io_traces, self.get_chain_output_key(_chain.key)
                     ),
                 ],
-                top_p=top_p,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
             )
         else:
             llm = ChatOpenAI(
@@ -156,15 +154,13 @@ class Workflow(BaseModel):
                 model_kwargs=llm,
                 streaming=True,
                 temperature=temperature,
+                max_tokens=max_token,
                 callbacks=[
                     CostCalcAsyncHandler(llm_model, self.cost_content),
                     IOTraceCallbackHandler(
                         self.io_traces, self.get_chain_output_key(_chain.key)
                     ),
                 ],
-                top_p=top_p,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
             )
         template = _chain.prompt.template
 

@@ -13,7 +13,6 @@ from langchain.schema import Document
 from langchain.vectorstores import Pinecone
 from loguru import logger
 from models.base import Dataset
-from models.data_loader import PDFLoader
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
@@ -21,20 +20,7 @@ from pdfminer.pdfpage import PDFPage
 from pydantic import Field
 from utils import PINECONE_API_KEY, PINECONE_ENVIRONMENT
 from ..webhook import WebhookHandler
-
-
-def extract_text_from_pdf(contents: io.BytesIO) -> list:
-    resource_manager = PDFResourceManager()
-    fake_file_handle = io.StringIO()
-    converter = TextConverter(resource_manager, fake_file_handle, laparams=LAParams())
-    page_interpreter = PDFPageInterpreter(resource_manager, converter)
-    for page in PDFPage.get_pages(contents, caching=True, check_extractable=True):
-        page_interpreter.process_page(page)
-    text = fake_file_handle.getvalue()
-    converter.close()
-    fake_file_handle.close()
-
-    return text
+from models.data_loader import PDFHandler, load_and_split_documents
 
 
 class PatchedSelfQueryRetriever(SelfQueryRetriever):
@@ -46,30 +32,23 @@ class PatchedSelfQueryRetriever(SelfQueryRetriever):
                 query, **self.search_kwargs
             )
         elif self.search_type == "similarity_score_threshold":
-            docs_and_similarities = (
-                await self.vectorstore.asimilarity_search_with_relevance_scores(
-                    query, 10000, **self.search_kwargs
-                )
+            docs = await self.vectorstore.asimilarity_search_with_relevance_scores(
+                query, **self.search_kwargs
             )
-            docs = [doc for doc, _ in docs_and_similarities]
-            docs = [doc for doc in docs if query.lower() in doc.page_content.lower()]
         elif self.search_type == "mmr":
             docs = await self.vectorstore.amax_marginal_relevance_search(
                 query, **self.search_kwargs
             )
         else:
             raise ValueError(f"search_type of {self.search_type} not allowed.")
-
         return docs
 
 
-class PDFRetrieverMixin:
+class Retriever:
     @classmethod
     def create_index(cls, dataset: Dataset):
-        docs = PDFLoader.load_and_split_documents([dataset])
-
+        docs = load_and_split_documents([dataset])
         embedding = OpenAIEmbeddings()
-
         ids = [doc.metadata["urn"] for doc in docs]
         texts = [doc.page_content for doc in docs]
         metadatas = [doc.metadata for doc in docs]
@@ -92,12 +71,8 @@ class PDFRetrieverMixin:
                 meta_ids.append(_id)
         for id in meta_ids:
             cls.upsert_vector(id=id, content="", metadata=metadata)
-
-        webhook_handler = WebhookHandler()
-        for doc in dataset.documents:
-            webhook_handler.update_document_status(
-                dataset.id, doc.uid, doc.content_size, 0
-            )
+        # metadata["text"] = ""
+        # cls.upsert_vector(id=f"dataset:{dataset.id}", content="", metadata=metadata)
 
         return vector_store
 
@@ -110,21 +85,20 @@ class PDFRetrieverMixin:
             for i in range(doc.page_size):
                 ids.append(f"{dataset.id}-{doc.url}-{i}")
             ids.append(f"{dataset.id}-{doc.url}")
-        if len(ids) == 1:
-            logger.warning(
-                f"Dataset {dataset.id} has no documents when deleting, or page_size bug"
-            )
+        if len(ids) == 0:
+            logger.warning(f"Dataset {dataset.id} has no documents when deleting")
             return
-        index.delete(ids=ids, namespace="withcontext")
+        MAX_IDS_PER_REQUEST = 1000
+        for start_idx in range(0, len(ids), MAX_IDS_PER_REQUEST):
+            batch_ids = ids[start_idx : start_idx + MAX_IDS_PER_REQUEST]
+            index.delete(ids=batch_ids, namespace="withcontext")
 
     @classmethod
     def get_relative_chains(cls, dataset: Dataset):
         pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
         index = pinecone.Index("context-prod")
-        if len(dataset.documents) == 0:
-            logger.warning(f"Dataset {dataset.id} has no documents when getting chains")
-            return []
-        id = f"{dataset.id}-{dataset.documents[0].url}"
+        id = f"dataset:{dataset.id}"
+        # id = f"{dataset.id}-{dataset.documents[0].url}"
         logger.info(f"Getting vector for id{id}")
         vector = (
             index.fetch(namespace="withcontext", ids=[id])
@@ -133,8 +107,17 @@ class PDFRetrieverMixin:
             .get(id, {})
         )
         if vector == {}:
-            logger.warning(f"vector {id} not found when getting chains")
-            return []
+            if len(dataset.documents) == 0:
+                logger.warning(f"Dataset {dataset.id} has no documents when getting")
+                return []
+            id = f"{dataset.id}-{dataset.documents[0].url}"
+            vector = (
+                index.fetch(namespace="withcontext", ids=[id])
+                .to_dict()
+                .get("vectors", {})
+                .get(id, {})
+            )
+            logger.warning(f"vector {id} need to be updated")
         logger.info(
             f"relative chains: {vector.get('metadata', {}).get('relative_chains', [])}"
         )
@@ -148,18 +131,16 @@ class PDFRetrieverMixin:
         index = pinecone.Index("context-prod")
         known_chains = cls.get_relative_chains(dataset)
         chain_urn = f"{model_id}-{chain_key}"
-        known_chains.append(chain_urn)
+        if chain_urn not in known_chains:
+            known_chains.append(chain_urn)
         logger.info(f"Adding chain {chain_urn} to dataset {dataset.id}")
         logger.info(f"Known chains: {known_chains}")
-        logger.info(
-            f"Dataset {dataset.id} has {len(dataset.documents)} documents, first documents: {dataset.documents[0].page_size} pages"
-        )
         for doc in dataset.documents:
             if doc.page_size == 0:
                 logger.warning(
                     f"Document {doc.url} has page_size 0 when adding relative chain"
                 )
-                doc.page_size = PDFLoader.get_document_page_size(doc)
+                doc.page_size = PDFHandler.get_document_page_size(doc)
                 logger.info(f"Updated Document {doc.url} page_size to {doc.page_size}")
             for i in range(doc.page_size):
                 id = f"{dataset.id}-{doc.url}-{i}"
@@ -176,6 +157,13 @@ class PDFRetrieverMixin:
                 namespace="withcontext",
             )
             logger.info(f"Updated {id} with relative chains {known_chains}")
+        id = f"dataset:{dataset.id}"
+        index.update(
+            id=id,
+            set_metadata={"relative_chains": known_chains},
+            namespace="withcontext",
+        )
+        logger.info(f"Updated {id} with relative chains {known_chains}")
 
     @classmethod
     def delete_relative_chain_from_dataset(
@@ -199,6 +187,12 @@ class PDFRetrieverMixin:
                     namespace="withcontext",
                 )
             id = f"{dataset.id}-{doc.url}"
+            index.update(
+                id=id,
+                set_metadata={"relative_chains": known_chains},
+                namespace="withcontext",
+            )
+            id = f"dataset:{dataset.id}"
             index.update(
                 id=id,
                 set_metadata={"relative_chains": known_chains},

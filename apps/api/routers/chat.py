@@ -6,7 +6,7 @@ from typing import AsyncIterable, Awaitable, List
 
 import graphsignal
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from models.response.response import OpenAIStreamResponse
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from loguru import logger
 from models.base import Choices, CompletionsRequest, CompletionsResponse
@@ -67,6 +67,7 @@ async def send_message(
     session_id: str,
     filt=False,
     start_time=None,
+    disconnect_event: asyncio.Event = None,
 ) -> AsyncIterable[str]:
     messages = []
     for message_content in messages_contents:
@@ -93,7 +94,7 @@ async def send_message(
             detail=f"Model {model_id} has {len(models)} models in model manager",
         )
     model = models[0]
-    workflow = session_state_manager.get_workflow(session_id, model)
+    workflow = session_state_manager.get_workflow(session_id, model, disconnect_event)
 
     async def wrap_done(fn: Awaitable, event: asyncio.Event):
         try:
@@ -133,7 +134,7 @@ async def send_message(
             yield wrap_token(token, model_id, session_id, filt=filt)
         await task
     except Exception as e:
-        pass
+        logger.warning(e)
 
     if not filt:
         yield f"data: {json.dumps(CompletionsResponse(id=session_id, object='chat.completion.chunk', model=workflow.model.id, choices=[Choices(index=0, finish_reason='stop', delta={})]).dict())}\n\n"
@@ -149,8 +150,10 @@ async def send_message(
                 "metadata": {"error": wrap_error(str(workflow.error_flags[0].args[0]))}
             }
             yield f"data: {json.dumps(info)}\n\n"
-    yield "data: [DONE]\n\n"
-    session_state_manager.save_workflow_status(session_id, workflow)
+
+    if not workflow.disconnect_event.is_set():
+        yield "data: [DONE]\n\n"
+        session_state_manager.save_workflow_status(session_id, workflow)
 
 
 async def send_done_message():
@@ -173,13 +176,23 @@ async def stream_completions(body: CompletionsRequest):
             )
             webhook_handler = WebhookHandler()
             webhook_handler.create_video_room_link(body.session_id, link)
-            return StreamingResponse(
-                send_done_message(), media_type="text/event-stream"
+            disconnect_event = asyncio.Event()
+            return OpenAIStreamResponse(
+                content=send_done_message(),
+                media_type="text/event-stream",
+                disconnect_event=disconnect_event,
             )
         else:
-            return StreamingResponse(
-                send_message(body.messages, body.session_id, start_time=start_time),
+            disconnect_event = asyncio.Event()
+            return OpenAIStreamResponse(
+                content=send_message(
+                    body.messages,
+                    body.session_id,
+                    start_time=start_time,
+                    disconnect_event=disconnect_event,
+                ),
                 media_type="text/event-stream",
+                disconnect_event=disconnect_event,
             )
 
 
@@ -191,9 +204,13 @@ async def video_stream_completions(
 ):
     with graphsignal.start_trace("completions_video"):
         logger.info(f"completions payload: {body.dict()}")
-        return StreamingResponse(
-            send_message(body.messages, session_id, filt=True),
+        disconnect_event = asyncio.Event()
+        return OpenAIStreamResponse(
+            content=send_message(
+                body.messages, session_id, filt=True, disconnect_event=disconnect_event
+            ),
             media_type="text/event-stream",
+            disconnect_event=disconnect_event,
         )
 
 
@@ -253,7 +270,7 @@ async def create_session(body: SessionRequest):
 async def get_process_status(session_id: str):
     logger.info(f"session_id: {session_id}")
     with graphsignal.start_trace("get_process_status"):
-        workflow = session_state_manager.get_workflow(session_id, None)
+        workflow = session_state_manager.get_workflow(session_id, None, None)
         if workflow is None:
             return {"data": [], "message": "workflow not found", "status": 400}
         process_list = []

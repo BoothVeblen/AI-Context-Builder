@@ -3,7 +3,7 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document, HumanMessage, SystemMessage
-from langchain.schema.messages import get_buffer_string
+from utils.base import get_buffer_string
 from langchain.text_splitter import CharacterTextSplitter
 from loguru import logger
 from models.base.model import Memory
@@ -94,7 +94,7 @@ class PromptCompressor(
         current_tokens = PromptCompressor.num_tokens_from_contents(content, model)
         while sumrize_step < 5 and current_tokens > max_tokens:
             summarize_chain = load_summarize_chain(OpenAI(), chain_type=chain_type)
-            token_splitter = CharacterTextSplitter.from_tiktoken_encoder(
+            token_splitter = CharacterTextSplitter(
                 chunk_size=100, chunk_overlap=0, separator="\n"
             )
             documents = token_splitter.split_text(content)

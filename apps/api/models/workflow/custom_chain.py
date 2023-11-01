@@ -33,7 +33,7 @@ from langchain.prompts.base import BasePromptTemplate
 from langchain.retrievers import SelfQueryRetriever
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain.schema.language_model import BaseLanguageModel
-from langchain.schema.messages import get_buffer_string
+from utils.base import get_buffer_string
 from loguru import logger
 from models.base.model import Memory
 from models.prompt_manager.compress import PromptCompressor
@@ -110,15 +110,22 @@ class TargetedChain(Chain):
                 messages=[messages],
                 callbacks=run_manager.get_child() if run_manager else None,
             )
-            if response.generations[0][0].text.lower().startswith("yes"):
+            response_text = response.generations[0][0].text
+            if response_text.startswith("AI:"):
+                response_text = response_text[3:]
+            # if response.generations[0][0].text.lower().startswith("yes"):
+            if (
+                response_text.lower().strip().startswith("yes")
+                and len(response_text) < 5
+            ):
                 self.process = TargetedChainStatus.FINISHED
-                return {self.output_key: response.generations[0][0].text}
+                return {self.output_key: response_text}
             else:
                 self.max_retries -= 1
                 if self.max_retries <= 0:
                     self.process = TargetedChainStatus.ERROR
-                    return {self.output_key: response.generations[0][0].text}
-                question = response.generations[0][0].text
+                    return {self.output_key: response_text}
+                question = response_text
         prompt_value = self.system_prompt.format_prompt(**inputs)
         if self.process == TargetedChainStatus.INIT:
             self.process = TargetedChainStatus.RUNNING
@@ -146,7 +153,9 @@ class TargetedChain(Chain):
         for k in copy_inputs:
             if "dialog" in k:
                 try:
-                    copy_inputs[k] = get_buffer_string(copy_inputs[k])
+                    copy_inputs[k] = get_buffer_string(
+                        copy_inputs[k], human_prefix="User"
+                    )
                 except:
                     logger.error(f"Error in get_output: {copy_inputs[k]}")
 
@@ -164,6 +173,8 @@ class TargetedChain(Chain):
             ],
             callbacks=run_manager.get_child(),
         )
+        if response.generations[0][0].text.startswith("AI:"):
+            return response.generations[0][0].text[3:].strip()
         return response.generations[0][0].text
 
 
@@ -412,7 +423,6 @@ class EnhanceConversationalRetrievalChain(Chain):
         )
         context = "\n".join([to_string(doc.page_content) for doc in docs])
         inputs["context"] = context
-
         messages = await PromptCompressor.get_compressed_messages(
             self.prompt,
             inputs,

@@ -24,6 +24,7 @@ class PromptManagerMixin:
             return content["input"]
 
         # [{"input":"xxx", "output":"xxx", "chain_key": "xxx"}, ...]
+
         for content in contents:
             current_chain_memory = self.get_chain_memory(
                 session_id, content["chain_key"]
