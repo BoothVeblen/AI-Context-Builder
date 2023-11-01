@@ -20,6 +20,7 @@ import {
 } from './const'
 import {
   InputItem,
+  MemoryFormItem,
   MentionTextareaItem,
   SelectItem,
   SlideItem,
@@ -66,6 +67,11 @@ const FormSchema = z.object({
   }),
   prompt: z.object({
     template: z.string().optional(),
+  }),
+  memory: z.object({
+    memory_type: z.string().optional(),
+    k: z.number().optional(),
+    max_token_limit: z.number().optional(),
   }),
 })
 
@@ -119,6 +125,8 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
           <FormItemLLM />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
           <FormItemPrompt />
+          <div className="-mx-6 h-px shrink-0 bg-slate-100" />
+          <MemoryFormItem />
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
 import {
   InputItem,
   ListSelectItem,
+  MemoryFormItem,
   MentionTextareaItem,
   SelectItem,
   SlideItem,
@@ -72,6 +73,11 @@ const FormSchema = z.object({
   prompt: z.object({
     template: z.string().optional(),
     basic_prompt: z.string().optional(),
+  }),
+  memory: z.object({
+    memory_type: z.string().optional(),
+    k: z.number().optional(),
+    max_token_limit: z.number().optional(),
   }),
   retriever: z.object({
     type: z.string(),
@@ -133,6 +139,8 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
           <FormItemLLM />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
           <FormItemPrompt />
+          <div className="-mx-6 h-px shrink-0 bg-slate-100" />
+          <MemoryFormItem />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
           <FormItemRetriever />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />

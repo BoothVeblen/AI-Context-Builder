@@ -1,6 +1,9 @@
+import { set } from 'lodash'
+
 import { safeParse } from '@/lib/utils'
 import { TreeItem } from '@/components/dnd/types'
 
+import { TASK_DEFAULT_VALUE_MAP } from './const'
 import { WorkflowItem } from './type'
 
 export function taskToApiFormatter(task: WorkflowItem) {
@@ -60,4 +63,15 @@ export function formatRetrieverType(str: string) {
     ?.join(' ')
     .toLowerCase()
     .replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
+}
+
+export function getTaskDefaultValue(
+  subType: keyof typeof TASK_DEFAULT_VALUE_MAP,
+  options: Record<string, any>
+) {
+  const formValue = TASK_DEFAULT_VALUE_MAP[subType]
+  Object.entries(options)?.forEach(([key, value]) => {
+    set(formValue, key, value)
+  })
+  return formValue
 }

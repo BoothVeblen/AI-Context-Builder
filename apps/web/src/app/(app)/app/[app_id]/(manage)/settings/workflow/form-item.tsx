@@ -36,7 +36,15 @@ import {
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { MentionTextarea } from '@/components/mention-textarea'
+
+import { HAS_K, HAS_MAX_TOKEN_LIMIT, MEMORY_TYPE } from './const'
+import { IFormSchema } from './task-item-conversational-retrieval-qa'
 
 interface IInputItem<T> {
   name: Path<T>
@@ -120,13 +128,15 @@ export function TextareaItem<T extends FieldValues>({
 interface ISelectItem<T> {
   name: Path<T>
   label?: string
-  options: { label: string; value: PathValue<T, Path<T>> }[]
+  options: { label: string; value: PathValue<T, Path<T>>; desc?: string }[]
+  showTooltip?: boolean
 }
 
 export function SelectItem<T extends FieldValues>({
   name,
   label,
   options,
+  showTooltip = false,
 }: ISelectItem<T>) {
   const form = useFormContext<T>()
   const [open, setOpen] = useState(false)
@@ -179,7 +189,18 @@ export function SelectItem<T extends FieldValues>({
                             : 'opacity-0'
                         )}
                       />
-                      {item.label}
+                      {showTooltip ? (
+                        <Tooltip key={item?.value}>
+                          <TooltipTrigger asChild>
+                            <div className="flex-1 truncate">{item?.label}</div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p className="max-w-xs">{item?.desc}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        item?.label
+                      )}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -418,5 +439,37 @@ export function MentionTextareaItem<T extends FieldValues>({
         </FormItem>
       )}
     />
+  )
+}
+
+export function MemoryFormItem<T extends FieldValues>() {
+  const form = useFormContext<T>()
+  const memory = form.getValues()?.memory
+  const type = memory?.memory_type
+  const showLimitToken = HAS_MAX_TOKEN_LIMIT?.includes(type)
+  const showK = HAS_K?.includes(type)
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm font-medium text-slate-500">MEMORY</div>
+      <div className="space-y-8">
+        <SelectItem<IFormSchema>
+          name="memory.memory_type"
+          label="Memory Type"
+          options={MEMORY_TYPE}
+          showTooltip
+        />
+        {showK && (
+          <InputItem<IFormSchema> name="memory.k" type="number" label="k" />
+        )}
+        {showLimitToken && (
+          <InputItem<IFormSchema>
+            name="memory.max_token_limit"
+            type="number"
+            label="Max Token Limit"
+          />
+        )}
+      </div>
+    </div>
   )
 }

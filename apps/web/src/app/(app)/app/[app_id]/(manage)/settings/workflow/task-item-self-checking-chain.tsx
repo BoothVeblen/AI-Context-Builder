@@ -25,6 +25,7 @@ import {
 } from './const'
 import {
   InputItem,
+  MemoryFormItem,
   MentionTextareaItem,
   SelectItem,
   SlideItem,
@@ -92,6 +93,12 @@ const FormSchema = z.object({
     target: z.string().optional(),
     check_prompt: z.string().optional(),
     follow_up_questions_num: z.number().min(0).step(1),
+    output_definition: z.string().optional(),
+  }),
+  memory: z.object({
+    memory_type: z.string().optional(),
+    k: z.number().optional(),
+    max_token_limit: z.number().optional(),
   }),
 })
 
@@ -146,6 +153,8 @@ function FormItems({ keyLabel }: { keyLabel?: string }) {
           <FormItemLLM />
           <div className="-mx-6 h-px shrink-0 bg-slate-100" />
           <FormItemPrompt />
+          <div className="-mx-6 h-px shrink-0 bg-slate-100" />
+          <MemoryFormItem />
         </div>
       </div>
     </div>
@@ -242,7 +251,7 @@ function FormItemPrompt() {
 
   const suggestionData = React.useMemo(
     () => [
-      ...['target', 'chat_history'].map(suggestionDataFormatter),
+      ...['target'].map(suggestionDataFormatter),
       ...formatWorkflowDataToSuggestionData(workflowData, ['output', 'dialog']),
     ],
     [workflowData]
@@ -289,6 +298,16 @@ function FormItemPrompt() {
           type="number"
           label="Maximum follow-up questions"
           min={0}
+        />
+        <MentionTextareaItem<IFormSchema>
+          name="prompt.output_definition"
+          label={
+            <FormItemTitle
+              title="Output Definition"
+              tip="With the following configuration,to define the potential output of this conversation."
+            />
+          }
+          data={suggestionData}
         />
       </div>
     </div>

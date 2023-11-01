@@ -7,7 +7,10 @@ import { db } from '@/lib/drizzle-edge'
 import { safeParse } from '@/lib/utils'
 import { AppsTable } from '@/db/apps/schema'
 import { TreeItem } from '@/components/dnd/types'
-import { TASK_DEFAULT_VALUE_MAP } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
+import {
+  DEFAULT_MEMORY,
+  TASK_DEFAULT_VALUE_MAP,
+} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
 import { WorkflowItem } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/type'
 import {
   formatTreeWithData,
@@ -79,6 +82,40 @@ function cleanWorkflowData(data: WorkflowItem[]) {
   return result
 }
 
+function fixTokenLimit(data: WorkflowItem[]) {
+  const result = []
+
+  for (const item of data) {
+    const { id, subType, formValueStr, type, key } = item
+    const formValue = safeParse(formValueStr, {})
+    let newValue = { ...formValue }
+    if (!formValue?.memory?.memory_type) {
+      newValue = {
+        ...newValue,
+        memory: DEFAULT_MEMORY,
+      }
+    }
+    if (
+      subType === 'self_checking_chain' &&
+      !formValue?.prompt?.output_definition
+    ) {
+      const keyLabel = `${type}-${key}`
+      const output_definition = `The goal is [{target}].
+[{${keyLabel}.dialog}].
+Please output the target based on this conversation.`
+      newValue.prompt.output_definition = output_definition
+    }
+
+    newValue.llm.max_tokens = 256
+    newValue.llm.temperature = 0.7
+
+    const newItem = { ...item, formValueStr: JSON.stringify(newValue) }
+    result.push(newItem)
+  }
+
+  return result
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -106,10 +143,8 @@ export async function GET(req: NextRequest) {
         []
       ) as WorkflowItem[]
 
-      const new_workflow_data = cleanWorkflowData(workflow_data)
-      const new_published_workflow_data = cleanWorkflowData(
-        published_workflow_data
-      )
+      const new_workflow_data = fixTokenLimit(workflow_data)
+      const new_published_workflow_data = fixTokenLimit(published_workflow_data)
       const newApp = {
         short_id,
         api_model_id,

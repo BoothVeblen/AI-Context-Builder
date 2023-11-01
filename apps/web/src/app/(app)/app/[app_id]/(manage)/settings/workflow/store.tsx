@@ -11,6 +11,7 @@ import { TreeItem } from '@/components/dnd/types'
 
 import { TASK_DEFAULT_VALUE_MAP } from './const'
 import { SelectOption, WorkflowItem, WorkflowType } from './type'
+import { getTaskDefaultValue } from './utils'
 
 interface WorkflowProps {
   workflowTree: TreeItem[]
@@ -60,13 +61,19 @@ const createWorkflowStore = (initProps?: Partial<WorkflowProps>) => {
       set(
         produce((draft: WorkflowState) => {
           const id = nanoid()
-          const defaultFormValue =
-            TASK_DEFAULT_VALUE_MAP[
-              subType as keyof typeof TASK_DEFAULT_VALUE_MAP
-            ] || {}
           const latestKey = last(
             draft.workflowData.filter((p) => p.type === type)
           )?.key
+          const keyLabel = `${type}-${Number(latestKey ?? -1) + 1}`
+          const change = 'prompt.output_definition'
+          const defaultFormValue = getTaskDefaultValue(
+            subType as keyof typeof TASK_DEFAULT_VALUE_MAP,
+            {
+              [change]: `The goal is [{target}].
+[{${keyLabel}.dialog}].
+Please output the target based on this conversation.`,
+            }
+          )
           draft.workflowData.push({
             key: Number(latestKey ?? -1) + 1,
             id,
