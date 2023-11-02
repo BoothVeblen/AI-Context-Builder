@@ -28,9 +28,8 @@ const SegmentHeader = ({
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const goBack = () => {
-    const nextUrl = '/datasets'
     startTransition(() => {
-      router.push(`/dataset/${datasetId}/settings/documents?nextUrl=${nextUrl}`)
+      router.push(`/dataset/${datasetId}/settings/documents`)
     })
   }
   return (

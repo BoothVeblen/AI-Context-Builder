@@ -171,9 +171,8 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
         })
         return
       } else {
-        const nextUrl = '/datasets'
         const uid = row?.uid
-        const params = `uid=${uid}&nextUrl=${nextUrl}`
+        const params = `uid=${uid}`
         router.push(
           `/dataset/${datasetId}/settings/documents/${row?.short_id}/segments?${params}`
         )

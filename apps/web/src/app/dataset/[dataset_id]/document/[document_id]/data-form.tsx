@@ -152,10 +152,7 @@ const DataForm = () => {
       await onSubmit()
       router.refresh()
       startTransition(() => {
-        const nextUrl = '/datasets'
-        router.push(
-          `/dataset/${datasetId}/settings/documents?nextUrl=${nextUrl}`
-        )
+        router.push(`/dataset/${datasetId}/settings/documents`)
       })
     }
   }
@@ -190,10 +187,7 @@ const DataForm = () => {
               variant="outline"
               onClick={() => {
                 form.reset()
-                const nextUrl = '/datasets'
-                router.push(
-                  `/dataset/${datasetId}/settings/documents?nextUrl=${nextUrl}`
-                )
+                router.push(`/dataset/${datasetId}/settings/documents`)
               }}
             >
               Cancel

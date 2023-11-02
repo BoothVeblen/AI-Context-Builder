@@ -98,8 +98,7 @@ const CreateAppDialog = (props: IProps) => {
       const json = await trigger(data)
       setOpen(false)
       mutate('/api/me/workspace')
-      const nextUrl = `/app/${json.appId}/session/${json.sessionId}`
-      router.push(`/app/${json.appId}/settings/basics?nextUrl=${nextUrl}`)
+      router.push(`/app/${json.appId}/settings/basics`)
       router.refresh()
     } catch (error: any) {
       toast({

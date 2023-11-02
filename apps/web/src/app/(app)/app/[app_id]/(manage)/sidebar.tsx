@@ -1,14 +1,9 @@
 'use client'
 
-import { PropsWithChildren, useTransition } from 'react'
-import { Route } from 'next'
+import { useTransition } from 'react'
 import { Url } from 'next/dist/shared/lib/router/router'
 import Link from 'next/link'
-import {
-  useRouter,
-  useSearchParams,
-  useSelectedLayoutSegments,
-} from 'next/navigation'
+import { useRouter, useSelectedLayoutSegments } from 'next/navigation'
 import { ArrowLeftIcon, Loader2Icon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -17,7 +12,7 @@ import { Button } from '@/components/ui/button'
 const commonStyle =
   'flex cursor-pointer flex-col rounded-md p-3 hover:bg-slate-200'
 
-type SidebarLinkProps = {
+interface SidebarLinkProps {
   href: Url
   name: string
   desc: string
@@ -42,16 +37,19 @@ const SidebarLink = (props: SidebarLinkProps) => {
     </Link>
   )
 }
-function Sidebar({ children }: PropsWithChildren) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const nextUrl = searchParams?.get('nextUrl')
-  const [isPending, startTransition] = useTransition()
 
+interface SidebarProps {
+  children: React.ReactNode
+  directUrl?: string
+}
+
+function Sidebar({ children, directUrl }: SidebarProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   function handleGoBack() {
     startTransition(() => {
-      if (nextUrl) {
-        router.push(nextUrl as Route)
+      if (directUrl) {
+        router.push(directUrl)
       } else {
         router.back()
       }

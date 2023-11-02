@@ -1,19 +1,17 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-
 import BaseSideBar from '../sidebar'
 import DeleteAppButton from './delete-app-button'
 
 interface IProps {
   appId: string
   appName: string
+  sessionId: string
 }
 
-export default function Sidebar({ appId, appName }: IProps) {
-  const searchParams = useSearchParams()
+export default function Sidebar({ appId, appName, sessionId }: IProps) {
   return (
-    <BaseSideBar>
+    <BaseSideBar directUrl={`/app/${appId}/session/${sessionId}`}>
       <div className="pl-3 text-sm font-medium uppercase text-slate-500">
         App Settings
       </div>
@@ -21,7 +19,6 @@ export default function Sidebar({ appId, appName }: IProps) {
       <BaseSideBar.Link
         href={{
           pathname: `/app/${appId}/settings/basics`,
-          search: searchParams?.toString(),
         }}
         name="Basics"
         desc="Some basic configurations of the App."
@@ -29,7 +26,6 @@ export default function Sidebar({ appId, appName }: IProps) {
       <BaseSideBar.Link
         href={{
           pathname: `/app/${appId}/settings/workflow`,
-          search: searchParams?.toString(),
         }}
         name="Workflow"
         desc="Workflow related configurations of the App."

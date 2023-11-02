@@ -35,9 +35,8 @@ const Sidebar = ({ datasetId, name }: IProps) => {
       router.refresh()
     } catch (error) {}
   }
-  const nextUrl = 'nextUrl=/datasets'
   return (
-    <BaseSideBar>
+    <BaseSideBar directUrl="/datasets">
       <div className="pl-3 text-sm font-medium uppercase text-slate-500">
         Datasets
       </div>
@@ -45,7 +44,6 @@ const Sidebar = ({ datasetId, name }: IProps) => {
       <BaseSideBar.Link
         href={{
           pathname: `/dataset/${datasetId}/settings/basics`,
-          search: nextUrl,
         }}
         name="Basics"
         desc=""
@@ -53,7 +51,6 @@ const Sidebar = ({ datasetId, name }: IProps) => {
       <BaseSideBar.Link
         href={{
           pathname: `/dataset/${datasetId}/settings/documents`,
-          search: nextUrl,
         }}
         name="Data"
         desc=""
