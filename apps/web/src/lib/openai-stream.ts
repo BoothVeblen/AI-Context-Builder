@@ -1,21 +1,15 @@
-import {
-  createParser,
-  ParsedEvent,
-  ReconnectInterval,
-} from 'eventsource-parser'
+import { createParser } from 'eventsource-parser'
 
-import { MESSAGE_FOR_KEEP_STREAM_CONNECTION } from './const'
+import {
+  MESSAGE_FOR_KEEP_STREAM_CONNECTION,
+  MESSAGE_FOR_STREAM_ENDING,
+} from './const'
 
 function encodeData(data: Record<string, unknown>) {
   return `[DATA]${JSON.stringify(data)}[DATAEND]`
 }
 
-export async function OpenAIStream({
-  baseUrl,
-  payload,
-  callback,
-  data,
-}: {
+type StreamParams = {
   baseUrl: string
   payload: any
   callback?: {
@@ -27,15 +21,14 @@ export async function OpenAIStream({
     onToken?: (token: string) => Promise<void> | void
   }
   data: Record<string, unknown>
-}) {
-  const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
+}
 
-  let counter = 0
-  let completion = ''
-  let initialed = false
-  let error = false
-  let aborted = false
+export async function OpenAIStream({
+  baseUrl,
+  payload,
+  callback,
+  data,
+}: StreamParams) {
   const abortController = new AbortController()
   const res = await fetch(`${baseUrl}/chat/completions`, {
     headers: {
@@ -47,96 +40,115 @@ export async function OpenAIStream({
     signal: abortController.signal,
   })
 
-  const stream = new ReadableStream({
-    cancel() {
-      aborted = true
-      abortController.abort()
-    },
-    async start(controller) {
-      // prevent the stream from closing when the initial response is too long
-      const waitingId = setInterval(() => {
-        const queue = encoder.encode(MESSAGE_FOR_KEEP_STREAM_CONNECTION)
-        controller.enqueue(queue)
+  if (!res.body) {
+    throw new Error('no response body')
+  }
+  const stream = res.body
+    .pipeThrough(createParserTransformer())
+    .pipeThrough(createProcessTransformer(callback))
+    .pipeThrough(createMetaTransformer(data))
+    .pipeThrough(createEncoderTransformer())
+
+  stream.cancel = async () => {
+    abortController.abort()
+  }
+
+  return stream
+}
+
+function createMetaTransformer(
+  data: Record<string, unknown>
+): TransformStream<string, string> {
+  let waitingId: NodeJS.Timeout | null = null
+  return new TransformStream({
+    start(controller) {
+      controller.enqueue(encodeData(data))
+      waitingId = setInterval(() => {
+        controller.enqueue(MESSAGE_FOR_KEEP_STREAM_CONNECTION)
       }, 20 * 1000)
-
-      let metadata: any
-
-      controller.enqueue(encoder.encode(encodeData(data)))
-
-      async function onParse(event: ParsedEvent | ReconnectInterval) {
-        if (event.type === 'event') {
-          const data = event.data
-          if (data === '[DONE]') {
-            if (!initialed) {
-              initialed = true
-              if (callback?.onStart) {
-                await callback.onStart()
-              }
-            }
-            // run onCompletion only if there is no error
-            if (callback?.onCompletion && !error) {
-              // todo actual impl
-              await callback.onCompletion(completion, metadata ?? {})
-            }
-            controller.close()
-            if (waitingId) clearInterval(waitingId)
-            return
-          }
-          try {
-            const json = JSON.parse(data)
-            metadata = json.metadata
-            if (metadata?.error) {
-              error = true
-              controller.enqueue(
-                encoder.encode(
-                  encodeData({
-                    error: metadata.error,
-                  })
-                )
-              )
-              return
-            }
-            const text = json.choices?.[0].delta?.content || ''
-            if (counter < 2 && (text.match(/\n/) || []).length) {
-              return
-            }
-            completion = completion + text
-            const queue = encoder.encode(text)
-            controller.enqueue(queue)
-            counter++
-
-            if (callback?.onToken) {
-              await callback.onToken(text)
-            }
-
-            if (!initialed) {
-              initialed = true
-
-              if (waitingId) clearInterval(waitingId)
-
-              if (callback?.onStart) {
-                await callback.onStart()
-              }
-            }
-          } catch (e) {
-            controller.error(e)
-          }
-        }
+    },
+    transform(chunk, controller) {
+      if (waitingId) {
+        clearInterval(waitingId)
+        waitingId = null
       }
+      controller.enqueue(chunk)
+    },
+  })
+}
 
-      // stream response (SSE) from OpenAI may be fragmented into multiple chunks
-      // this ensures we properly read chunks & invoke an event for each SSE event stream
-      const parser = createParser(onParse)
-
-      // https://web.dev/streams/#asynchronous-iteration
-      for await (const chunk of res.body as any) {
-        if (aborted) {
-          break
+function createProcessTransformer(
+  callbacks: StreamParams['callback']
+): TransformStream<string, string> {
+  let metadata: any
+  let counter = 0
+  let completion = ''
+  let error = false
+  return new TransformStream({
+    async start() {
+      await callbacks?.onStart?.()
+    },
+    async transform(chunk, controller) {
+      if (chunk === MESSAGE_FOR_STREAM_ENDING) {
+        return
+      }
+      try {
+        const json = JSON.parse(chunk)
+        metadata = json.metadata
+        if (metadata?.error) {
+          error = true
+          controller.enqueue(
+            encodeData({
+              error: metadata.error,
+            })
+          )
+          return
         }
-        parser.feed(decoder.decode(chunk))
+        const text = json.choices?.[0].delta?.content || ''
+        if (counter < 2 && (text.match(/\n/) || []).length) {
+          return
+        }
+        completion = completion + text
+        const queue = text
+        controller.enqueue(queue)
+        counter++
+
+        await callbacks?.onToken?.(text)
+      } catch (e) {
+        controller.error(e)
+      }
+    },
+    async flush() {
+      if (!error) {
+        await callbacks?.onCompletion?.(completion, metadata)
       }
     },
   })
+}
 
-  return stream
+function createParserTransformer(): TransformStream<Uint8Array, string> {
+  const decoder = new TextDecoder()
+  let parser: ReturnType<typeof createParser>
+  return new TransformStream({
+    start(controller) {
+      parser = createParser((chunk) => {
+        if (chunk.type === 'reconnect-interval') {
+          return
+        }
+        controller.enqueue(chunk.data)
+      })
+    },
+    transform(chunk) {
+      parser.feed(decoder.decode(chunk))
+    },
+  })
+}
+
+function createEncoderTransformer(): TransformStream<string, Uint8Array> {
+  const encoder = new TextEncoder()
+  return new TransformStream({
+    transform(chunk, controller) {
+      controller.enqueue(encoder.encode(chunk))
+    },
+  })
 }

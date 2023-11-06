@@ -7,3 +7,4 @@ export const SLACK_AUTHORIZE_URL = `https://slack.com/oauth/v2/authorize?client_
 )}`
 
 export const MESSAGE_FOR_KEEP_STREAM_CONNECTION = 'waiting...\n'
+export const MESSAGE_FOR_STREAM_ENDING = '[DONE]'
