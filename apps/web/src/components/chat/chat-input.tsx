@@ -32,7 +32,7 @@ const ChatInput = ({ onSubmit, showResend, onReload, onStop }: InputProps) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (!disabled) onSubmit(e)
   }
-
+  const escapedInput = input === '\n' ? '' : input
   return (
     <div
       className={cn(
@@ -70,7 +70,7 @@ const ChatInput = ({ onSubmit, showResend, onReload, onStop }: InputProps) => {
             <Textarea
               className="min-h-[40px]"
               placeholder="Type a message"
-              value={input}
+              value={escapedInput}
               onChange={handleInputChange}
               onKeyDown={(e) => {
                 if (!disabled && shouldSubmit(e)) {
