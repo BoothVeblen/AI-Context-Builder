@@ -1,19 +1,8 @@
 import Link from 'next/link'
 
-import useUser from '@/hooks/use-user'
 import { Button } from '@/components/ui/button'
-import UserProfileCard from '@/components/user-profile-card'
 
-function Profile() {
-  const { data, isLoading } = useUser()
-
-  if (isLoading) {
-    return <UserProfileCard.Loading />
-  }
-
-  const { email, name, imageUrl } = data
-  return <UserProfileCard name={name} email={email} imageUrl={imageUrl} />
-}
+import Profile from './profile'
 
 export default function Account() {
   return (

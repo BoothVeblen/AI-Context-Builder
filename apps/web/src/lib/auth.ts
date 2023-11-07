@@ -8,10 +8,15 @@ export function auth() {
 }
 
 export async function currentUser() {
-  const { emailAddresses, firstName, lastName, imageUrl, privateMetadata } =
-    (await clerkCurrentUser()) ?? {}
+  const {
+    emailAddresses,
+    firstName,
+    lastName,
+    imageUrl = '',
+    privateMetadata,
+  } = (await clerkCurrentUser()) ?? {}
   const name = [firstName || '', lastName || ''].join(' ').trim()
-  const email = emailAddresses?.[0].emailAddress
+  const email = emailAddresses?.[0].emailAddress || ''
   const isAdmin = ((privateMetadata?.roles as string[]) || []).includes('admin')
 
   return {
@@ -24,6 +29,5 @@ export async function currentUser() {
 
 export async function currentUserEmail() {
   const { emailAddresses } = (await clerkCurrentUser()) ?? {}
-  const email = emailAddresses?.[0].emailAddress
-  if (email) return email
+  return emailAddresses?.[0].emailAddress || ''
 }

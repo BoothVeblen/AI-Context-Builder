@@ -10,7 +10,7 @@ import SlackTeamList from './slack-team-list'
 
 export default function ChatApps() {
   const { data, isLoading } = useUser()
-  const { email } = data
+  const { email } = data || {}
 
   return (
     <div className="space-y-8 px-6 py-4">

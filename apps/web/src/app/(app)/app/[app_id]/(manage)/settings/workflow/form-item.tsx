@@ -373,7 +373,8 @@ export function ListSelectItem<T extends FieldValues>({
             field.value.length > 0 &&
             field.value.map((value: string) => {
               const item = options.find((d) => d.value === value)
-              const { label, icon } = item || {}
+              const { label } = item || {}
+              if (!label) return null
               return (
                 <div
                   key={value}

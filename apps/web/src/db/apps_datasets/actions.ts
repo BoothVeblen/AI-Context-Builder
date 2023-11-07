@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import { db } from '@/lib/drizzle-edge'
 
@@ -13,7 +13,10 @@ export async function getLinkedDatasetsByAppId(appId: string) {
       .from(AppsDatasetsTable)
       .rightJoin(
         DatasetsTable,
-        eq(DatasetsTable.short_id, AppsDatasetsTable.dataset_id)
+        and(
+          eq(DatasetsTable.short_id, AppsDatasetsTable.dataset_id),
+          eq(DatasetsTable.archived, false)
+        )
       )
       .where(eq(AppsDatasetsTable.app_id, appId))
 

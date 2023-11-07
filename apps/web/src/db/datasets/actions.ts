@@ -143,6 +143,7 @@ export async function removeDataset(datasetId: string) {
     if (!api_dataset_id) return Promise.resolve([])
     await api.delete(`/v1/datasets/${api_dataset_id}`)
   }
+
   const response = await db
     .update(DatasetsTable)
     .set({ archived: true, updated_at: new Date() })
@@ -152,6 +153,10 @@ export async function removeDataset(datasetId: string) {
         eq(DatasetsTable.created_by, userId)
       )
     )
+
+  await db
+    .delete(AppsDatasetsTable)
+    .where(eq(AppsDatasetsTable.dataset_id, datasetId))
 
   return response
 }

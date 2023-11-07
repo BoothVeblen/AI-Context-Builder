@@ -1,19 +1,13 @@
+import { UserProfile } from '@/types/users'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-
-interface IProps {
-  name: string
-  email?: string
-  imageUrl?: string
-  isAdmin?: boolean
-}
 
 export default function UserProfileCard({
   name,
   email,
   imageUrl,
   isAdmin,
-}: IProps) {
+}: UserProfile) {
   return (
     <div className="flex items-center space-x-2 truncate">
       {imageUrl && (

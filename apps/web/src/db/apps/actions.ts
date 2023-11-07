@@ -499,6 +499,10 @@ export async function removeApp(appId: string) {
       )
       .returning()
 
+    await db
+      .delete(AppsDatasetsTable)
+      .where(eq(AppsDatasetsTable.app_id, appId))
+
     await logsnag?.track({
       user_id: userId,
       channel: 'creator',

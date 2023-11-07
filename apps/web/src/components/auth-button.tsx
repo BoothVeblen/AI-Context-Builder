@@ -2,12 +2,12 @@ import { currentUser } from '@/lib/auth'
 import { flags } from '@/lib/flags'
 
 import AuthDropdownMenu from './auth-dropdown-menu'
-import UserProfileCard from './user-profile-card'
+import Profile from './settings/profile'
 
 export default async function AuthButton() {
   if (!flags.enabledAuth) return null
 
-  const { name, email, imageUrl, isAdmin } = await currentUser()
+  const profileData = await currentUser()
 
   return (
     <AuthDropdownMenu>
@@ -15,12 +15,7 @@ export default async function AuthButton() {
         type="button"
         className="flex h-16 items-center border-t border-slate-200 px-4 text-left hover:bg-slate-100 focus:outline-none"
       >
-        <UserProfileCard
-          name={name}
-          email={email}
-          imageUrl={imageUrl}
-          isAdmin={isAdmin}
-        />
+        <Profile fallbackData={profileData} />
       </button>
     </AuthDropdownMenu>
   )
