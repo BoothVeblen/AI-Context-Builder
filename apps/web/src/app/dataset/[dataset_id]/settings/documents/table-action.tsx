@@ -1,7 +1,8 @@
 'use client'
 
-import { MutableRefObject, ReactNode, useCallback, useTransition } from 'react'
+import { ReactNode, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useModal } from '@ebay/nice-modal-react'
 import { Loader2Icon, RefreshCw, Settings2, Trash } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'
 
@@ -13,6 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useToast } from '@/components/ui/use-toast'
+import ConfirmDialog from '@/components/nice-confirm-dialog'
 
 const TooltipButton = ({
   children,
@@ -35,10 +37,8 @@ interface IProps {
   status: 0 | 1 | 2
   type?: string
   datasetId: string
-  currentId: MutableRefObject<{ shortId: string }>
   shortId: string
-  setOpen: (s: boolean) => void
-  handleSynchronize: () => void
+  handleRefresh: () => void
 }
 
 function synchrony(
@@ -53,46 +53,77 @@ function synchrony(
   })
 }
 
+function deleteData(
+  url: string,
+  { arg }: { arg: { dataset_id: string; uid: string } }
+) {
+  return fetcher(url, {
+    method: 'DELETE',
+    body: JSON.stringify(arg),
+  })
+}
+
 const TableAction = ({
   datasetId,
-  currentId,
   shortId,
-  setOpen,
-  handleSynchronize,
+  handleRefresh,
   status,
   type,
 }: IProps) => {
   const [isPending, startTransition] = useTransition()
+  const confirmDialog = useModal(ConfirmDialog)
+
+  const currentId = useRef({ shortId: '' })
 
   const { trigger, isMutating } = useSWRMutation(
     `/api/datasets/document`,
     synchrony
   )
 
+  const { trigger: triggerDelete, isMutating: isMutatingDelete } =
+    useSWRMutation(`/api/datasets/document`, deleteData)
   const router = useRouter()
-  const editData = useCallback(async () => {
-    startTransition(() => {
-      router.push(`/dataset/${datasetId}/document/${currentId.current.shortId}`)
+
+  const onOk = async () => {
+    await triggerDelete({ dataset_id: datasetId, uid: shortId || '' })
+    handleRefresh()
+    router.refresh()
+  }
+
+  const handelDelete = () => {
+    confirmDialog.show({
+      title: `Delete Data?`,
+      description: `Are you sure you want to delete this data? This action cannot be
+      undone.`,
+      confirmText: 'Delete Data',
+      loadingText: 'Deleting',
+      onOk,
     })
-  }, [datasetId, currentId.current.shortId])
+  }
+
+  const handelEdit = () => {
+    currentId.current.shortId = shortId
+    startTransition(() => {
+      router.push(`/dataset/${datasetId}/document/${shortId}`)
+    })
+  }
 
   const { toast } = useToast()
 
-  const refreshData = useCallback(async () => {
+  const handelSynchronize = async () => {
     toast({
       description: 'Synchronizing',
     })
     await trigger({
       isSynchrony: true,
       dataset_id: datasetId,
-      document_id: currentId.current.shortId,
+      document_id: shortId,
     })
-    handleSynchronize()
+    handleRefresh()
     toast({
       description: 'Synchronized',
     })
-  }, [datasetId, currentId.current.shortId])
-
+  }
   return (
     <div className="invisible z-10 flex gap-2 group-hover/cell:visible">
       {status === 0 && (
@@ -103,8 +134,7 @@ const TableAction = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation()
-              currentId.current.shortId = shortId
-              editData()
+              handelEdit()
             }}
           >
             {isPending && currentId?.current?.shortId === shortId ? (
@@ -123,8 +153,7 @@ const TableAction = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation()
-              currentId.current.shortId = shortId
-              refreshData()
+              handelSynchronize()
             }}
           >
             {isMutating && currentId?.current?.shortId === shortId ? (
@@ -142,8 +171,7 @@ const TableAction = ({
           className="h-8 w-8 text-red-600"
           onClick={(e) => {
             e.stopPropagation()
-            setOpen(true)
-            currentId.current.shortId = shortId
+            handelDelete()
           }}
         >
           <Trash size={18} />

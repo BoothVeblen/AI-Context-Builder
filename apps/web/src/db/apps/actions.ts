@@ -2,7 +2,7 @@ import 'server-only'
 
 import { redirect } from 'next/navigation'
 import { and, desc, eq, inArray } from 'drizzle-orm'
-import { difference, isEmpty, pick } from 'lodash'
+import { difference, isEmpty, pick, set } from 'lodash'
 
 import { api } from '@/lib/api'
 import { auth, currentUser } from '@/lib/auth'
@@ -353,78 +353,9 @@ export async function deployApp(appId: string, newValue: Partial<NewApp>) {
       await api.patch(`/v1/models/${api_model_id}`, { chains })
     }
 
-    // BEGIN link datasets to this app
-    const newWorkflow = safeParse(newValue.published_workflow_data_str, [])
-    const allApiDatasetIds = newWorkflow.reduce(
-      (acc: string[], task: WorkflowItem) => {
-        const d =
-          (safeParse(task.formValueStr, {}).data?.datasets as string[]) || []
-        acc.push(...d)
-        return acc
-      },
-      []
-    ) as string[]
-    const newApiDatasetIds = [...new Set(allApiDatasetIds)]
-
-    const oldApiDatasetIds = (
-      await db
-        .select({ api_dataset_id: DatasetsTable.api_dataset_id })
-        .from(AppsDatasetsTable)
-        .where(eq(AppsDatasetsTable.app_id, appId))
-        .leftJoin(
-          DatasetsTable,
-          eq(DatasetsTable.short_id, AppsDatasetsTable.dataset_id)
-        )
-    ).map((d) => d.api_dataset_id)
-
-    const addedApiDatasetIds = difference(
-      newApiDatasetIds,
-      oldApiDatasetIds
-    ) as string[]
-    const removedApiDatasetIds = difference(
-      oldApiDatasetIds,
-      newApiDatasetIds
-    ) as string[]
-
-    const queue = []
-    if (addedApiDatasetIds.length > 0) {
-      const addedDatasetIds = (
-        await db
-          .select({ id: DatasetsTable.short_id })
-          .from(DatasetsTable)
-          .where(inArray(DatasetsTable.api_dataset_id, addedApiDatasetIds))
-      ).map((d) => d.id)
-      for (const datasetId of addedDatasetIds) {
-        const task = db.insert(AppsDatasetsTable).values({
-          app_id: appId,
-          dataset_id: datasetId,
-        })
-        queue.push(task)
-      }
+    if (newValue.published_workflow_data_str) {
+      await modifyAppsDatasetsTable(appId, newValue.published_workflow_data_str)
     }
-    if (removedApiDatasetIds.length > 0) {
-      const removedDatasetIds = (
-        await db
-          .select({ id: DatasetsTable.short_id })
-          .from(DatasetsTable)
-          .where(inArray(DatasetsTable.api_dataset_id, removedApiDatasetIds))
-      ).map((d) => d.id)
-      for (const datasetId of removedDatasetIds) {
-        const task = db
-          .delete(AppsDatasetsTable)
-          .where(
-            and(
-              eq(AppsDatasetsTable.app_id, appId),
-              eq(AppsDatasetsTable.dataset_id, datasetId)
-            )
-          )
-        queue.push(task)
-      }
-    }
-    if (queue.length > 0) {
-      await Promise.all(queue)
-    }
-    // END link datasets to this app
 
     const [updatedApp] = await db
       .update(AppsTable)
@@ -631,4 +562,216 @@ export async function getDebugSessionId({
   )
   const api_model_id = response?.id
   return await addDebugSession(api_model_id)
+}
+
+function removeSensitiveData(
+  config: string | null,
+  modifies: { path: string; value: any }[] = []
+) {
+  if (!config) return null
+  const data = safeParse(config, [])
+  const newData = data.map((item: any) => {
+    const formValueStr = item.formValueStr
+    if (!formValueStr) return item
+    const formValue = safeParse(formValueStr, {})
+    for (const { path, value } of modifies) {
+      set(formValue, path, value)
+    }
+    return {
+      ...item,
+      formValueStr: JSON.stringify(formValue),
+    }
+  })
+  return JSON.stringify(newData)
+}
+
+const SENSITIVE_DATA_MODIFIER = [
+  { path: 'llm.api_key', value: '' },
+  { path: 'data.datasets', value: [] },
+]
+
+export async function forkApp(
+  parentAppId: string,
+  newValue: Omit<NewApp, 'short_id' | 'created_by'>
+) {
+  try {
+    const { userId } = auth()
+    if (!userId) {
+      throw new Error('Not authenticated')
+    }
+
+    const { email } = await currentUser()
+
+    const appDetail = await getApp(parentAppId)
+    const isOwner = appDetail.created_by === userId
+
+    const appId = nanoid()
+    const { published_workflow_tree_str } = appDetail
+    const published_workflow_data_str = isOwner
+      ? appDetail.published_workflow_data_str
+      : removeSensitiveData(
+          appDetail.published_workflow_data_str,
+          SENSITIVE_DATA_MODIFIER
+        )
+
+    const chains = safeParse(published_workflow_data_str, []).map(
+      taskToApiFormatter
+    )
+    const opening_remarks = appDetail.opening_remarks || ''
+    const enable_video_interaction = appDetail.enable_video_interaction || false
+
+    const appData = await api.post<
+      {
+        chains: any[]
+        opening_remarks: string
+        enable_video_interaction: boolean
+      },
+      { id: string }
+    >('/v1/models', { chains, opening_remarks, enable_video_interaction })
+    const api_model_id = appData?.id
+
+    const appVal = {
+      ...newValue,
+      short_id: appId,
+      opening_remarks,
+      enable_video_interaction,
+      workflow_tree_str: published_workflow_tree_str,
+      workflow_data_str: published_workflow_data_str,
+      published_workflow_tree_str,
+      published_workflow_data_str,
+      api_model_id,
+      parent_app_id: parentAppId,
+      created_by: userId,
+    }
+
+    const [newApp] = await db.insert(AppsTable).values(appVal).returning()
+
+    if (isOwner && published_workflow_data_str) {
+      await modifyAppsDatasetsTable(appId, published_workflow_data_str)
+    }
+
+    const sessionData = await api.post<
+      { model_id: string },
+      { session_id: string }
+    >('/v1/chat/session', { model_id: api_model_id })
+    const api_session_id = sessionData?.session_id
+    const sessionVal = {
+      short_id: nanoid(),
+      name: 'Chat 1',
+      app_id: appId,
+      created_by: userId,
+      api_session_id,
+    }
+    const [newSession] = await db
+      .insert(SessionsTable)
+      .values(sessionVal)
+      .returning()
+
+    if (newApp.opening_remarks) {
+      const message = formatEventMessage({
+        session_id: newSession.short_id,
+        event_type: 'basic.opening_remarks',
+        content: newApp.opening_remarks,
+      })
+      await addMessage(message)
+    }
+
+    await addToWorkspace(appId)
+
+    const actionName = isOwner ? 'Duplicate' : 'Customize'
+    await logsnag?.track({
+      user_id: userId,
+      channel: 'creator',
+      event: `${actionName} App Request`,
+      icon: '✅',
+      description: `${email} ${actionName.toLowerCase()} app "${
+        appDetail.name
+      }" successfully`,
+      tags: {
+        'user-id': userId,
+        'parent-app-id': parentAppId,
+        'app-id': appId,
+      },
+    })
+
+    return { appId, sessionId: newSession?.short_id }
+  } catch (error: any) {
+    return {
+      error: error.message,
+    }
+  }
+}
+
+// link the datasets of workflow to the app
+async function modifyAppsDatasetsTable(appId: string, workflowDataStr: string) {
+  const newWorkflow = safeParse(workflowDataStr, [])
+  const allApiDatasetIds = newWorkflow.reduce(
+    (acc: string[], task: WorkflowItem) => {
+      const d =
+        (safeParse(task.formValueStr, {}).data?.datasets as string[]) || []
+      acc.push(...d)
+      return acc
+    },
+    []
+  ) as string[]
+  const newApiDatasetIds = [...new Set(allApiDatasetIds)]
+
+  const oldApiDatasetIds = (
+    await db
+      .select({ api_dataset_id: DatasetsTable.api_dataset_id })
+      .from(AppsDatasetsTable)
+      .where(eq(AppsDatasetsTable.app_id, appId))
+      .leftJoin(
+        DatasetsTable,
+        eq(DatasetsTable.short_id, AppsDatasetsTable.dataset_id)
+      )
+  ).map((d) => d.api_dataset_id)
+
+  const addedApiDatasetIds = difference(
+    newApiDatasetIds,
+    oldApiDatasetIds
+  ) as string[]
+  const removedApiDatasetIds = difference(
+    oldApiDatasetIds,
+    newApiDatasetIds
+  ) as string[]
+
+  const queue = []
+  if (addedApiDatasetIds.length > 0) {
+    const addedDatasetIds = (
+      await db
+        .select({ id: DatasetsTable.short_id })
+        .from(DatasetsTable)
+        .where(inArray(DatasetsTable.api_dataset_id, addedApiDatasetIds))
+    ).map((d) => d.id)
+    for (const datasetId of addedDatasetIds) {
+      const task = db.insert(AppsDatasetsTable).values({
+        app_id: appId,
+        dataset_id: datasetId,
+      })
+      queue.push(task)
+    }
+  }
+  if (removedApiDatasetIds.length > 0) {
+    const removedDatasetIds = (
+      await db
+        .select({ id: DatasetsTable.short_id })
+        .from(DatasetsTable)
+        .where(inArray(DatasetsTable.api_dataset_id, removedApiDatasetIds))
+    ).map((d) => d.id)
+    for (const datasetId of removedDatasetIds) {
+      const task = db
+        .delete(AppsDatasetsTable)
+        .where(
+          and(
+            eq(AppsDatasetsTable.app_id, appId),
+            eq(AppsDatasetsTable.dataset_id, datasetId)
+          )
+        )
+      queue.push(task)
+    }
+  }
+  if (queue.length > 0) {
+    await Promise.all(queue)
+  }
 }

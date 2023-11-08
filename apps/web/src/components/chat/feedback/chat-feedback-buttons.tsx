@@ -4,6 +4,7 @@ import { startTransition, useCallback } from 'react'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import useSWRMutation from 'swr/mutation'
 
+import ChatActionCopy from '../actions/copy'
 import ChatAction, { actionCommonButtonProps } from '../chat-action'
 import { ChatMessage } from '../types'
 import { useChat } from '../useChat'
@@ -17,7 +18,7 @@ type Props = {
 
 const ChatFeedbackButtons = (props: Props) => {
   const { message } = props
-  const { id, feedback } = message
+  const { id, feedback, content } = message
   const { updateMessage } = useChat()
 
   const { toggleFeedback } = useChatFeedbackContext()
@@ -78,7 +79,8 @@ const ChatFeedbackButtons = (props: Props) => {
   const status = feedback
 
   return (
-    <div className="flex w-[4.75rem] flex-row-reverse">
+    <div className="flex">
+      <ChatActionCopy content={content} />
       {!status && (
         <>
           {renderButton('good', true)}

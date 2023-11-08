@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useModal } from '@ebay/nice-modal-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronRightIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
+import CreateDatasetDialog from '@/components/create-dataset-dialog'
 
 import AddTemplateButton from './add-template-button'
 import {
@@ -306,6 +308,7 @@ function FormItemRetriever() {
 
 function FormItemData() {
   const datasetOptions = useWorkflowContext((state) => state.datasetOptions)
+  const modal = useModal(CreateDatasetDialog)
 
   return (
     <div className="space-y-4">
@@ -315,6 +318,11 @@ function FormItemData() {
           name="data.datasets"
           label="Dataset"
           options={datasetOptions}
+          actionChildren={
+            <Button variant="outline" onClick={() => modal.show()}>
+              Create a Dataset
+            </Button>
+          }
         />
       </div>
     </div>

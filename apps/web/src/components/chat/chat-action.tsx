@@ -1,9 +1,9 @@
-import React, { PropsWithChildren } from 'react'
+import React, { MouseEventHandler, PropsWithChildren } from 'react'
 
 import { cn } from '@/lib/utils'
 
 interface Props {
-  onClick?: () => void
+  onClick?: MouseEventHandler<HTMLButtonElement>
 }
 export const actionCommonButtonProps = {
   size: 16,
@@ -12,7 +12,7 @@ export const actionCommonButtonProps = {
 
 const ChatAction = ({ onClick, children }: PropsWithChildren<Props>) => {
   return (
-    <div
+    <button
       className={cn(
         'mr-1 rounded-md border bg-white p-2',
         onClick
@@ -26,7 +26,7 @@ const ChatAction = ({ onClick, children }: PropsWithChildren<Props>) => {
         : {})}
     >
       {children}
-    </div>
+    </button>
   )
 }
 

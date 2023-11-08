@@ -1,23 +1,24 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import NiceModal from '@ebay/nice-modal-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { z } from 'zod'
 
-import { fetcher } from '@/lib/utils'
+import { fetcher, nanoid } from '@/lib/utils'
+import { NewApp } from '@/db/apps/schema'
+import useNiceModal from '@/hooks/use-nice-modal'
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-
 import {
   Form,
   FormControl,
@@ -25,17 +26,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from './ui/form'
-import { Input } from './ui/input'
-import { Textarea } from './ui/textarea'
-import { useToast } from './ui/use-toast'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/components/ui/use-toast'
+import Upload from '@/components/upload/upload'
+import { FileProps } from '@/components/upload/utils'
+
 import { UPLOAD_ACCEPT_MAP } from './upload/type'
-import Upload from './upload/upload'
-import { FileProps } from './upload/utils'
 
 interface IProps {
-  dialogTrigger?: ReactNode
-  submit?: () => void
+  defaultValues?: z.infer<typeof formSchema>
+  parentAppId?: string
 }
 
 interface FormValuesProps {
@@ -61,42 +63,50 @@ const formSchema = z.object({
   icon: z.string().optional(),
 })
 
-const defaultValues = {
-  name: '',
-  description: '',
-  icon: '',
-}
-
-function addApp(
-  url: string,
-  { arg }: { arg: { name: string; description?: string; icon?: string } }
-) {
+function addApp(url: string, { arg }: { arg: Partial<NewApp> }) {
   return fetcher(url, {
     method: 'POST',
     body: JSON.stringify(arg),
   })
 }
 
-const CreateAppDialog = (props: IProps) => {
-  const { dialogTrigger } = props
+export default NiceModal.create((props: IProps) => {
+  const { defaultValues: _defaultValues, parentAppId } = props
+  const isCopy = !!parentAppId
+
   const router = useRouter()
   const { mutate } = useSWRConfig()
-  const [open, setOpen] = useState<boolean>(false)
+  const { trigger, isMutating } = useSWRMutation('/api/me/apps', addApp)
+  const { modal, onOpenChange } = useNiceModal()
+  const { toast } = useToast()
+
+  const defaultValues = {
+    name: _defaultValues?.name || '',
+    description: _defaultValues?.description || '',
+    icon: _defaultValues?.icon || '',
+  }
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
   })
   const { reset, setValue } = form
-  const { toast } = useToast()
-
-  const [image, setImage] = useState<FileProps[]>([])
+  const _image = defaultValues?.icon
+    ? [
+        {
+          uid: nanoid(),
+          url: defaultValues?.icon,
+          type: 'image',
+          name: '',
+        },
+      ]
+    : []
+  const [image, setImage] = useState<FileProps[]>(_image)
   const [uploading, setUploading] = useState(false)
-  const { trigger, isMutating } = useSWRMutation('/api/me/apps', addApp)
 
   const onSubmit = async (data: FormValuesProps) => {
     try {
-      const json = await trigger(data)
-      setOpen(false)
+      const json = await trigger({ ...data, parent_app_id: parentAppId })
+      onOpenChange(false)
       mutate('/api/me/workspace')
       router.push(`/app/${json.appId}/settings/basics`)
       router.refresh()
@@ -109,19 +119,23 @@ const CreateAppDialog = (props: IProps) => {
     }
   }
   const handleCancel = () => {
-    setOpen(false)
     reset()
-    setImage([])
+    onOpenChange(false)
+    if (isCopy) {
+      setImage(_image)
+    } else {
+      setImage([])
+    }
   }
 
-  const onChangeFileList = (file: FileProps[]) => {
-    setImage(file)
-    setValue('icon', file[0]?.url || '')
+  const onChangeFileList = (files: FileProps[]) => {
+    setImage(files)
+    const current = files[files?.length - 1]
+    setValue('icon', current?.url)
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(open) => open && setOpen(open)}>
-      <AlertDialogTrigger asChild>{dialogTrigger}</AlertDialogTrigger>
+    <AlertDialog open={modal.visible} onOpenChange={onOpenChange}>
       <AlertDialogContent className="sm:max-w-[488px]">
         <AlertDialogHeader>
           <AlertDialogTitle>Create App</AlertDialogTitle>
@@ -195,5 +209,4 @@ const CreateAppDialog = (props: IProps) => {
       </AlertDialogContent>
     </AlertDialog>
   )
-}
-export default CreateAppDialog
+})

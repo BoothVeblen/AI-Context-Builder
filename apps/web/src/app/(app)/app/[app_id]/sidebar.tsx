@@ -17,7 +17,10 @@ export default async function Sidebar({ appId }: { appId: string }) {
             <Header appId={appId} />
           </Suspense>
           <div className="m-full h-px bg-slate-200" />
-          <Menu />
+          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+            <Menu appId={appId} />
+          </Suspense>
+
           <div className="m-full h-px bg-slate-200" />
           <SessionListHeader appId={appId} />
           <Suspense

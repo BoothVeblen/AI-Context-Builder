@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ColumnDef,
@@ -25,7 +18,6 @@ import { DataTablePagination } from '@/components/ui/table/pagination'
 import { useToast } from '@/components/ui/use-toast'
 
 import { formateDate, formateNumber, formateStatus } from '../../../utils'
-import DeleteData from './delete-data'
 import FileIcon from './file-icon'
 import TableAction from './table-action'
 
@@ -47,8 +39,6 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
     NodeDataChildren
   )
 
-  const [open, setOpen] = useState(false)
-  const currentId = useRef({ shortId: '' })
   const router = useRouter()
   const [synchronizeNum, setSynchronizeNum] = useState(0)
 
@@ -141,13 +131,11 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
           const status = row?.original?.status as 0 | 2 | 2
           return (
             <TableAction
-              setOpen={setOpen}
               status={status}
               type={type}
               shortId={short_id}
               datasetId={datasetId}
-              currentId={currentId}
-              handleSynchronize={() => setSynchronizeNum(synchronizeNum + 1)}
+              handleRefresh={() => setSynchronizeNum(synchronizeNum + 1)}
             />
           )
         },
@@ -218,13 +206,6 @@ const DatasetTable = ({ preload = [], datasetId, total }: IProps) => {
         onRowClick={handleRowClick}
       />
       <DataTablePagination table={table} />
-      <DeleteData
-        datasetId={datasetId}
-        uid={currentId?.current?.shortId}
-        open={open}
-        setOpen={setOpen}
-        confirmDelete={() => setSynchronizeNum((v) => v + 1)}
-      />
     </div>
   )
 }

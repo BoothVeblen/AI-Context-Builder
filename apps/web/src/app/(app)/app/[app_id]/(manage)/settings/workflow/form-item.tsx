@@ -285,6 +285,7 @@ export function SlideItem<T extends FieldValues>({
 interface IListSelectItem<T> {
   name: Path<T>
   label: string
+  actionChildren?: ReactNode
   options: {
     label: string
     value: PathValue<T, Path<T>>
@@ -297,6 +298,7 @@ export function ListSelectItem<T extends FieldValues>({
   name,
   label,
   options,
+  actionChildren,
 }: IListSelectItem<T>) {
   const form = useFormContext<T>()
   const [open, setOpen] = useState(false)
@@ -366,6 +368,7 @@ export function ListSelectItem<T extends FieldValues>({
                   </CommandGroup>
                 </CommandList>
               </Command>
+              <div className="px-1 py-2">{actionChildren}</div>
             </PopoverContent>
           </Popover>
           <FormMessage />

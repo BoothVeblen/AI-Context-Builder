@@ -1,10 +1,12 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useModal } from '@ebay/nice-modal-react'
 import { ArrowLeft, Loader2Icon, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
 import FileIcon from '../../file-icon'
+import SegmentFormDialog from './segment-form-dialog'
 
 interface IProps {
   uid: string
@@ -13,12 +15,12 @@ interface IProps {
   icon?: string
   name?: string
   type?: string
-  addNew?: () => void
+  handelRefresh: () => void
 }
 
 const SegmentHeader = ({
   uid,
-  addNew,
+  handelRefresh,
   appId: app_id,
   icon,
   datasetId,
@@ -30,6 +32,16 @@ const SegmentHeader = ({
   const goBack = () => {
     startTransition(() => {
       router.push(`/dataset/${datasetId}/settings/documents`)
+    })
+  }
+  const modal = useModal(SegmentFormDialog)
+  const handelAdd = () => {
+    modal.show({
+      dataset_id: datasetId,
+      document_id: uid,
+      segment_id: '',
+      content: '',
+      handelRefresh,
     })
   }
   return (
@@ -55,7 +67,7 @@ const SegmentHeader = ({
           isSegment
         />
       </div>
-      <Button onClick={addNew} type="button" className="flex gap-1">
+      <Button onClick={handelAdd} type="button" className="flex gap-1">
         <Plus size={16} />
         Add Segment
       </Button>

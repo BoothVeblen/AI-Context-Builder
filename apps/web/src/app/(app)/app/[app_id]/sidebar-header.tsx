@@ -46,7 +46,9 @@ export default async function Header({ appId }: IProps) {
             <AppSettingDialog
               appId={appId}
               name={name}
-              isOwner={isOwner || isAdmin}
+              appDetail={appDetail}
+              isAdmin={isAdmin}
+              isOwner={isOwner}
             />
           </div>
         </div>

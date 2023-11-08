@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
@@ -7,6 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface IProps {
   id: string
@@ -51,7 +58,17 @@ export default function AppCard({
               {creator}
             </CardDescription>
           </div>
-          <CardTitle className="truncate text-xl">{name}</CardTitle>
+          <Tooltip>
+            <div className="flex">
+              <TooltipTrigger asChild>
+                <CardTitle className="truncate text-xl">{name}</CardTitle>
+              </TooltipTrigger>
+              <div className="flex-1" />
+            </div>
+            <TooltipContent side="top" className="max-w-[300px]" align="start">
+              <p className="break-words">{name}</p>
+            </TooltipContent>
+          </Tooltip>
           <CardDescription className="line-clamp-4 break-words text-xs leading-5">
             {description}
           </CardDescription>

@@ -1,20 +1,19 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import NiceModal from '@ebay/nice-modal-react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { PlusIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
 import { z } from 'zod'
 
 import { fetcher } from '@/lib/utils'
+import useNiceModal from '@/hooks/use-nice-modal'
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,7 +26,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-import { FormSchema, SchemaProps } from '../../../dataset/type'
+import { FormSchema, SchemaProps } from '../app/dataset/type'
 
 const defaultValues = {
   name: '',
@@ -48,8 +47,9 @@ function addDataset(url: string, { arg }: { arg: SchemaProps }) {
   })
 }
 
-const CreateDialog = () => {
-  const [open, setOpen] = useState(false)
+export default NiceModal.create(() => {
+  const { modal, onOpenChange } = useNiceModal()
+
   const router = useRouter()
   const { trigger, isMutating } = useSWRMutation(
     `/api/datasets/add-dataset`,
@@ -64,7 +64,7 @@ const CreateDialog = () => {
   const onSubmit = async (data: SchemaProps) => {
     try {
       const json = await trigger(data)
-      setOpen(false)
+      onOpenChange(false)
       router.refresh()
       router.push(`/dataset/${json?.datasetId}/settings/documents`)
     } catch (error) {}
@@ -72,19 +72,13 @@ const CreateDialog = () => {
 
   const handleCancel = () => {
     if (!isMutating) {
-      setOpen(false)
+      onOpenChange(false)
       form.reset()
     }
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(open) => open && setOpen(true)}>
-      <AlertDialogTrigger asChild>
-        <Button size="sm">
-          <PlusIcon className="mr-2 h-4 w-4" />
-          Add Dataset
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={modal.visible} onOpenChange={onOpenChange}>
       <AlertDialogContent className="sm:max-w-[488px]">
         <AlertDialogHeader>
           <AlertDialogTitle>Create Dataset</AlertDialogTitle>
@@ -127,6 +121,4 @@ const CreateDialog = () => {
       </AlertDialogContent>
     </AlertDialog>
   )
-}
-
-export default CreateDialog
+})

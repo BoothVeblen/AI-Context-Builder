@@ -3,10 +3,12 @@
 import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useModal } from '@ebay/nice-modal-react'
 import {
   Activity,
   ChevronDown,
   ChevronUp,
+  CopyIcon,
   LogOutIcon,
   Settings,
   Share,
@@ -15,6 +17,7 @@ import { useSWRConfig } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { cn, fetcher } from '@/lib/utils'
+import { NewApp } from '@/db/apps/schema'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 import ConfirmDialog from './confirm-dialog'
+import CreateAppDialog from './create-app-dialog'
 import { Button } from './ui/button'
 
 function leaveApp(url: string) {
@@ -33,12 +37,21 @@ function leaveApp(url: string) {
 interface IProps {
   appId: string
   name: string
+  isAdmin: boolean
   isOwner: boolean
+  appDetail: NewApp
 }
 
-const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
+const AppSettingDialog = ({
+  appId,
+  name,
+  isAdmin,
+  isOwner,
+  appDetail,
+}: IProps) => {
   const [open, setOpen] = useState<boolean>(false)
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false)
+  const modal = useModal(CreateAppDialog)
 
   const router = useRouter()
   const { mutate } = useSWRConfig()
@@ -73,7 +86,7 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
         className="cursor-pointer"
         onClick={() => {
           setOpen(false)
-          onClick?.()
+          setTimeout(() => onClick?.(), 0)
         }}
       >
         <Link
@@ -103,7 +116,7 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[220px]" align="end">
-          {isOwner && (
+          {(isOwner || isAdmin) && (
             <>
               {renderItem({
                 icon: <Settings size={16} />,
@@ -116,6 +129,20 @@ const AppSettingDialog = ({ appId, name, isOwner }: IProps) => {
                 name: 'App Analysis',
               })}
               <DropdownMenuSeparator />
+            </>
+          )}
+          {isOwner && (
+            <>
+              {renderItem({
+                icon: <CopyIcon size={16} />,
+                link: '',
+                name: 'Duplicate',
+                onClick: () =>
+                  modal.show({
+                    defaultValues: appDetail,
+                    parentAppId: appId,
+                  }),
+              })}
             </>
           )}
           {renderItem({
