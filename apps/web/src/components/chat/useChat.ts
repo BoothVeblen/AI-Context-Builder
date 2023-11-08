@@ -118,15 +118,7 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
   )
 
   const triggerRequest = useCallback(
-    async ({
-      query,
-      reloadId,
-      messages,
-    }: {
-      query: string
-      reloadId?: string
-      messages?: ChatMessage[]
-    }) => {
+    async ({ query, reloadId }: { query: string; reloadId?: string }) => {
       const responseMessage: ChatMessage = {
         id: nanoid(),
         content: '',
@@ -146,12 +138,11 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
         const res = await fetch(api, {
           method: 'POST',
           body: JSON.stringify({
-            query,
-            reloadId,
             appId,
             sessionId,
             apiSessionId,
-            ...(messages ? { messages } : {}),
+            query,
+            reloadId,
           }),
           signal: abortController.signal,
         })
@@ -292,9 +283,8 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
     }
 
     const currMessages = messagesRef.current
-    const nextMessages = [...currMessages, buildUserMessage(query)]
     try {
-      triggerRequest({ query, reloadId, messages: nextMessages })
+      triggerRequest({ query, reloadId })
     } catch (err) {
       setMessages(currMessages)
     }
@@ -307,7 +297,7 @@ export function useChat(props?: UseChatOptions): UseChatHelpers {
       messagesRef.current = nextMessages
       setMessages(nextMessages)
       try {
-        triggerRequest({ query, messages: nextMessages })
+        triggerRequest({ query })
       } catch (err) {}
     },
     [setMessages, triggerRequest]

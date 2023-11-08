@@ -62,9 +62,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
   const appId = body.appId as string
   const sessionId = body.sessionId as string
   const apiSessionId = body.apiSessionId as string
-  // const messages = body.messages as Message[]
   const query = body.query as string
   const reloadMessageId = body.reloadId as string
+  const messageId = reloadMessageId || nanoid()
 
   const payload = {
     session_id: apiSessionId,
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
         content: query,
       },
     ],
-    reload: !!reloadMessageId,
+    message_id: messageId,
   }
 
   const requestId = nanoid()
@@ -92,8 +92,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
       'is-prod': flags.isProd,
     },
   })
-
-  const messageId = reloadMessageId || nanoid()
 
   const requestTimestamp = Date.now()
 
