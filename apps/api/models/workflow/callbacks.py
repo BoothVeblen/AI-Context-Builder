@@ -369,9 +369,6 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         if token is not None and token != "":
             await self.queue.put(token)
 
-    async def on_chain_end(self, response: Any, **kwargs: Any) -> None:
-        self.done.set()
-
     async def on_chat_model_start(
         self,
         serialized: Dict[str, Any],

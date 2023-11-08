@@ -37,7 +37,7 @@ from utils.base import get_buffer_string
 from loguru import logger
 from models.base.model import Memory
 from models.prompt_manager.compress import PromptCompressor
-from pydantic import Extra, Field, root_validator
+from pydantic import Extra, Field
 from utils.base import to_string
 
 from .callbacks import CustomAsyncIteratorCallbackHandler
@@ -97,6 +97,13 @@ class TargetedChain(Chain):
         basic_messages += [HumanMessage(content=human_input)]
 
         question = ""
+        custom_iterator_handler = None
+        callbacks = run_manager.get_child() if run_manager else None
+        if callbacks:
+            for handler in callbacks.handlers:
+                if type(handler) == CustomAsyncIteratorCallbackHandler:
+                    custom_iterator_handler = handler
+                    callbacks.remove_handler(handler)
         if self.process == TargetedChainStatus.RUNNING:
             prompt_value = self.check_prompt.format_prompt(**inputs)
             messages = [SystemMessage(content=prompt_value.to_string())] + [
@@ -107,8 +114,7 @@ class TargetedChain(Chain):
                 )
             ]
             response = await self.llm.agenerate(
-                messages=[messages],
-                callbacks=run_manager.get_child() if run_manager else None,
+                messages=[messages], callbacks=callbacks
             )
             response_text = response.generations[0][0].text
             if response_text.startswith("AI:"):
@@ -133,10 +139,14 @@ class TargetedChain(Chain):
         else:
             system_message = f"{prompt_value.to_string()}\n{self.suffix}{question}\n"
         messages = [SystemMessage(content=system_message)] + basic_messages
-        response = await self.llm.agenerate(
-            messages=[messages],
-            callbacks=run_manager.get_child() if run_manager else None,
-        )
+        if custom_iterator_handler:
+            has_custom_iterator = False
+            for handler in callbacks.handlers:
+                if type(handler) == CustomAsyncIteratorCallbackHandler:
+                    has_custom_iterator = True
+            if has_custom_iterator is False:
+                callbacks.add_handler(custom_iterator_handler)
+        response = await self.llm.agenerate(messages=[messages], callbacks=callbacks)
         return {self.output_key: response.generations[0][0].text}
 
     async def get_output(
@@ -215,6 +225,14 @@ class EnhanceSequentialChain(SequentialChain):
                     self.current_chain += 1
                     continue
                 else:
+                    has_custom_iterator = False
+                    for handler in callbacks.handlers:
+                        if type(handler) == CustomAsyncIteratorCallbackHandler:
+                            has_custom_iterator = True
+                    if has_custom_iterator is False:
+                        callbacks.add_handler(
+                            CustomAsyncIteratorCallbackHandler(self.queue, self.done)
+                        )
                     outputs = await chain.acall(
                         self.known_values, return_only_outputs=True, callbacks=callbacks
                     )
@@ -245,7 +263,7 @@ class EnhanceSequentialChain(SequentialChain):
                         TargetedChainStatus.FINISHED,
                         TargetedChainStatus.ERROR,
                     ]:
-                        await self._put_tokens_into_queue(current_output)
+                        # await self._put_tokens_into_queue(current_output)
                         return self._construct_return_dict()
                     elif self.current_chain == len(self.chains) - 1:
                         await self._handle_final_chain()
@@ -256,9 +274,14 @@ class EnhanceSequentialChain(SequentialChain):
                         self.current_chain += 1
             else:
                 if self.current_chain == len(self.chains) - 1:
-                    callbacks.add_handler(
-                        CustomAsyncIteratorCallbackHandler(self.queue, self.done)
-                    )
+                    has_custom_iterator = False
+                    for handler in callbacks.handlers:
+                        if type(handler) == CustomAsyncIteratorCallbackHandler:
+                            has_custom_iterator = True
+                    if has_custom_iterator is False:
+                        callbacks.add_handler(
+                            CustomAsyncIteratorCallbackHandler(self.queue, self.done)
+                        )
                 outputs = await chain.acall(
                     self.known_values, return_only_outputs=True, callbacks=callbacks
                 )
@@ -304,12 +327,12 @@ class EnhanceSequentialChain(SequentialChain):
         # it will result in the loss of a token
         while not self.queue.empty():
             await asyncio.sleep(2)
-        self.done.set()
 
     def _construct_return_dict(self):
         return_dict = {}
         for k in self.output_variables:
             return_dict[k] = self.known_values.get(k, "")
+        self.done.set()
         return return_dict
 
     async def aiter(self) -> AsyncIterator[str]:
