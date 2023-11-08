@@ -302,6 +302,7 @@ export function ListSelectItem<T extends FieldValues>({
 }: IListSelectItem<T>) {
   const form = useFormContext<T>()
   const [open, setOpen] = useState(false)
+  const hasOptions = options?.length > 0
   return (
     <FormField
       control={form.control}
@@ -322,50 +323,58 @@ export function ListSelectItem<T extends FieldValues>({
               align="end"
             >
               <Command filter={labelFilterBuilder(options)}>
-                <CommandInput
-                  placeholder={`Search ${label.toLowerCase()}...`}
-                />
-                {!options?.length && (
-                  <div className="py-6 text-center text-sm">
-                    No Dataset found.
-                  </div>
+                {hasOptions && (
+                  <CommandInput
+                    placeholder={`Search ${label.toLowerCase()}...`}
+                  />
                 )}
                 <CommandList>
-                  <CommandEmpty>No {label.toLowerCase()} found.</CommandEmpty>
-                  <CommandGroup>
-                    {options.map((item) => (
-                      <CommandItem
-                        key={item.value}
-                        value={item.value}
-                        onSelect={(value) => {
-                          // Note: cmdk currently lowercases values in forms for some reason, so don't use
-                          // 'value' directly from the onSelect here
-                          // const newValue = [...(field.value || []), value]
-                          const newValue = [...(field.value || []), item.value]
-                          form.setValue(name, newValue as any)
-                          setOpen(false)
-                        }}
-                        data-disabled={
-                          field.value?.includes(item.value) || undefined
-                        }
-                        className="flex items-center justify-between space-x-2"
-                      >
-                        <div className="flex items-center justify-between gap-2 truncate">
-                          <Database
-                            size={24}
-                            className="mr-2 shrink-0 text-orange-600"
-                          />
-                          <div className="truncate">{item.label}</div>
-                        </div>
-                        {item.status != null && item.status === 1 && (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
-                        )}
-                        {item.status != null && item.status === 2 && (
-                          <AlertCircleIcon className="h-4 w-4 text-red-500" />
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                  {hasOptions ? (
+                    <CommandEmpty>No {label.toLowerCase()} found.</CommandEmpty>
+                  ) : (
+                    <div className="py-6 text-center text-sm">
+                      No {label.toLowerCase()} found.
+                    </div>
+                  )}
+                  {hasOptions && (
+                    <CommandGroup>
+                      {options.map((item) => (
+                        <CommandItem
+                          key={item.value}
+                          value={item.value}
+                          onSelect={(value) => {
+                            // Note: cmdk currently lowercases values in forms for some reason, so don't use
+                            // 'value' directly from the onSelect here
+                            // const newValue = [...(field.value || []), value]
+                            const newValue = [
+                              ...(field.value || []),
+                              item.value,
+                            ]
+                            form.setValue(name, newValue as any)
+                            setOpen(false)
+                          }}
+                          data-disabled={
+                            field.value?.includes(item.value) || undefined
+                          }
+                          className="flex items-center justify-between space-x-2"
+                        >
+                          <div className="flex items-center justify-between gap-2 truncate">
+                            <Database
+                              size={24}
+                              className="mr-2 shrink-0 text-orange-600"
+                            />
+                            <div className="truncate">{item.label}</div>
+                          </div>
+                          {item.status != null && item.status === 1 && (
+                            <Loader2Icon className="h-4 w-4 animate-spin" />
+                          )}
+                          {item.status != null && item.status === 2 && (
+                            <AlertCircleIcon className="h-4 w-4 text-red-500" />
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
                 </CommandList>
               </Command>
               <div className="px-1 py-2">{actionChildren}</div>
