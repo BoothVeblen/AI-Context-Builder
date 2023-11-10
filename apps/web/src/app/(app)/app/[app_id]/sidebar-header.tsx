@@ -2,7 +2,12 @@ import * as React from 'react'
 import { auth } from '@clerk/nextjs'
 
 import { currentUser } from '@/lib/auth'
-import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
+import {
+  cn,
+  getAvatarBgColor,
+  getFirstLetter,
+  getPresetUrlOfImage,
+} from '@/lib/utils'
 import { getApp } from '@/db/apps/actions'
 import AppSettingDialog from '@/components/app-setting-dialog'
 
@@ -28,7 +33,7 @@ export default async function Header({ appId }: IProps) {
         style={{
           ...(icon
             ? {
-                backgroundImage: `url(${icon})`,
+                backgroundImage: `url(${getPresetUrlOfImage(icon)})`,
               }
             : {}),
         }}

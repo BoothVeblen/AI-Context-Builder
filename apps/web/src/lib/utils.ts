@@ -120,3 +120,13 @@ export const labelFilterBuilder =
     if (label?.toLowerCase().includes(search.toLowerCase())) return 1
     return 0
   }
+
+export function getPresetUrlOfImage(url: string, preset: string = 'thumbnail') {
+  const isBytescale = url.startsWith('https://upcdn.io/')
+  const imgTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']
+  const isImage = imgTypes.some((type) => url.endsWith(`.${type}`))
+  if (isBytescale && isImage) {
+    return url.replace('/raw/', `/${preset}/`)
+  }
+  return url
+}

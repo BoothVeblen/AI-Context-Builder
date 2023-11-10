@@ -17,6 +17,7 @@
     "db:push": "drizzle-kit push:pg --config drizzle.config.ts"
   },
   "dependencies": {
+    "@bytescale/sdk": "^3.9.1",
     "@clerk/nextjs": "^4.26.2",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/modifiers": "^7.0.0",

@@ -6,7 +6,13 @@ import { useModal } from '@ebay/nice-modal-react'
 import { Box, PlusIcon } from 'lucide-react'
 import useSWR from 'swr'
 
-import { cn, fetcher, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
+import {
+  cn,
+  fetcher,
+  getAvatarBgColor,
+  getFirstLetter,
+  getPresetUrlOfImage,
+} from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 import CreateAppDialog from './create-app-dialog'
@@ -125,7 +131,7 @@ export default function WorkspaceSidebar({ appList }: IProps) {
                       >
                         {appItem.app_icon && (
                           <img
-                            src={appItem.app_icon}
+                            src={getPresetUrlOfImage(appItem.app_icon)}
                             alt=""
                             className="aspect-square h-full w-full object-cover"
                           />

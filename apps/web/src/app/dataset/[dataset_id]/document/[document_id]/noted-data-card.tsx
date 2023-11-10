@@ -1,4 +1,9 @@
-import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
+import {
+  cn,
+  getAvatarBgColor,
+  getFirstLetter,
+  getPresetUrlOfImage,
+} from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import { DataBaseProps } from '../../../type'
@@ -28,7 +33,9 @@ const NotedDataCard = ({
           item?.icon ? 'bg-white' : `bg-${color}-600`
         )}
       >
-        <AvatarImage src={item?.icon} alt="data icon" />
+        {item?.icon && (
+          <AvatarImage src={getPresetUrlOfImage(item?.icon)} alt="data icon" />
+        )}
         <AvatarFallback className="bg-transparent text-white">
           {getFirstLetter(item?.name || '')}
         </AvatarFallback>

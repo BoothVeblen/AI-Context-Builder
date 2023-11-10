@@ -10,6 +10,7 @@ import {
   formatTime,
   getAvatarBgColor,
   getFirstLetter,
+  getPresetUrlOfImage,
 } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
@@ -170,7 +171,7 @@ const ChatCardLayout = (prop: Props) => {
           >
             {icon && (
               <img
-                src={icon}
+                src={getPresetUrlOfImage(icon)}
                 alt={name}
                 className="aspect-square h-full w-full object-cover"
               />

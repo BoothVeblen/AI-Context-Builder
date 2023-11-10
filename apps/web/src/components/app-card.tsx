@@ -2,7 +2,12 @@
 
 import Link from 'next/link'
 
-import { cn, getAvatarBgColor, getFirstLetter } from '@/lib/utils'
+import {
+  cn,
+  getAvatarBgColor,
+  getFirstLetter,
+  getPresetUrlOfImage,
+} from '@/lib/utils'
 import {
   Card,
   CardDescription,
@@ -40,7 +45,7 @@ export default function AppCard({
           <div className="space-y-2">
             {icon ? (
               <img
-                src={icon}
+                src={getPresetUrlOfImage(icon)}
                 alt={id}
                 className="relative h-24 w-24 rounded-lg bg-white object-cover"
               />

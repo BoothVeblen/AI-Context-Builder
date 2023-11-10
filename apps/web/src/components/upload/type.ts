@@ -141,7 +141,11 @@ export interface UploadFileProps {
   setProcess?: (s: FilePercent[]) => void
 }
 
-export type AbortRef = { uid: string; control: AbortController }[]
+export type AbortRef = {
+  uid: string
+  control: AbortController
+  cancel?: () => void
+}[]
 
 export const UPLOAD_ACCEPT_MAP = {
   pdf: 'application/pdf',

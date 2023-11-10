@@ -68,6 +68,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@bytescale/sdk':
+        specifier: ^3.9.1
+        version: 3.9.1
       '@clerk/nextjs':
         specifier: ^4.26.2
         version: 4.26.2(next@14.0.1)(react-dom@18.2.0)(react@18.2.0)
@@ -679,6 +682,10 @@ packages:
       '@babel/helper-string-parser': 7.22.5
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+
+  /@bytescale/sdk@3.9.1:
+    resolution: {integrity: sha512-xDUCwqTjuoWjPtyKFZwyL8QoF6hgpFjjVZlG13AhiWCGcmOBH4iJV90ElsGTtPfLWqNNm1Td1nd1Oa3XYujbng==}
+    dev: false
 
   /@clerk/backend@0.33.0(react@18.2.0):
     resolution: {integrity: sha512-bhUJn4hrgQOGcn9Baxuk8pcbXROYXmsuua1Juolxp+1mAVwImx4JDh4Y/pweYTgZGCT86MnJX1HJS9bncdP3Eg==}
