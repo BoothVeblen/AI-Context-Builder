@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as Bytescale from '@bytescale/sdk'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, ne } from 'drizzle-orm'
 import pLimit from 'p-limit'
 
 import { db } from '@/lib/drizzle-edge'
@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
     const apps = await db
       .select()
       .from(AppsTable)
+      .where(ne(AppsTable.icon, ''))
       .orderBy(desc(AppsTable.created_at))
       .limit(1)
     const filteredApps = apps.filter(
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
     const docs = await db
       .select()
       .from(DocumentsTable)
+      .where(ne(DocumentsTable.url, ''))
       .orderBy(desc(DocumentsTable.created_at))
       .limit(1)
     const filteredDocs = docs.filter(
@@ -50,6 +52,7 @@ export async function GET(req: NextRequest) {
         queue.push(
           limit(async () => {
             try {
+              console.log('app upload:', short_id, icon)
               const result = await uploadApi.uploadFromUrl({
                 accountId,
                 uploadFromUrlRequest: { url: icon },
@@ -58,9 +61,9 @@ export async function GET(req: NextRequest) {
               console.log('new app:', short_id, newUrl)
               newApps.push({ short_id, icon: newUrl })
               return db
-                .update(DocumentsTable)
+                .update(AppsTable)
                 .set({ icon: newUrl })
-                .where(eq(DocumentsTable.short_id, short_id))
+                .where(eq(AppsTable.short_id, short_id))
             } catch (error) {
               console.error('app upload error:', short_id, error)
               return Promise.resolve()
@@ -72,7 +75,6 @@ export async function GET(req: NextRequest) {
 
     for (const doc of filteredDocs) {
       const { short_id, url } = doc
-
       if (url && accountId) {
         queue.push(
           limit(async () => {
