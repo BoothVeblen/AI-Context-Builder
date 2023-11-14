@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 
-import CardList, { CardListFallback } from '../card-list'
-import { CATEGORY_IDS, getCategoryTitle } from '../utils'
+import { CATEGORY_IDS, getCategoryTitle } from '@/utils/explore'
 
-export const runtime = 'edge'
+import CardList, { CardListFallback } from '../card-list'
 
 interface IProps {
   params: {
@@ -16,7 +15,7 @@ export default function Page({ params }: IProps) {
   const { category_id } = params
 
   if (!CATEGORY_IDS.includes(category_id.toUpperCase())) {
-    redirect(`/explore`)
+    redirect('/')
   }
 
   return (

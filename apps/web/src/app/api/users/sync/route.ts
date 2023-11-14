@@ -1,11 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { clerkClient } from '@clerk/nextjs'
 
 import { logsnag } from '@/lib/logsnag'
 import { formatUser } from '@/db/users/utils'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const secret = searchParams.get('secret')
+    if (secret == null || secret !== process.env.SECRET) {
+      return NextResponse.json({ success: true })
+    }
+
     const totalUsers = await clerkClient.users.getCount()
 
     const users = await clerkClient.users.getUserList({

@@ -1,15 +1,16 @@
-import { getAppsBasedOnIds } from '@/db/apps/actions'
+import { BASE_URL } from '@/lib/utils'
+import { App } from '@/db/apps/schema'
 import { Skeleton } from '@/components/ui/skeleton'
 import AppCard from '@/components/app-card'
-import { getFeaturedAppIds } from '@/app/(app)/explore/utils'
 
 interface IProps {
   categoryName: string
 }
 
 export default async function CardList({ categoryName }: IProps) {
-  const ids = getFeaturedAppIds(categoryName)
-  const list = await getAppsBasedOnIds(ids)
+  const res = await fetch(`${BASE_URL}/api/apps/explore/${categoryName}`)
+  const json = await res.json()
+  const list = (json?.data || []) as App[]
 
   return (
     <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

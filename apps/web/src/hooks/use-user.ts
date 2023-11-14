@@ -10,7 +10,7 @@ interface IProps {
 export default function useUser(options?: IProps) {
   const { data, isLoading } = useSWR<UserProfile>('/api/me/profile', fetcher, {
     fallbackData: options?.fallbackData,
-    revalidateOnFocus: true,
+    revalidateOnMount: !options?.fallbackData,
   })
 
   return {

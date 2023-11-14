@@ -1,8 +1,7 @@
 import { PropsWithChildren } from 'react'
 
-import WorkspaceSidebar from '@/components/workspace-sidebar'
-
-import NavSheet from './nav-sheet'
+import AppLayoutSidebar from '@/components/app-layout-sidebar'
+import NavSheet from '@/components/nav-sheet'
 
 type Props = {
   sidebar: React.ReactNode
@@ -21,7 +20,7 @@ const ResponsiveLayout = (props: PropsWithChildren<Props>) => {
 
       {/* Float sidebar for mobile */}
       <NavSheet defaultPageTitle={pageTitle}>
-        <WorkspaceSidebar />
+        <AppLayoutSidebar />
         {sidebar}
       </NavSheet>
 

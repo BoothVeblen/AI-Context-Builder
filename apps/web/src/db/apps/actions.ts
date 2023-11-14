@@ -475,20 +475,14 @@ export async function removeApp(appId: string) {
 }
 
 export async function getAppsBasedOnIds(ids: string[]) {
-  try {
-    const apps = await db
-      .select()
-      .from(AppsTable)
-      .where(
-        and(inArray(AppsTable.short_id, ids), eq(AppsTable.archived, false))
-      )
-    const sortedApps = ids
-      .map((id) => apps.find((app) => app.short_id === id))
-      .filter((app) => !!app) as typeof apps
-    return sortedApps
-  } catch (error) {
-    redirect('/')
-  }
+  const apps = await db
+    .select()
+    .from(AppsTable)
+    .where(and(inArray(AppsTable.short_id, ids), eq(AppsTable.archived, false)))
+  const sortedApps = ids
+    .map((id) => apps.find((app) => app.short_id === id))
+    .filter((app) => !!app) as typeof apps
+  return sortedApps
 }
 
 export async function addDebugSession(api_model_id: string) {

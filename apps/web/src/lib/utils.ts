@@ -30,14 +30,15 @@ export const nanoid = customAlphabet(
 // export const getFirstLetter = (str: string) => str.charAt(0).toUpperCase()
 export const getFirstLetter = (str: string) => runes(str)?.[0]?.toUpperCase()
 
-export const BASE_URL =
-  process.env.VERCEL_URL || process.env.VERCEL_BRANCH_URL
-    ? `https://${
-        process.env.VERCEL_ENV === 'production'
-          ? 'build.withcontext.ai'
-          : process.env.VERCEL_URL
-      }`
-    : 'http://localhost:3000'
+const VERCEL_URL = process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL
+
+export const BASE_URL = VERCEL_URL
+  ? `https://${
+      process.env.VERCEL_ENV === 'production'
+        ? 'build.withcontext.ai'
+        : VERCEL_URL
+    }`
+  : 'http://localhost:3000'
 
 export const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args)
