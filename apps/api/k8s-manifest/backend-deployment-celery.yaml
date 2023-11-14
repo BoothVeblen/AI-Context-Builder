@@ -89,9 +89,9 @@ spec:
                   name: withcontext-backend-env
                   key: LOGSNAG_API_KEY
             - name: WEBHOOK_ENDPOINT
-              value: https://dev-build-withcontext-ai.vercel.app/api/webhook/chat
+              value: https://build.withcontext.ai/api/webhook/chat
             - name: BACKEND_URL
-              value: http://api-test.withcontext.ai
+              value: http://api.withcontext.ai
           image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:celery
           resources:
             limits:
