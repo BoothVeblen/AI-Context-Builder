@@ -6,7 +6,13 @@ import { flags } from './lib/flags'
 export default authMiddleware({
   // debug: flags.isDev,
   publicRoutes: flags.enabledAuth
-    ? ['/sign-in', '/sign-up', '/api/webhook/(.*)', '/api/cron/(.*)']
+    ? [
+        '/sign-in',
+        '/sign-up',
+        '/api/webhook/(.*)',
+        '/api/cron/(.*)',
+        '/api/public/(.*)',
+      ]
     : [],
   beforeAuth: () => {
     if (flags.enabledAuth) return NextResponse.next()

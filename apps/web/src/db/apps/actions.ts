@@ -476,7 +476,12 @@ export async function removeApp(appId: string) {
 
 export async function getAppsBasedOnIds(ids: string[]) {
   const apps = await db
-    .select()
+    .select({
+      short_id: AppsTable.short_id,
+      name: AppsTable.name,
+      description: AppsTable.description,
+      icon: AppsTable.icon,
+    })
     .from(AppsTable)
     .where(and(inArray(AppsTable.short_id, ids), eq(AppsTable.archived, false)))
   const sortedApps = ids

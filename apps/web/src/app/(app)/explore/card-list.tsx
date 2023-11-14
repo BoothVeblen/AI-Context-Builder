@@ -8,7 +8,11 @@ interface IProps {
 }
 
 export default async function CardList({ categoryName }: IProps) {
-  const res = await fetch(`${BASE_URL}/api/apps/explore/${categoryName}`)
+  const res = await fetch(`${BASE_URL}/api/public/explore/${categoryName}`, {
+    next: {
+      revalidate: 3600,
+    },
+  })
   const json = await res.json()
   const list = (json?.data || []) as App[]
 
