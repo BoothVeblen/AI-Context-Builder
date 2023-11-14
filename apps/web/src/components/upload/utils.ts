@@ -44,14 +44,7 @@ export const handleSuccess = ({
   onChangeFileList?: (files: FileProps[]) => void
 }) => {
   setMergedFileList?.((files: UploadFile[]) => {
-    const success = files?.filter(
-      (item) => item?.status === 'success' && item?.url
-    )
-    const data = success?.reduce((m: FileProps[], item: UploadFile) => {
-      const cur = pick(item, ['url', 'uid', 'type', 'name'])
-      m.push(cur)
-      return m
-    }, [])
+    const data = formateFormFile(files)
     onChangeFileList?.(data)
     return files
   })
@@ -206,4 +199,15 @@ export async function uploadToBytescale({
   file.url = fileUrl
 
   return file
+}
+
+export const formateFormFile = (files: UploadFile[]) => {
+  const success = files?.filter(
+    (item) => item?.status === 'success' && item?.url
+  )
+  return success?.reduce((m: FileProps[], item: UploadFile) => {
+    const cur = pick(item, ['url', 'uid', 'type', 'name'])
+    m.push(cur)
+    return m
+  }, [])
 }

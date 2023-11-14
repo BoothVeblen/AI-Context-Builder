@@ -105,7 +105,7 @@ export const FileCard = (props: FileItemProps) => {
         )}
       >
         <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex-b flex items-center gap-2 truncate">
+          <div className="flex flex-1 items-center gap-2 truncate">
             <FileImage type={file?.type as FileType} />
             <div className="flex w-full flex-col gap-1 truncate">
               <div className="truncate">{file?.name}</div>

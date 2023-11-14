@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(query.get('pageIndex') || '')
   const search = query.get('search') || ''
   const offset = page * limit
-  const data = await getSegments(dataset_id, uid, search, offset, limit)
+  const data = await getSegments({ dataset_id, uid, search, offset, limit })
   const segments =
     data?.segments?.length === 0
       ? [{ content: '', segment_id: '00' }]

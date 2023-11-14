@@ -9,13 +9,20 @@ export async function getApiDatasetId(dataset_id: string) {
   return api_dataset_id
 }
 
-export async function getSegments(
-  dataset_id: string,
-  uid: string,
-  search?: string,
-  offset?: number,
+interface ISegmentProps {
+  dataset_id: string
+  uid: string
+  search?: string
+  offset?: number
   limit?: number
-) {
+}
+export async function getSegments({
+  dataset_id,
+  uid,
+  limit,
+  search,
+  offset,
+}: ISegmentProps) {
   const api_dataset_id = await getApiDatasetId(dataset_id)
   let params = `offset=${offset || 0}&limit=${limit || 100}`
   if (search) {

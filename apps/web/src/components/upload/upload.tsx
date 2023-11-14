@@ -12,7 +12,6 @@ import {
   FilePercent,
   ListTypeProps,
   RcFile,
-  UploadChangeParam,
   UploadFile,
   UploadProps,
 } from './type'
@@ -21,6 +20,7 @@ import UploadFileList from './upload-file-list'
 import {
   changeToUploadFile,
   file2Obj,
+  formateFormFile,
   handleSuccess,
   uploadToBytescale,
 } from './utils'
@@ -104,12 +104,6 @@ const Upload = (props: UploadProps) => {
       flushSync(() => {
         setMergedFileList(cloneList)
       })
-      setMergedFileList(cloneList)
-      const changeInfo: UploadChangeParam<UploadFile> = {
-        file: file as UploadFile,
-        fileList: cloneList,
-      }
-
       setIsUploading(true)
       if (isValid) {
         try {
@@ -165,7 +159,8 @@ const Upload = (props: UploadProps) => {
         const current = aborts?.current?.find((item) => item?.uid === file?.uid)
         current?.control?.abort()
         current?.cancel?.()
-        onChangeFileList?.(otherFileList)
+        const data = formateFormFile(otherFileList)
+        onChangeFileList?.(data)
       } else {
         onChangeFileList?.([])
       }

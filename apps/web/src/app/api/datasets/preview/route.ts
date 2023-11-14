@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
   const uid = files[0].uid
   await getDataSplitPreview(dataset_id, files, uid, preview)
-  const data = await getSegments(dataset_id, uid)
+  const data = await getSegments({ dataset_id, uid, limit: preview })
   const segments =
     data?.segments?.length === 0
       ? [{ content: '', segment_id: '00' }]
