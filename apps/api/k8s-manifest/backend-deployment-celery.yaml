@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: withcontext-backend-celery
-  namespace: withcontext-backend-test
+  namespace: withcontext-backend
 spec:
   replicas: 1
   selector:
