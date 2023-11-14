@@ -133,6 +133,12 @@ class Workflow(BaseModel):
         # TODO add max_tokens to chain
         max_token = llm.pop("max_tokens")
         temperature = llm.pop("temperature")
+        if llm_model.startswith("gpt-3.5-turbo"):
+            logger.info("switch llm_model to gpt-3.5-turbo-1106")
+            llm_model = "gpt-3.5-turbo-1106"
+        elif llm_model.startswith("gpt-4"):
+            logger.info("switch llm_model to gpt-4-1106-preview")
+            llm_model = "gpt-4-1106-preview"
         if llm_model == "Azure-GPT-3.5":
             llm = AzureChatOpenAI(
                 openai_api_base=AZURE_BASE_URL,
@@ -161,6 +167,7 @@ class Workflow(BaseModel):
                         self.io_traces, self.get_chain_output_key(_chain.key)
                     ),
                 ],
+                request_timeout=5,
             )
         template = _chain.prompt.template
 
@@ -275,6 +282,7 @@ class Workflow(BaseModel):
                             }
                         }
                     )
+                    retriever.search_kwargs["k"] = 8
                     chain = EnhanceConversationalRetrievalChain(
                         prompt=prompt_template[0],
                         retriever=retriever,

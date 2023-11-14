@@ -142,6 +142,7 @@ class Retriever:
                 )
                 doc.page_size = PDFHandler.get_document_page_size(doc)
                 logger.info(f"Updated Document {doc.url} page_size to {doc.page_size}")
+
             for i in range(doc.page_size):
                 id = f"{dataset.id}-{doc.url}-{i}"
                 index.update(
@@ -149,7 +150,7 @@ class Retriever:
                     set_metadata={"relative_chains": known_chains},
                     namespace="withcontext",
                 )
-                logger.info(f"Updated {id} with relative chains {known_chains}")
+
             id = f"{dataset.id}-{doc.url}"
             index.update(
                 id=id,
@@ -157,6 +158,7 @@ class Retriever:
                 namespace="withcontext",
             )
             logger.info(f"Updated {id} with relative chains {known_chains}")
+
         id = f"dataset:{dataset.id}"
         index.update(
             id=id,
@@ -186,12 +188,14 @@ class Retriever:
                     set_metadata={"relative_chains": known_chains},
                     namespace="withcontext",
                 )
+
             id = f"{dataset.id}-{doc.url}"
             index.update(
                 id=id,
                 set_metadata={"relative_chains": known_chains},
                 namespace="withcontext",
             )
+
             id = f"dataset:{dataset.id}"
             index.update(
                 id=id,

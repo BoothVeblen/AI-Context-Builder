@@ -1,15 +1,18 @@
+import cProfile
+import io
 import os
+import pstats
+import sys
+import traceback
 
+import graphsignal
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
+from loguru import logger
 from routers import chat, dataset, model
 from starlette.responses import JSONResponse
-import traceback
-import graphsignal
-from loguru import logger
-import sys
-from utils import GRAPH_SIGNAL_API_KEY
+from utils import GRAPH_SIGNAL_API_KEY, BACKEND_URL
 
 logger.add(sys.stdout, format="{time} {level} {message}", level="INFO", enqueue=True)
 
@@ -18,6 +21,20 @@ load_dotenv()
 
 app = FastAPI(docs_url=None, redoc_url=None)
 graphsignal.configure(api_key=GRAPH_SIGNAL_API_KEY, deployment="my-app-prod")
+
+if BACKEND_URL.startswith("http://api-test") and os.getenv("TESTING"):
+
+    @app.middleware("http")
+    async def profiler_middleware(request: Request, call_next):
+        pr = cProfile.Profile()
+        pr.enable()
+        response = await call_next(request)
+        pr.disable()
+        s = io.StringIO()
+        ps = pstats.Stats(pr, stream=s).sort_stats("cumulative")
+        ps.print_stats()
+        logger.info(s.getvalue())
+        return response
 
 
 @app.get("/health")

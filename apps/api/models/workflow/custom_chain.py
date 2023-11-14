@@ -106,20 +106,15 @@ class TargetedChain(Chain):
                     callbacks.remove_handler(handler)
         if self.process == TargetedChainStatus.RUNNING:
             prompt_value = self.check_prompt.format_prompt(**inputs)
-            messages = [SystemMessage(content=prompt_value.to_string())] + [
-                HumanMessage(
-                    content=get_buffer_string(
-                        basic_messages, human_prefix="User", ai_prefix="AI"
-                    )
-                )
-            ]
+            messages = [
+                SystemMessage(content=prompt_value.to_string())
+            ] + basic_messages
             response = await self.llm.agenerate(
                 messages=[messages], callbacks=callbacks
             )
             response_text = response.generations[0][0].text
             if response_text.startswith("AI:"):
                 response_text = response_text[3:]
-            # if response.generations[0][0].text.lower().startswith("yes"):
             if (
                 response_text.lower().strip().startswith("yes")
                 and len(response_text) < 5

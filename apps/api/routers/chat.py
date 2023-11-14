@@ -110,7 +110,6 @@ async def send_message(
         task = asyncio.create_task(
             wrap_done(workflow.agenerate(messages), workflow.context.done)
         )
-
         yield wrap_token(CHUNK_DATA, model_id, session_id, filt=filt)
 
         async for token in workflow.context.aiter():

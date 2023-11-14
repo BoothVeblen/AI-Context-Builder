@@ -7,6 +7,8 @@ MODEL_TO_MAX_TOKEN = {
     "gpt-4": 8191,
     "gpt-4-0314": 8191,
     "gpt-4-0613": 8191,
+    "gpt-3.5-turbo-1106": 16385,
+    "gpt-4-1106-preview": 128000,
 }
 
 RESPONSE_BUFFER_SIZE = 500

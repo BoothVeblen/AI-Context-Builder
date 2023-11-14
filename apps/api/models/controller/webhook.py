@@ -20,6 +20,9 @@ class WebhookHandler:
         after=after_log(logger, 10),
     )
     def update_dataset_status(self, dataset_id: str, status: int):
+        """
+        @params status: 0.index complete 1.indexing 2.index failed
+        """
         logger.info(f"Updating status of {dataset_id} to {status}")
         payload = DatasetStatusWebhookRequest(
             status=status, data={"api_dataset_id": dataset_id, "status": status}

@@ -55,14 +55,13 @@ def test_create_dataset():
     assert response.status_code == 200
     assert "id" in response.json()["data"]
 
-
 def test_update_dataset():
     """
     Tests the PATCH /v1/datasets/{id} endpoint.
     The endpoint is supposed to update an existing dataset.
     """
     # Update the dataset created in the test_create_dataset test
-    dataset_manager.upsert_dataset(dataset_id="test2", dataset={"documents": []})
+    #dataset_manager.upsert_dataset(dataset_id="test2", dataset={"documents": []})
     response = client.patch(
         "/v1/datasets/test2",
         json={
@@ -75,7 +74,6 @@ def test_update_dataset():
 
     # The endpoint should return with a 200 OK status
     assert response.status_code == 200
-
 
 def test_delete_dataset():
     """

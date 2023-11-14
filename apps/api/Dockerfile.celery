@@ -1,0 +1,6 @@
+FROM 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:base 
+
+WORKDIR /app
+COPY . /app
+
+CMD ["celery", "-A", "crontab", "worker", "-l", "INFO", "--without-heartbeat"]

@@ -18,3 +18,4 @@ loguru==0.7.0
 gunicorn==21.2.0
 redis==5.0.0
 python-docx==0.8.11
+celery==5.2.7
