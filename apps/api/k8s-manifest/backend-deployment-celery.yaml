@@ -17,6 +17,7 @@ spec:
         - name: ecr-registry
       containers:
         - name: withcontext-backend-celery
+          image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:celery
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -92,8 +93,8 @@ spec:
               value: https://build.withcontext.ai/api/webhook/chat
             - name: BACKEND_URL
               value: http://api.withcontext.ai
-          image: 326596634873.dkr.ecr.us-east-2.amazonaws.com/withcontext-backend:celery
+
           resources:
             limits:
-              memory: '3000Mi'
+              memory: '5000Mi'
               cpu: '2'
