@@ -33,7 +33,7 @@ const DataPage = ({ datasetId, preload, total }: IProps) => {
             onClick={handelClick}
             type="button"
             disabled={isPending}
-            className="flex gap-1"
+            className="flex gap-2"
           >
             {isPending ? (
               <Loader2Icon className="h-4 w-4 animate-spin" />

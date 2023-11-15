@@ -7,7 +7,6 @@ import NavSidebar from '@/components/nav-sidebar'
 const Layout = ({ children }: PropsWithChildren) => {
   return (
     <ResponsiveLayout
-      pageTitle="My Apps"
       sidebar={
         <NavSidebar title="My Space">
           <MineList />

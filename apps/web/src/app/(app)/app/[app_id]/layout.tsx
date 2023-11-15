@@ -2,8 +2,6 @@ import ResponsiveLayout from '@/components/layouts/responsive-layout'
 
 import Sidebar from './sidebar'
 
-export const runtime = 'edge'
-
 interface IProps {
   children: React.ReactNode
   params: { app_id: string; session_id: string }

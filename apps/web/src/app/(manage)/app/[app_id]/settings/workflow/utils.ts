@@ -1,4 +1,4 @@
-import { set } from 'lodash'
+import { has, set } from 'lodash'
 
 import { safeParse } from '@/lib/utils'
 import { TreeItem } from '@/components/dnd/types'
@@ -71,7 +71,9 @@ export function getTaskDefaultValue(
 ) {
   const formValue = TASK_DEFAULT_VALUE_MAP[subType]
   Object.entries(options)?.forEach(([key, value]) => {
-    set(formValue, key, value)
+    if (has(formValue, key)) {
+      set(formValue, key, value)
+    }
   })
   return formValue
 }

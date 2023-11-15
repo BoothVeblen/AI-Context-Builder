@@ -10,12 +10,12 @@ import { TreeItem } from '@/components/dnd/types'
 import {
   DEFAULT_MEMORY,
   TASK_DEFAULT_VALUE_MAP,
-} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/const'
-import { WorkflowItem } from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/type'
+} from '@/app/(manage)/app/[app_id]/settings/workflow/const'
+import { WorkflowItem } from '@/app/(manage)/app/[app_id]/settings/workflow/type'
 import {
   formatTreeWithData,
   taskToApiFormatter,
-} from '@/app/(app)/app/[app_id]/(manage)/settings/workflow/utils'
+} from '@/app/(manage)/app/[app_id]/settings/workflow/utils'
 
 const limit = pLimit(5)
 

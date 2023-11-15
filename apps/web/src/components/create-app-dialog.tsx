@@ -151,7 +151,11 @@ export default NiceModal.create((props: IProps) => {
                     App Name <div className="text-red-500">*</div>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Give your App a name" {...field} />
+                    <Input
+                      placeholder="Give your App a name"
+                      autoFocus
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

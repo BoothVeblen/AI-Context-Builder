@@ -1,16 +1,14 @@
 import * as React from 'react'
 
 import { getSessions } from '@/db/sessions/actions'
-import { Session } from '@/db/sessions/schema'
 
-import SessionList from './session-list.client'
+import SessionListClient from './session-list.client'
 
 interface IProps {
   appId: string
-  sessionList: Session[]
 }
 
-export default async function ServerSessionList({ appId }: { appId: string }) {
+export default async function SessionList({ appId }: IProps) {
   const sessionList = await getSessions(appId)
-  return <SessionList appId={appId} sessionList={sessionList} />
+  return <SessionListClient appId={appId} sessionList={sessionList} />
 }

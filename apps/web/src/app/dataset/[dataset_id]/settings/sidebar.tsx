@@ -8,8 +8,7 @@ import useSWRMutation from 'swr/mutation'
 import { fetcher } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/confirm-dialog'
-
-import BaseSideBar from '../../../(app)/app/[app_id]/(manage)/sidebar'
+import BaseSideBar from '@/app/(manage)/app/[app_id]/sidebar'
 
 interface IProps {
   name: string

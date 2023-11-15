@@ -1,10 +1,11 @@
 'use client'
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 import BaseSideBar from '../sidebar'
 
 interface IProps {
   appId: string
-  appName: string
 }
 
 export default function Sidebar({ appId }: IProps) {
@@ -22,3 +23,21 @@ export default function Sidebar({ appId }: IProps) {
     </BaseSideBar>
   )
 }
+
+function Loading() {
+  return (
+    <div>
+      <div className="flex items-center space-x-2 px-4 py-3">
+        <Skeleton className="h-8 w-1/2" />
+      </div>
+      <div className="mt-4 space-y-2 p-2">
+        <div className="px-2">
+          <Skeleton className="h-5 w-1/2" />
+        </div>
+        <Skeleton className="h-[84px] w-full" />
+      </div>
+    </div>
+  )
+}
+
+Sidebar.Loading = Loading

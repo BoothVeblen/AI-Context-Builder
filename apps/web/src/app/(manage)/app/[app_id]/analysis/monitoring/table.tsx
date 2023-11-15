@@ -90,7 +90,7 @@ export const MonitoringTable = ({ preloaded }: Props) => {
         accessorKey: 'created_at',
         header: 'Time',
         cell: ({ row }) =>
-          new Date(row.getValue('created_at')).toLocaleString(),
+          new Date(row.getValue('created_at')).toLocaleString('en-US'),
       },
       {
         accessorKey: 'email',

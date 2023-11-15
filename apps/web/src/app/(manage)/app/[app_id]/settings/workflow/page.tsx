@@ -9,7 +9,7 @@ import { WorkflowProvider } from './store'
 import TaskDetail from './task-detail'
 import TaskList from './task-list'
 
-export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 interface IProps {
   params: {

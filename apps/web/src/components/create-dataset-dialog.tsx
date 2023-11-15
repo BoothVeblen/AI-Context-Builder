@@ -97,7 +97,11 @@ export default NiceModal.create(() => {
                     Dataset Name <div className="text-red-500">*</div>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Give your Dataset a name" {...field} />
+                    <Input
+                      placeholder="Give your Dataset a name"
+                      autoFocus
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

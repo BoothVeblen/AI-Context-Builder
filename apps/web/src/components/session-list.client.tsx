@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { isEmpty } from 'lodash'
 import useSWR from 'swr'
 
 import { fetcher } from '@/lib/utils'
@@ -14,14 +15,14 @@ interface IProps {
 }
 
 export default function SessionList({ appId, sessionList }: IProps) {
-  const {
-    isLoading,
-    data: sessionListData,
-    error,
-    mutate,
-  } = useSWR<Session[]>(`/api/apps/${appId}/sessions`, fetcher, {
-    fallbackData: sessionList,
-  })
+  const { data: sessionListData } = useSWR<Session[]>(
+    `/api/apps/${appId}/sessions`,
+    fetcher,
+    {
+      fallbackData: sessionList,
+      revalidateOnMount: isEmpty(sessionList),
+    }
+  )
 
   const isOnlyOneSession = sessionListData?.length === 1
 

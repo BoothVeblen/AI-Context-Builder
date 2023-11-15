@@ -2,8 +2,6 @@ import { redirect } from 'next/navigation'
 
 import { getLatestSessionId } from '@/db/sessions/actions'
 
-export const runtime = 'edge'
-
 interface IProps {
   params: { app_id: string }
 }

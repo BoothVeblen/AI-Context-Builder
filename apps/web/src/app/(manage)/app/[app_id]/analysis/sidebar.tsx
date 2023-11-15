@@ -2,21 +2,17 @@ import { redirect } from 'next/navigation'
 
 import { getApp } from '@/db/apps/actions'
 import { checkIsAdminNotOwner, checkIsAdminOrOwner } from '@/utils/permission'
-import ManageLayout from '@/components/layouts/manage-layout'
+import { Skeleton } from '@/components/ui/skeleton'
 import WarningLabel from '@/components/warning-label'
 
-import Sidebar from './sidebar'
-
-export const runtime = 'edge'
+import ClientSidebar from './sidebar.client'
 
 interface IProps {
-  children: React.ReactNode
-  params: { app_id: string }
+  appId: string
 }
 
-export default async function Layout({ children, params }: IProps) {
-  const { app_id } = params
-  const appDetail = await getApp(app_id)
+export default async function Sidebar({ appId }: IProps) {
+  const appDetail = await getApp(appId)
 
   const isAdminOrOwner = await checkIsAdminOrOwner(appDetail.created_by)
   if (!isAdminOrOwner) {
@@ -27,11 +23,7 @@ export default async function Layout({ children, params }: IProps) {
 
   return (
     <>
-      <ManageLayout
-        sidebar={<Sidebar appId={app_id} appName={appDetail.name} />}
-      >
-        {children}
-      </ManageLayout>
+      <ClientSidebar appId={appId} />
       {isAdminNotOwner && (
         <div className="fixed bottom-2 left-2 z-50">
           <WarningLabel>You are not the owner of this app.</WarningLabel>
@@ -40,3 +32,21 @@ export default async function Layout({ children, params }: IProps) {
     </>
   )
 }
+
+function Loading() {
+  return (
+    <div>
+      <div className="flex items-center space-x-2 px-4 py-3">
+        <Skeleton className="h-8 w-1/2" />
+      </div>
+      <div className="mt-4 space-y-2 p-2">
+        <div className="px-2">
+          <Skeleton className="h-5 w-1/2" />
+        </div>
+        <Skeleton className="h-[84px] w-full" />
+      </div>
+    </div>
+  )
+}
+
+Sidebar.Loading = Loading

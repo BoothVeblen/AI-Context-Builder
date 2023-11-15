@@ -2,7 +2,7 @@ import { getApp } from '@/db/apps/actions'
 
 import BasicsSettingForm from './form'
 
-export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 interface IProps {
   params: {

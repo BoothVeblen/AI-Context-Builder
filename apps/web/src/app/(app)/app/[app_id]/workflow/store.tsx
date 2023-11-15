@@ -6,8 +6,8 @@ import { produce } from 'immer'
 import { createStore, useStore } from 'zustand'
 
 import { TreeItem } from '@/components/dnd/types'
+import { WorkflowItem } from '@/app/(manage)/app/[app_id]/settings/workflow/type'
 
-import { WorkflowItem } from '../(manage)/settings/workflow/type'
 import { DatasetProps } from './page'
 
 interface Props {

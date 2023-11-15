@@ -3,11 +3,16 @@ import { getDocumentsCount } from '@/db/documents/action'
 import { Skeleton } from '@/components/ui/skeleton'
 import DatasetCard from '@/components/dataset-card'
 
+import CardLayout from '../card-layout'
+
 export default async function CardList() {
-  const datasets = await getDatasets()
-  const documentCounts = await getDocumentsCount()
+  const [datasets, documentCounts] = await Promise.all([
+    getDatasets(),
+    getDocumentsCount(),
+  ])
+
   return (
-    <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ">
+    <CardLayout>
       {datasets?.map(({ short_id, name, config, linked_app_count }) => {
         const cur = documentCounts?.find(
           (item) => item?.dataset_id === short_id
@@ -25,19 +30,21 @@ export default async function CardList() {
           />
         )
       })}
-    </ul>
+    </CardLayout>
   )
 }
 
-export function CardListFallback() {
+function Loading() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ">
+    <CardLayout>
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton
           key={i}
           className="h-[148px] rounded-lg border border-transparent"
         />
       ))}
-    </div>
+    </CardLayout>
   )
 }
+
+CardList.Loading = Loading

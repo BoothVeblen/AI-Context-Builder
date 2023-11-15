@@ -2,11 +2,13 @@ import { getApps } from '@/db/apps/actions'
 import { Skeleton } from '@/components/ui/skeleton'
 import AppCard from '@/components/app-card'
 
+import CardLayout from '../card-layout'
+
 export default async function CardList() {
   const list = await getApps()
 
   return (
-    <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <CardLayout>
       {list.map(({ short_id, name, description, icon }) => (
         <AppCard
           key={short_id}
@@ -17,19 +19,21 @@ export default async function CardList() {
           creator="@Context Builder"
         />
       ))}
-    </ul>
+    </CardLayout>
   )
 }
 
-export function CardListFallback() {
+function Loading() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <CardLayout>
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton
           key={i}
           className="h-[278px] rounded-lg border border-transparent"
         />
       ))}
-    </div>
+    </CardLayout>
   )
 }
+
+CardList.Loading = Loading

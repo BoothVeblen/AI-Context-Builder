@@ -1,4 +1,4 @@
-# Context Builder
+# AI Context Builder
 
 _Turn AI app development into clicks, no coding skills required_
 
@@ -15,7 +15,6 @@ Our project is guided by the following principles:
 
 We believe LLM will dramatically decrease the requirements to build AI apps and ultimately any individual could use tools to build the AI application, and that's what we want to build.
 
-https://github.com/54microlong/builder/assets/530382/7f61c534-dbd3-4e8f-9cb3-65d3f2faaf38
 
 ## ✨ Feature
 
@@ -58,21 +57,12 @@ Run the app locally:
 
 Before you submit an issue, please check all existing [open and closed issues](https://github.com/withcontext-ai/builder/issues) to see if your issue has previously been resolved or is already known. If there is already an issue logged, feel free to upvote it by adding a 👍 [reaction](https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments). If you would like to [submit a new issue](https://github.com/withcontext-ai/builder/issues/new/choose), please fill out our Issue Template to the best of your ability so we can accurately understand your report.
 
-### Good first issues
-
-We have a list of [good first issues](https://github.com/withcontext-ai/builder/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
 
 ### Building additional features
 
 To contribute to this project, we follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow. Please do not try to push directly to this repo unless you are a maintainer.
 
-First, please [fork this repository](https://github.com/withcontext-ai/builder/fork).
-
-Then clone your GitHub forked repository to your local machine:
-
-```bash
-git clone https://github.com/<your_github_username>/builder.git
-```
+First, please fork this repository.
 
 Run the following commands at root directory:
 
@@ -88,7 +78,7 @@ Now you can start making changes to the code. Once you are done, please submit a
 
 For all Pull Requests, you should be extremely descriptive about both the problem and the proposed solution. If there are any affected open or closed issues, please include the issue number in your PR message.
 
-Did you have an issue, like a merge conflict, or don't know how to open a pull request? Check out [GitHub's pull request tutorial](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests) on how to resolve merge conflicts and other issues. Once your PR has been merged, you will be proudly listed as a contributor in the [contributor chart](https://github.com/withcontext-ai/builder/graphs/contributors).
+Did you have an issue, like a merge conflict, or don't know how to open a pull request? Check out [GitHub's pull request tutorial](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests) on how to resolve merge conflicts and other issues. 
 
 ### Troubleshooting
 
